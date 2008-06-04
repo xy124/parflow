@@ -11,9 +11,9 @@
 
 PF_MAKEFILES=Makefile
 
-PF_LIBNAME = ../lib/parflow.$(PF_ARCH).a
+PF_LIBNAME = ../lib/parflow.$(PF_ARCH)
 
-all: $(PF_LIBNAME)
+all: $(PF_LIBNAME).a
 
 PF_SRC = \
 	advect.F\
@@ -196,6 +196,6 @@ PF_DEPEND = \
 	well.h
 
 clean: 
-	@/bin/rm -f $(PF_LIBNAME)
+	@/bin/rm -f $(PF_LIBNAME).a
 
 include $(PARFLOW_SRC)/amps/$(PF_COMM)/Makefile.$(PF_ARCH).pftomp
