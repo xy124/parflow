@@ -1,4 +1,4 @@
-LIBRARY=clm.a
+LIBRARY=../../lib/clm.a
 OBJECTS=$(SOURCES:.F90=.o)
 SOURCES = \
 	precision.F90\
@@ -70,6 +70,9 @@ SOURCES = \
 .SUFFIXES: .F90 .o 
 
 all: $(SOURCES) $(LIBRARY)
+
+clean:
+	rm -f *.o *.mod
 
 $(LIBRARY): $(OBJECTS)
 	ar rvu $@ $(OBJECTS)

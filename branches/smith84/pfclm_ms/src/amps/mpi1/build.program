@@ -65,7 +65,7 @@ then
 	cd $PARFLOW_SRC/sundials
 	./build
 	cd $PARFLOW_SRC/parflow
-	$PF_MAKE ${PF_PROGRAM}.${PF_NODE_EXT}
+	$PF_MAKE 
 	)
 
 fi

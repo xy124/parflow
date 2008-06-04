@@ -11,6 +11,10 @@
 
 PF_MAKEFILES=Makefile
 
+PF_LIBNAME = ../lib/parflow.$(PF_ARCH).a
+
+all: $(PF_LIBNAME)
+
 PF_SRC = \
 	advect.F\
 	advection_godunov.c\
@@ -72,7 +76,6 @@ PF_SRC = \
 	mg_semi_restrict.c\
 	new_endpts.c\
 	nodiag_scale.c\
-	parflow.c\
 	pcg.c\
 	permeability_face.c\
 	perturb_lb.c\
@@ -192,9 +195,7 @@ PF_DEPEND = \
 	vector.h\
 	well.h
 
-all: $(PF_PROGRAM)$(PF_EXT)
-
 clean: 
-	@/bin/rm -f ../parflow/*$(PF_OEXT)
+	@/bin/rm -f $(PF_LIBNAME)
 
 include $(PARFLOW_SRC)/amps/$(PF_COMM)/Makefile.$(PF_ARCH).pftomp
