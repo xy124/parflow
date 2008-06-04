@@ -60,14 +60,9 @@ fi
 #=============================================================================
 if [ "$PF_ALL_FLAG" ]
 then
-	(cd $PARFLOW_SRC/amps/$PF_COMM/
-	./build
-	cd $PARFLOW_SRC/sundials
-	./build
-	cd $PARFLOW_SRC/parflow
-	$PF_MAKE 
-	)
-
+#	(cd $PARFLOW_SRC/amps/$PF_COMM/ && ./build)
+#	(cd $PARFLOW_SRC/pflib && $PF_MAKE)
+	(cd $PARFLOW_SRC/parflow && $PF_MAKE ${PF_PROGRAM}.${PF_NODE_EXT})
 fi
 
 
