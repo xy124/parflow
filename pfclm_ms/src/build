@@ -128,13 +128,46 @@ do
  	(cd $PARFLOW_SRC/$i;./build $args)
 done
 
+#=============================================================================
+#
+# Build Sundials
+#
+#=============================================================================
+echo "Building Sundials"
+if [ "$PF_CLEAN_FLAG" ]
+then
+    (cd $PARFLOW_SRC/sundials && make clean)
+    (cd $PARFLOW_SRC/sundials && rm -f config.log config.status)
+    if [ "$PF_VERYCLEAN_FLAG" ]
+    then
+	(cd $PARFLOW_SRC/sundials && rm -fr lib/* )
+    fi
+else
+    if [! -f $PARFLOW_SRC/sundial/config.status]
+    then
+	(cd $PARFLOW_SRC/sundials && ./configure)
+    fi
+    (cd $PARFLOW_SRC/sundials && make install)
+fi
+
+#=============================================================================
+#
+# Build CLM
+#
+#=============================================================================
+echo "Building CLM"
+if [ "$PF_CLEAN_FLAG" ]
+then
+    (cd $PARFLOW_SRC/parflow_lib/clm && make clean)
+else
+    (cd $PARFLOW_SRC/parflow_lib/clm && make)
+fi
 
 #=============================================================================
 #
 # Build parflow
 #
 #=============================================================================
-echo "Building Parflow"
 (cd $PARFLOW_SRC/parflow;./build $args )
 
 #=============================================================================
@@ -145,6 +178,16 @@ echo "Building Parflow"
 if [ "$PF_CLEAN_FLAG" ]
 then
 	rm -f .current_arch
+fi
+
+if [ "$PF_CLEAN_FLAG" ]
+then
+	(cd lib && rm -fr *)
+fi
+
+if [ "$PF_VERYCLEAN_FLAG" ]
+then
+	(cd test && rm -f *.pfb *.pfsb *.log pfout.txt)
 fi
 
 
