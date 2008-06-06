@@ -104,18 +104,14 @@ then
 	(cd $PARFLOW_SRC/amps/$PF_COMM; rm -f *.o)
 	(cd $PARFLOW_SRC/amps/common; rm -f *$PF_NODE_EXT.o)
 	(cd $PARFLOW_SRC/amps/common; rm -f *.o)
-#	(cd $PARFLOW_SRC/kinsol; rm -f *$PF_NODE_EXT.o)
-#	(cd $PARFLOW_SRC/kinsol; rm -f *.o)
 fi
 
 if [ "$PF_VERYCLEAN_FLAG" ]
 then
-	(cd $PARFLOW_SRC/parflow/; rm -f $PF_PROGRAM$PF_NODE_EXT *$PF_NODE_EXT.a)
+	(cd $PARFLOW_SRC/parflow/; rm -f $PF_PROGRAM.$PF_NODE_EXT *$PF_NODE_EXT.a .current_arch)
 	(cd $PARFLOW_SRC/amps/$PF_COMM; rm -f *$PF_NODE_EXT.a)
 	(cd $PARFLOW_SRC/amps/common; rm -f *$PF_NODE_EXT.a)
-#	(cd $PARFLOW_SRC/kinsol; rm -f *$PF_NODE_EXT.a)
 	(cd $PARFLOW_LIB; rm -f *$PF_NODE_EXT.a)
-
 fi
 
 
