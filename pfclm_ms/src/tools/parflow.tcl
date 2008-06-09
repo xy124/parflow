@@ -277,6 +277,10 @@ proc Parflow::pfundist { runname } {
 	append filelist [glob -nocomplain $root.phasex.?.?????.*$postfix] " "
 	append filelist [glob -nocomplain $root.phasey.?.?????.*$postfix] " "
 	append filelist [glob -nocomplain $root.phasez.?.?????.*$postfix] " "
+	append filelist [glob -nocomplain $root.temp.?????.*$postfix] " "
+	append filelist [glob -nocomplain $root.et.?????.*$postfix] " "
+	append filelist [glob -nocomplain $root.obf.?????.*$postfix] " "
+	append filelist [glob -nocomplain $root.mask.?????.*$postfix] " "
     }
 
     foreach i $filelist {
