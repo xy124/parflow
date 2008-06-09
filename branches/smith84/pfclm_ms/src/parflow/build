@@ -140,6 +140,8 @@ echo "       Make Options:           $PF_MAKE_OPTS"
 # Each communications package has its own special one.
 # We source it so it inherits all variables.
 #=============================================================================
+#echo "SGS"
+#printenv > ~/parflow.env
 . $PARFLOW_SRC/amps/$PF_COMM/build.program $args
 
 echo "done"
