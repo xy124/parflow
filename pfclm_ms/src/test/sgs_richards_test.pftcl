@@ -400,5 +400,14 @@ pfset Geom.domain.SpecificStorage.Value 1.0e-4
 pfrun default_richards
 pfundist default_richards
 
+set orig [pfload orig/default_richards.out.press.00005.pfb]
+set new  [pfload      default_richards.out.press.00005.pfb]
+puts "Max difference in Pressure"
+puts [pfmdiff $new $orig 12]
+
+set orig [pfload orig/default_richards.out.satur.00005.pfb]
+set new  [pfload      default_richards.out.satur.00005.pfb]
+puts "Max difference in Saturation"
+puts [pfmdiff $new $orig 12]
 
 
