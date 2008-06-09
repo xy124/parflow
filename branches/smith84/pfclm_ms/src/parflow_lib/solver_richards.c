@@ -18,6 +18,9 @@
 #include "parflow.h"
 #include "kinsol_dependences.h"
 
+#define WATER 0
+#define ROCK  1
+
 /*--------------------------------------------------------------------------
  * Structures
  *--------------------------------------------------------------------------*/
@@ -119,18 +122,48 @@ typedef struct
    char         *recomp_log; 
    char         *dt_info_log;
 
+   int file_number;
    int number_logged;
 
 } InstanceXtra; 
 
-void SetupRichards() {
-  PFModule      *this_module      = ThisPFModule;
+void SetupRichards(PFModule *this_module) {
   PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
   InstanceXtra  *instance_xtra    = PFModuleInstanceXtra(this_module);
 
+  Problem      *problem             = (public_xtra -> problem);
   ProblemData  *problem_data        = (instance_xtra -> problem_data);
 
+
+  double        start_time          = ProblemStartTime(problem);
+
+  /*
+   * Modules used in setup
+   */
   PFModule     *set_problem_data        = (instance_xtra -> set_problem_data);
+  PFModule     *ic_phase_temperature    = (instance_xtra -> ic_phase_temperature);
+  PFModule     *phase_density           = (instance_xtra -> phase_density);
+  PFModule     *ic_phase_pressure       = (instance_xtra -> ic_phase_pressure);
+  PFModule     *phase_heat_capacity     = (instance_xtra -> phase_heat_capacity);
+
+  CommHandle   *handle;
+
+  Grid         *grid                = (instance_xtra -> grid);
+  Grid         *grid2d              = (instance_xtra -> grid2d);
+  Grid         *x_grid              = (instance_xtra -> x_grid);
+  Grid         *y_grid              = (instance_xtra -> y_grid);
+  Grid         *z_grid              = (instance_xtra -> z_grid);
+
+  double        dtmp, err_norm;
+
+  double        gravity = ProblemGravity(problem);
+
+  int           any_file_dumped;
+
+  char          file_prefix[64];
+  char          file_postfix[64];
+
+  sprintf(file_prefix, GlobalsOutFileName);
 
   IfLogging(1)
     {
@@ -150,7 +183,6 @@ void SetupRichards() {
 
   if ( public_xtra -> print_subsurf_data )
   {
-     char          file_prefix[64], file_postfix[64];
      sprintf(file_postfix, "perm_x");
      WritePFBinary(file_prefix, file_postfix, 
 		   ProblemDataPermeabilityX(problem_data));
@@ -174,10 +206,217 @@ void SetupRichards() {
 		   (WELLDATA_PRINTPHYSICAL | WELLDATA_PRINTVALUES));
   }
 
+  int           start_count         = ProblemStartCount(problem);
+
+  /*
+   * Only allocate space if needed. 
+   */
+  if (start_count >= 0)
+  {
+     /*-------------------------------------------------------------------
+      * Allocate and set up initial values
+      *-------------------------------------------------------------------*/
+
+     instance_xtra -> pressure = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> pressure, 0.0);
+
+     instance_xtra -> temperature = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> temperature, 0.0);
+
+     instance_xtra -> saturation = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> saturation, 0.0);
+
+     instance_xtra -> density = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> density, 0.0);
+
+     instance_xtra -> heat_capacity_water= NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> heat_capacity_water, 0.0);
+
+     instance_xtra -> heat_capacity_rock= NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> heat_capacity_rock, 1.932e+6);
+
+     instance_xtra -> viscosity= NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> viscosity, 0.0);
+
+     instance_xtra -> old_pressure = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> old_pressure, 0.0);
+
+     instance_xtra -> old_temperature= NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> old_temperature, 0.0);
+
+     instance_xtra -> old_saturation = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> old_saturation, 0.0);
+
+     instance_xtra -> old_density = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> old_density, 0.0);
+
+     instance_xtra -> old_viscosity = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> old_viscosity, 0.0);
+
+     /*sk Initialize LSM sink terms*/
+     instance_xtra -> evap_trans = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> evap_trans, 0.0);
+   
+     instance_xtra -> clm_energy_source = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> clm_energy_source, 0.0);
+
+     instance_xtra -> forc_t = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> forc_t, 0.0);
+
+     /*sk Initialize Overland flow boundary fluxes*/
+     instance_xtra -> ovrl_bc_flx = NewVector( grid2d, 1, 1 );
+     InitVectorAll(instance_xtra -> ovrl_bc_flx, 0.0);
+
+     /*sk Initialize LSM mask */
+     instance_xtra -> mask = NewVector( grid, 1, 1 );
+     InitVectorAll(instance_xtra -> mask, 0.0);
+
+     /* Velocity vectors for heat convection */ 
+     instance_xtra -> x_velocity = NewVector( x_grid, 1, 1 );
+     InitVectorAll(instance_xtra -> x_velocity, 0.0);
+     instance_xtra -> y_velocity = NewVector( y_grid, 1, 1 );
+     InitVectorAll(instance_xtra -> y_velocity, 0.0);
+     instance_xtra -> z_velocity = NewVector( z_grid, 1, 1 );
+     InitVectorAll(instance_xtra -> z_velocity, 0.0);
+
+     /* Set initial temperature and pass around ghost data to start */
+     PFModuleInvoke(void, ic_phase_temperature, 
+		    (instance_xtra -> temperature, problem_data, problem)); 
+
+     handle = InitVectorUpdate(instance_xtra -> temperature, VectorUpdateAll);
+     FinalizeVectorUpdate(handle);
+
+     /* Set initial densities and pass around ghost data to start */
+     PFModuleInvoke(void, phase_density, 
+		    (WATER, instance_xtra -> pressure, instance_xtra -> temperature, 
+		     instance_xtra -> density, &dtmp, &dtmp, CALCFCN));
+
+     handle = InitVectorUpdate(instance_xtra -> density, VectorUpdateAll);
+     FinalizeVectorUpdate(handle);
+
+     /* Set initial pressures and pass around ghost data to start */
+     PFModuleInvoke(void, ic_phase_pressure, 
+		    (instance_xtra -> pressure, instance_xtra -> temperature, 
+		     instance_xtra -> mask, problem_data, problem));
+	 
+     handle = InitVectorUpdate(instance_xtra -> pressure, VectorUpdateAll);
+     FinalizeVectorUpdate(handle);
+
+     /* Set initial heat capacities and pass around ghost data to start */
+     PFModuleInvoke(void, phase_heat_capacity, 
+		    (WATER, instance_xtra -> heat_capacity_water, problem_data));
+
+     handle = InitVectorUpdate(instance_xtra -> heat_capacity_water, VectorUpdateAll);
+     FinalizeVectorUpdate(handle);
+
+     /* Set initial viscosities and pass around ghost data to start */
+     PFModuleInvoke(void, instance_xtra -> phase_viscosity, 
+		    (WATER, instance_xtra -> pressure, instance_xtra -> temperature, 
+		     instance_xtra -> viscosity, CALCFCN));
+
+     handle = InitVectorUpdate(instance_xtra -> viscosity, VectorUpdateAll);
+     FinalizeVectorUpdate(handle);
+
+     /* Set initial saturations */
+     PFModuleInvoke(void, instance_xtra -> problem_saturation, 
+		    (instance_xtra -> saturation, instance_xtra -> pressure, 
+		     instance_xtra -> density, gravity, problem_data, 
+		     CALCFCN));
+
+     handle = InitVectorUpdate(instance_xtra -> pressure, VectorUpdateAll);
+     FinalizeVectorUpdate(handle);
+
+
+     /*****************************************************************/
+     /*          Print out any of the requested initial data          */
+     /*****************************************************************/
+     any_file_dumped = 0;
+
+     /*-------------------------------------------------------------------
+      * Print out the initial well data?
+      *-------------------------------------------------------------------*/
+
+     if ( public_xtra -> print_wells )
+     {
+        WriteWells(file_prefix,
+		   problem,
+		   ProblemDataWellData(problem_data),
+		   start_time, 
+		   WELLDATA_WRITEHEADER);
+     }
+
+     /*-----------------------------------------------------------------
+      * Print out the initial pressures?
+      *-----------------------------------------------------------------*/
+
+     if ( public_xtra -> print_press )
+     {
+        sprintf(file_postfix, "press.%05d", start_count );
+	WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
+	any_file_dumped = 1;
+     }
+
+     /*-----------------------------------------------------------------
+      * Print out the initial temperatures?
+      *-----------------------------------------------------------------*/
+ 
+     if ( public_xtra -> print_press )
+     {
+        sprintf(file_postfix, "temp.%05d", start_count );
+        WritePFBinary(file_prefix, file_postfix, instance_xtra -> temperature);
+        any_file_dumped = 1;
+     }
+
+     /*-----------------------------------------------------------------
+      * Print out the initial saturations?
+      *-----------------------------------------------------------------*/
+
+     if ( public_xtra -> print_satur )
+     {
+        sprintf(file_postfix, "satur.%05d", start_count );
+	WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation );
+	any_file_dumped = 1;
+     }
+
+     /*-----------------------------------------------------------------
+      * Print out mask?
+      *-----------------------------------------------------------------*/
+     /* SGS this flag is wrong? */
+     if ( public_xtra -> print_satur )
+     {
+        sprintf(file_postfix, "mask.%05d", start_count );
+        WritePFBinary(file_prefix, file_postfix, instance_xtra -> mask );
+        any_file_dumped = 1;
+     }
+
+     /*-----------------------------------------------------------------
+      * Log this step
+      *-----------------------------------------------------------------*/
+
+     IfLogging(1)
+     {
+	double        outflow = 0.0; //sk Outflow due to overland flow
+
+        instance_xtra -> seq_log[instance_xtra -> number_logged]       = start_count;
+	instance_xtra -> time_log[instance_xtra -> number_logged]      = start_time;
+	instance_xtra -> dt_log[instance_xtra -> number_logged]        = 0.0;
+	instance_xtra -> dt_info_log[instance_xtra -> number_logged]   = 'i';
+	instance_xtra -> outflow_log[instance_xtra -> number_logged]   = outflow;
+	if ( any_file_dumped )
+	  instance_xtra -> dumped_log[instance_xtra -> number_logged] = start_count;
+	else
+	  instance_xtra -> dumped_log[instance_xtra -> number_logged] = -1;
+	instance_xtra -> recomp_log[instance_xtra -> number_logged]   = 'n';
+	instance_xtra -> number_logged++;
+     }
+
+     instance_xtra -> file_number = start_count;
+     if (any_file_dumped) instance_xtra -> file_number++;
+  }
+
 }
 
-void TeardownRichards() {
-  PFModule      *this_module      = ThisPFModule;
+void TeardownRichards(PFModule *this_module) {
   PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
   InstanceXtra  *instance_xtra    = PFModuleInstanceXtra(this_module);
 
@@ -271,9 +510,8 @@ void TeardownRichards() {
    tfree(instance_xtra -> outflow_log);
 }
 
-void AdvanceRichards(int start_count, double start_time, double stop_time) 
+void AdvanceRichards(PFModule *this_module, int start_count, double start_time, double stop_time) 
 {
-  PFModule      *this_module      = ThisPFModule;
   PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
   InstanceXtra  *instance_xtra    = PFModuleInstanceXtra(this_module);
 
@@ -290,18 +528,16 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
   int           print_satur         = (public_xtra -> print_satur);
   int           print_wells         = (public_xtra -> print_wells);
 
-
-  PFModule     *ic_phase_pressure       = (instance_xtra -> ic_phase_pressure);
-  PFModule     *ic_phase_temperature    = (instance_xtra -> ic_phase_temperature);
   PFModule     *problem_saturation      = (instance_xtra -> problem_saturation);
   PFModule     *phase_density           = (instance_xtra -> phase_density);
-  PFModule     *phase_heat_capacity     = (instance_xtra -> phase_heat_capacity);
   PFModule     *phase_viscosity         = (instance_xtra -> phase_viscosity);
   PFModule     *select_time_step        = (instance_xtra -> select_time_step);
   PFModule     *l2_error_norm           = (instance_xtra -> l2_error_norm);
   PFModule     *nonlin_solver           = (instance_xtra -> nonlin_solver);
 
   ProblemData  *problem_data        = (instance_xtra -> problem_data);
+
+  double        gravity             = ProblemGravity(problem);
 
   Grid         *grid                = (instance_xtra -> grid);
   Grid         *grid2d              = (instance_xtra -> grid2d);
@@ -311,9 +547,6 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
 
   double        dump_interval       = ProblemDumpInterval(problem);
 
-  int           water = 0;
-  int           rock  = 1;
-
   Subgrid      *subgrid;
   Subvector    *p_sub, *s_sub, *t_sub, *et_sub, *es_sub, *ft_sub, *m_sub, *po_sub; 
   double       *pp, *sp, *tp, *et, *es, *ft, *ms, *po_dat;
@@ -321,7 +554,7 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
   double       dx,dy,dz;
   int          rank;
 
-  int           iteration_number, file_number;
+  int           iteration_number;
   int           dump_index;
   int           any_file_dumped;
   int           dump_files;
@@ -334,7 +567,7 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
   double        dt = 0.0;
   double        print_dt;
   double        dtmp, err_norm;
-  double        gravity = ProblemGravity(problem);
+
 
   double        outflow = 0.0; //sk Outflow due to overland flow
 
@@ -364,8 +597,7 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
      take_more_time_steps = 1;
   }
 
-
-  iteration_number = file_number = start_count;
+  iteration_number = start_count;
   dump_index = 1;
 
   if ( ( (t >= stop_time) || (iteration_number > max_iterations) ) 
@@ -378,237 +610,11 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
      print_wells           = 0;
   }
          
-  if (take_more_time_steps ==1 )
-  {
-     /*-------------------------------------------------------------------
-      * Allocate and set up initial values
-      *-------------------------------------------------------------------*/
-
-     instance_xtra -> pressure = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> pressure, 0.0);
-
-     instance_xtra -> temperature = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> temperature, 0.0);
-
-     instance_xtra -> saturation = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> saturation, 0.0);
-
-     instance_xtra -> density = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> density, 0.0);
-
-     instance_xtra -> heat_capacity_water= NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> heat_capacity_water, 0.0);
-
-     instance_xtra -> heat_capacity_rock= NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> heat_capacity_rock, 1.932e+6);
-
-     instance_xtra -> viscosity= NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> viscosity, 0.0);
-
-     instance_xtra -> old_pressure = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> old_pressure, 0.0);
-
-     instance_xtra -> old_temperature= NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> old_temperature, 0.0);
-
-     instance_xtra -> old_saturation = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> old_saturation, 0.0);
-
-     instance_xtra -> old_density = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> old_density, 0.0);
-
-     instance_xtra -> old_viscosity = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> old_viscosity, 0.0);
-
-     /*sk Initialize LSM sink terms*/
-     instance_xtra -> evap_trans = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> evap_trans, 0.0);
-   
-     instance_xtra -> clm_energy_source = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> clm_energy_source, 0.0);
-
-     instance_xtra -> forc_t = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> forc_t, 0.0);
-
-     /*sk Initialize Overland flow boundary fluxes*/
-     instance_xtra -> ovrl_bc_flx = NewVector( grid2d, 1, 1 );
-     InitVectorAll(instance_xtra -> ovrl_bc_flx, 0.0);
-
-     /*sk Initialize LSM mask */
-     instance_xtra -> mask = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> mask, 0.0);
-
-     /* Velocity vectors for heat convection */ 
-     instance_xtra -> x_velocity = NewVector( x_grid, 1, 1 );
-     InitVectorAll(instance_xtra -> x_velocity, 0.0);
-     instance_xtra -> y_velocity = NewVector( y_grid, 1, 1 );
-     InitVectorAll(instance_xtra -> y_velocity, 0.0);
-     instance_xtra -> z_velocity = NewVector( z_grid, 1, 1 );
-     InitVectorAll(instance_xtra -> z_velocity, 0.0);
-
-     /* Set initial temperature and pass around ghost data to start */
-     PFModuleInvoke(void, ic_phase_temperature, 
-		    (instance_xtra -> temperature, problem_data, problem)); 
-
-     handle = InitVectorUpdate(instance_xtra -> temperature, VectorUpdateAll);
-     FinalizeVectorUpdate(handle);
-
-     /* Set initial densities and pass around ghost data to start */
-     PFModuleInvoke(void, phase_density, 
-		    (water, instance_xtra -> pressure, instance_xtra -> temperature, instance_xtra -> density, &dtmp, &dtmp, CALCFCN));
-
-     handle = InitVectorUpdate(instance_xtra -> density, VectorUpdateAll);
-     FinalizeVectorUpdate(handle);
-
-     /* Set initial pressures and pass around ghost data to start */
-     PFModuleInvoke(void, ic_phase_pressure, 
-		    (instance_xtra -> pressure, instance_xtra -> temperature, instance_xtra -> mask, problem_data, problem));
-	 
-     handle = InitVectorUpdate(instance_xtra -> pressure, VectorUpdateAll);
-     FinalizeVectorUpdate(handle);
-
-     /* Set initial heat capacities and pass around ghost data to start */
-     PFModuleInvoke(void, phase_heat_capacity, 
-		    (water, instance_xtra -> heat_capacity_water, problem_data));
-
-     handle = InitVectorUpdate(instance_xtra -> heat_capacity_water, VectorUpdateAll);
-     FinalizeVectorUpdate(handle);
-
-     /* Set initial viscosities and pass around ghost data to start */
-     PFModuleInvoke(void, instance_xtra -> phase_viscosity, 
-		    (water, instance_xtra -> pressure, instance_xtra -> temperature, instance_xtra -> viscosity, CALCFCN));
-
-     handle = InitVectorUpdate(instance_xtra -> viscosity, VectorUpdateAll);
-     FinalizeVectorUpdate(handle);
-
-     /* Set initial saturations */
-     PFModuleInvoke(void, instance_xtra -> problem_saturation, 
-		    (instance_xtra -> saturation, instance_xtra -> pressure, instance_xtra -> density, gravity, problem_data, 
-		     CALCFCN));
-
-     handle = InitVectorUpdate(instance_xtra -> pressure, VectorUpdateAll);
-     FinalizeVectorUpdate(handle);
-
-
-    /*-----------------------------------------------------------------
-      * Allocate phase velocities 
-      *-----------------------------------------------------------------*/
-     /*
-	  phase_x_velocity = ctalloc(Vector *, ProblemNumPhases(problem) );
-	  for(phase = 0; phase < ProblemNumPhases(problem); phase++)
-	    {
-	      phase_x_velocity[phase] = NewVector( x_grid, 1, 1 );
-	      InitVectorAll(phase_x_velocity[phase], 0.0);
-	    }
-
-	  phase_y_velocity = ctalloc(Vector *, ProblemNumPhases(problem) );
-	  for(phase = 0; phase < ProblemNumPhases(problem); phase++)
-	    {
-	      phase_y_velocity[phase] = NewVector( y_grid, 1, 1 );
-	      InitVectorAll(phase_y_velocity[phase], 0.0);
-	    }
-
-	  phase_z_velocity = ctalloc(Vector *, ProblemNumPhases(problem) );
-	  for(phase = 0; phase < ProblemNumPhases(problem); phase++)
-	    {
-	      phase_z_velocity[phase] = NewVector( z_grid, 1, 2 );
-	      InitVectorAll(phase_z_velocity[phase], 0.0);
-	    }
-	    */
-
-     /*****************************************************************/
-     /*          Print out any of the requested initial data          */
-     /*****************************************************************/
-
-     any_file_dumped = 0;
-
-     /*-------------------------------------------------------------------
-      * Print out the initial well data?
-      *-------------------------------------------------------------------*/
-
-     if ( print_wells )
-     {
-        WriteWells(file_prefix,
-		   problem,
-		   ProblemDataWellData(problem_data),
-		   t, 
-		   WELLDATA_WRITEHEADER);
-     }
-
-     /*-----------------------------------------------------------------
-      * Print out the initial pressures?
-      *-----------------------------------------------------------------*/
-
-     if ( print_press )
-     {
-        sprintf(file_postfix, "press.%05d", file_number );
-	WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
-	any_file_dumped = 1;
-     }
-
-     /*-----------------------------------------------------------------
-      * Print out the initial temperatures?
-      *-----------------------------------------------------------------*/
- 
-     if ( print_press )
-     {
-        sprintf(file_postfix, "temp.%05d", file_number );
-        WritePFBinary(file_prefix, file_postfix, instance_xtra -> temperature);
-        any_file_dumped = 1;
-     }
-
-     /*-----------------------------------------------------------------
-      * Print out the initial saturations?
-      *-----------------------------------------------------------------*/
-
-     if ( print_satur )
-     {
-        sprintf(file_postfix, "satur.%05d", file_number );
-	WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation );
-	any_file_dumped = 1;
-     }
-
-     /*-----------------------------------------------------------------
-      * Print out mask?
-      *-----------------------------------------------------------------*/
- 
-     /* SGS this flag is wrong */
-     if ( print_satur )
-     {
-        sprintf(file_postfix, "mask.%05d", file_number );
-        WritePFBinary(file_prefix, file_postfix, instance_xtra -> mask );
-        any_file_dumped = 1;
-     }
-
-     /*-----------------------------------------------------------------
-      * Log this step
-      *-----------------------------------------------------------------*/
-
-     IfLogging(1)
-     {
-        instance_xtra -> seq_log[instance_xtra -> number_logged]       = iteration_number;
-	instance_xtra -> time_log[instance_xtra -> number_logged]      = t;
-	instance_xtra -> dt_log[instance_xtra -> number_logged]        = dt;
-	instance_xtra -> dt_info_log[instance_xtra -> number_logged]   = 'i';
-	instance_xtra -> outflow_log[instance_xtra -> number_logged]   = outflow;
-	if ( any_file_dumped )
-	  instance_xtra -> dumped_log[instance_xtra -> number_logged] = file_number;
-	else
-	  instance_xtra -> dumped_log[instance_xtra -> number_logged] = -1;
-	instance_xtra -> recomp_log[instance_xtra -> number_logged]   = 'n';
-	instance_xtra -> number_logged++;
-     }
-
-     if (any_file_dumped) file_number++;
-
-  } /* End if take_more_time_steps */
-
   /***********************************************************************/
   /*                                                                     */
   /*                Begin the main computational section                 */
   /*                                                                     */
   /***********************************************************************/
-
   
   /***************************************************************************
    sk: Here, I make the multispecies N_Vector from pressure and temperature 
@@ -682,9 +688,9 @@ void AdvanceRichards(int start_count, double start_time, double stop_time)
              po_dat = SubvectorData(po_sub);
  
              ip = SubvectorEltIndex(p_sub, ix, iy, iz);
-printf("Before %d %d %d \n",nx, ny,nz);
-           //CALL_CLM_LSM(pp,sp,tp,et,es,ft,ms,po_dat,dt,t,dx,dy,dz,ix,iy,nx,ny,nz,nx_f,ny_f,nz_f,ip,p,q,r,rank);
-printf("After\n");
+	     // printf("Before %d %d %d \n",nx, ny,nz);
+	     // CALL_CLM_LSM(pp,sp,tp,et,es,ft,ms,po_dat,dt,t,dx,dy,dz,ix,iy,nx,ny,nz,nx_f,ny_f,nz_f,ip,p,q,r,rank);
+	     // printf("After\n");
            }
           handle = InitVectorUpdate(instance_xtra -> evap_trans, VectorUpdateAll);
           FinalizeVectorUpdate(handle);
@@ -816,6 +822,7 @@ printf("After\n");
      handle = InitVectorUpdate(instance_xtra -> viscosity, VectorUpdateAll);
      FinalizeVectorUpdate(handle);
 
+
      PFModuleInvoke(void, problem_saturation, 
 		    (instance_xtra -> saturation, instance_xtra -> pressure, instance_xtra -> density, gravity, problem_data,
 		     CALCFCN));
@@ -829,10 +836,10 @@ printf("After\n");
      /* Dump the pressure values at this time-step */
      if ( ( print_press ) && ( dump_files ) )
      {
-        sprintf(file_postfix, "press.%05d", file_number);
+        sprintf(file_postfix, "press.%05d", instance_xtra -> file_number);
 	WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
 
-        sprintf(file_postfix, "temp.%05d", file_number);
+        sprintf(file_postfix, "temp.%05d", instance_xtra -> file_number);
 	WritePFBinary(file_prefix, file_postfix, instance_xtra -> temperature);
 
 	any_file_dumped = 1;
@@ -840,15 +847,15 @@ printf("After\n");
 
      if ( ( print_satur ) && ( dump_files ) )
      {
-	sprintf(file_postfix, "satur.%05d", file_number );
+	sprintf(file_postfix, "satur.%05d", instance_xtra -> file_number );
 	WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation );
 
      /*sk Print the sink terms from the land surface model*/
-        sprintf(file_postfix, "et.%05d", file_number );
+        sprintf(file_postfix, "et.%05d", instance_xtra -> file_number );
         WritePFBinary(file_prefix, file_postfix, instance_xtra -> evap_trans);
 
      /*sk Print the sink terms from the land surface model*/
-        sprintf(file_postfix, "obf.%05d", file_number );
+        sprintf(file_postfix, "obf.%05d", instance_xtra -> file_number );
         WritePFBinary(file_prefix, file_postfix, instance_xtra -> ovrl_bc_flx);
 
 	any_file_dumped = 1;
@@ -891,14 +898,14 @@ printf("After\n");
 	instance_xtra -> dt_info_log[instance_xtra -> number_logged]   = dt_info;
 	instance_xtra -> outflow_log[instance_xtra -> number_logged]   = outflow;
 	if ( any_file_dumped )
-	   instance_xtra -> dumped_log[instance_xtra -> number_logged] = file_number;
+	   instance_xtra -> dumped_log[instance_xtra -> number_logged] = instance_xtra -> file_number;
 	else
 	   instance_xtra -> dumped_log[instance_xtra -> number_logged] = -1;
 	instance_xtra -> recomp_log[instance_xtra -> number_logged] = 'y';
 	instance_xtra -> number_logged++;
      }
 
-     if ( any_file_dumped ) file_number++;
+     if ( any_file_dumped ) instance_xtra -> file_number++;
 
      if (take_more_time_steps == 1)
         take_more_time_steps = (    (iteration_number < max_iterations) 
@@ -1441,10 +1448,10 @@ void      SolverRichards() {
    double        start_time          = ProblemStartTime(problem);
    double        stop_time           = ProblemStopTime(problem);
 
-   SetupRichards();
+   SetupRichards(this_module);
 
-   AdvanceRichards(start_count, start_time, stop_time);
+   AdvanceRichards(this_module, start_count, start_time, stop_time);
    
-   TeardownRichards();
+   TeardownRichards(this_module);
 }
 
