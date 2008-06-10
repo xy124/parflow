@@ -27,8 +27,6 @@ void
                 Solve()
 {
    PFModule       *solver;
-
-   
    
    BeginTiming(SolverSetupTimingIndex);
    NewSolver();

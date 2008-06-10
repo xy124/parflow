@@ -18,6 +18,7 @@
 #include "parflow.h"
 #include "kinsol_dependences.h"
 
+
 #define WATER 0
 #define ROCK  1
 
@@ -102,10 +103,6 @@ typedef struct
   N_Vector     multispecies;
   N_VectorContent_Parflow content;
 
-  /* 
-   * sk: Vector that contains the sink terms from the land surface model 
-   */ 
-  Vector       *evap_trans;
 
   /* 
    * sk: Vector that contains the outflow at the boundary 
@@ -125,7 +122,10 @@ typedef struct
    int file_number;
    int number_logged;
 
+   int iteration_number;
+
 } InstanceXtra; 
+
 
 void SetupRichards(PFModule *this_module) {
   PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
@@ -253,10 +253,6 @@ void SetupRichards(PFModule *this_module) {
      instance_xtra -> old_viscosity = NewVector( grid, 1, 1 );
      InitVectorAll(instance_xtra -> old_viscosity, 0.0);
 
-     /*sk Initialize LSM sink terms*/
-     instance_xtra -> evap_trans = NewVector( grid, 1, 1 );
-     InitVectorAll(instance_xtra -> evap_trans, 0.0);
-   
      instance_xtra -> clm_energy_source = NewVector( grid, 1, 1 );
      InitVectorAll(instance_xtra -> clm_energy_source, 0.0);
 
@@ -414,6 +410,7 @@ void SetupRichards(PFModule *this_module) {
      if (any_file_dumped) instance_xtra -> file_number++;
   }
 
+  instance_xtra -> iteration_number = start_count;
 }
 
 void TeardownRichards(PFModule *this_module) {
@@ -438,7 +435,6 @@ void TeardownRichards(PFModule *this_module) {
    FreeVector( instance_xtra -> old_viscosity );
    FreeVector( instance_xtra -> pressure );
    FreeVector( instance_xtra -> temperature );
-   FreeVector( instance_xtra -> evap_trans );
    FreeVector( instance_xtra -> clm_energy_source );
    FreeVector( instance_xtra -> forc_t );
    FreeVector( instance_xtra -> ovrl_bc_flx );
@@ -510,7 +506,18 @@ void TeardownRichards(PFModule *this_module) {
    tfree(instance_xtra -> outflow_log);
 }
 
-void AdvanceRichards(PFModule *this_module, int start_count, double start_time, double stop_time) 
+// SGS start, stop and dt seem a bit redundant.
+void AdvanceRichards(PFModule *this_module, 
+		     double start_time,      /* Starting time */
+		     double stop_time,       /* Stopping time */
+		     double dt,              /* Suggested dt, may be overridden */
+		     Vector *evap_trans,     /* Flux from land surface model */
+		     
+		                             /* Output */
+		     Vector **pressure_out,  
+		     Vector **porosity_out,
+		     Vector **saturation_out
+   ) 
 {
   PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
   InstanceXtra  *instance_xtra    = PFModuleInstanceXtra(this_module);
@@ -554,7 +561,6 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
   double       dx,dy,dz;
   int          rank;
 
-  int           iteration_number;
   int           dump_index;
   int           any_file_dumped;
   int           dump_files;
@@ -564,7 +570,6 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
   int           max_failures = 60;
 
   double        t;
-  double        dt = 0.0;
   double        print_dt;
   double        dtmp, err_norm;
 
@@ -582,13 +587,12 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
 
 // SGS Reworking here
   t = start_time;
-  dt = 0.0e0;
 
   /* Check to see if pressure solves are requested */
   /* start_count < 0 implies that subsurface data ONLY is requested */
   /*    Thus, we do not want to allocate memory or initialize storage for */
   /*    other variables.  */
-  if ( start_count < 0 )
+  if ( instance_xtra -> iteration_number < 0 )
   {
      take_more_time_steps = 0;
   }
@@ -597,10 +601,9 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
      take_more_time_steps = 1;
   }
 
-  iteration_number = start_count;
   dump_index = 1;
 
-  if ( ( (t >= stop_time) || (iteration_number > max_iterations) ) 
+  if ( ( (t >= stop_time) || (instance_xtra -> iteration_number > max_iterations) ) 
        && ( take_more_time_steps == 1) )
   {
      take_more_time_steps = 0;
@@ -656,7 +659,7 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
              p_sub = VectorSubvector(instance_xtra -> pressure, is);
              s_sub  = VectorSubvector(instance_xtra -> saturation, is);
              t_sub  = VectorSubvector(instance_xtra -> temperature, is);
-             et_sub = VectorSubvector(instance_xtra -> evap_trans, is);
+             et_sub = VectorSubvector(evap_trans, is);
              es_sub = VectorSubvector(instance_xtra -> clm_energy_source, is);
              ft_sub = VectorSubvector(instance_xtra -> forc_t, is);
              m_sub = VectorSubvector(instance_xtra -> mask, is);
@@ -692,7 +695,7 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
 	     // CALL_CLM_LSM(pp,sp,tp,et,es,ft,ms,po_dat,dt,t,dx,dy,dz,ix,iy,nx,ny,nz,nx_f,ny_f,nz_f,ip,p,q,r,rank);
 	     // printf("After\n");
            }
-          handle = InitVectorUpdate(instance_xtra -> evap_trans, VectorUpdateAll);
+          handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
           FinalizeVectorUpdate(handle);
  
           handle = InitVectorUpdate(instance_xtra -> clm_energy_source, VectorUpdateAll);
@@ -747,7 +750,7 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
 	   }
 	   else
 	   {
-	      if ( (iteration_number % (-(int)dump_interval)) == 0 )
+	      if ( (instance_xtra -> iteration_number % (-(int)dump_interval)) == 0 )
 	      {
 	         dump_files = 1;
 	      }
@@ -773,11 +776,26 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
 	/*******************************************************************/
 	  
 	retval = PFModuleInvoke(int, nonlin_solver, 
-	                        (instance_xtra -> multispecies, instance_xtra -> density, instance_xtra -> old_density, instance_xtra -> heat_capacity_water, instance_xtra -> heat_capacity_rock, 
-                                 instance_xtra -> viscosity, instance_xtra -> old_viscosity, instance_xtra -> saturation, 
-				 instance_xtra -> old_saturation, t, dt, problem_data, instance_xtra -> old_pressure, 
-                                 instance_xtra -> old_temperature, &outflow, instance_xtra -> evap_trans, instance_xtra -> clm_energy_source, instance_xtra -> forc_t, instance_xtra -> ovrl_bc_flx,
-                                 instance_xtra -> x_velocity, instance_xtra -> y_velocity, instance_xtra -> z_velocity));
+	                        (instance_xtra -> multispecies, 
+				 instance_xtra -> density, 
+				 instance_xtra -> old_density, 
+				 instance_xtra -> heat_capacity_water, 
+				 instance_xtra -> heat_capacity_rock, 
+                                 instance_xtra -> viscosity, 
+				 instance_xtra -> old_viscosity, 
+				 instance_xtra -> saturation, 
+				 instance_xtra -> old_saturation, 
+				 t, dt, problem_data, 
+				 instance_xtra -> old_pressure, 
+                                 instance_xtra -> old_temperature, 
+				 &outflow, 
+				 evap_trans, 
+				 instance_xtra -> clm_energy_source, 
+				 instance_xtra -> forc_t, 
+				 instance_xtra -> ovrl_bc_flx,
+                                 instance_xtra -> x_velocity, 
+				 instance_xtra -> y_velocity, 
+				 instance_xtra -> z_velocity));
 
 	printf("Outflow , %e\n",outflow);
 
@@ -808,7 +826,7 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
      }  /* Ends do for convergence of time step loop */
      while ( (!converged) && (conv_failures < max_failures) );
 
-     iteration_number++;
+     instance_xtra -> iteration_number++;
 
      
      /* Calculate densities, viscosities and saturations for the new pressure. */
@@ -852,7 +870,7 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
 
      /*sk Print the sink terms from the land surface model*/
         sprintf(file_postfix, "et.%05d", instance_xtra -> file_number );
-        WritePFBinary(file_prefix, file_postfix, instance_xtra -> evap_trans);
+        WritePFBinary(file_prefix, file_postfix, evap_trans);
 
      /*sk Print the sink terms from the land surface model*/
         sprintf(file_postfix, "obf.%05d", instance_xtra -> file_number );
@@ -892,7 +910,7 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
 
      IfLogging(1)
      {
-        instance_xtra -> seq_log[instance_xtra -> number_logged]       = iteration_number;
+        instance_xtra -> seq_log[instance_xtra -> number_logged]       = instance_xtra -> iteration_number;
 	instance_xtra -> time_log[instance_xtra -> number_logged]      = t;
 	instance_xtra -> dt_log[instance_xtra -> number_logged]        = dt;
 	instance_xtra -> dt_info_log[instance_xtra -> number_logged]   = dt_info;
@@ -908,12 +926,15 @@ void AdvanceRichards(PFModule *this_module, int start_count, double start_time, 
      if ( any_file_dumped ) instance_xtra -> file_number++;
 
      if (take_more_time_steps == 1)
-        take_more_time_steps = (    (iteration_number < max_iterations) 
+        take_more_time_steps = (    (instance_xtra -> iteration_number < max_iterations) 
 				 && (t < stop_time) );
 
   }   /* ends do for time loop */
   while( take_more_time_steps );
 
+  *pressure_out = instance_xtra -> pressure;
+  *porosity_out = ProblemDataPorosity(problem_data);
+  *saturation_out = instance_xtra -> saturation;
 }
 
 /*--------------------------------------------------------------------------
@@ -1447,11 +1468,36 @@ void      SolverRichards() {
 
    double        start_time          = ProblemStartTime(problem);
    double        stop_time           = ProblemStopTime(problem);
+   double        dt                  = 0.0;
 
+   Grid         *grid                = (instance_xtra -> grid);
+
+   Vector       *pressure_out;
+   Vector       *porosity_out;
+   Vector       *saturation_out;
+
+   /* 
+    * sk: Vector that contains the sink terms from the land surface model 
+    */ 
+   Vector       *evap_trans;
+   
    SetupRichards(this_module);
+   
+  /*sk Initialize LSM terms*/
+   evap_trans = NewVector( grid, 1, 1 );
+   InitVectorAll(evap_trans, 0.0);
 
-   AdvanceRichards(this_module, start_count, start_time, stop_time);
+   AdvanceRichards(this_module, 
+		   start_time, 
+		   stop_time, 
+		   dt, 
+		   evap_trans,
+		   &pressure_out, 
+                   &porosity_out,
+                   &saturation_out);
    
    TeardownRichards(this_module);
+
+   FreeVector(evap_trans );
 }
 
