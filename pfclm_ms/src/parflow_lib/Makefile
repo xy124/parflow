@@ -153,7 +153,8 @@ PF_SRC = \
 	well.c\
 	well_package.c\
 	wells_lb.c\
-	write_parflow_binary.c
+	write_parflow_binary.c \
+	wrf_parflow.c
 
 PF_DEPEND = \
 	background.h\
@@ -193,7 +194,7 @@ PF_DEPEND = \
 	time_cycle_data.h\
 	timing.h\
 	vector.h\
-	well.h
+	well.h 
 
 clean: 
 	@/bin/rm -f $(PF_LIBNAME).a
