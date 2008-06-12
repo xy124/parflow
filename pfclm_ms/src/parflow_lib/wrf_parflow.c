@@ -20,7 +20,11 @@ amps_ThreadLocalDcl(PFModule *, solver);
 
 amps_ThreadLocalDcl(int, parflow_first_time = 1);
 
-void WRFParflow() 
+void wrfparflowinit_() {
+   printf("Hello from WRFParflowInit\n");
+}
+
+void wrfparflowadvance_() 
 {
    // SGS this needs to come from somewhere
    char *input_file = "sgs_richards_test";
