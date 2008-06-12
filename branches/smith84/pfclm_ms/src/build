@@ -143,7 +143,7 @@ then
 	(cd $PARFLOW_SRC/sundials && rm -fr lib/* )
     fi
 else
-    if [ ! -f $PARFLOW_SRC/sundial/config.status ]
+    if [ ! -f $PARFLOW_SRC/sundials/config.status ]
     then
 	(cd $PARFLOW_SRC/sundials && ./configure)
     fi
