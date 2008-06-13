@@ -41,7 +41,6 @@ void amps_FindPowers P((int N , int *log , int *Nnext , int *Nprev ));
 amps_File amps_Fopen P((char *filename , char *type ));
 
 /* amps_init.c */
-int MAIN__ P((void ));
 int amps_Init P((int *argc , char **argv []));
 int amps_EmbeddedInit P((void));
 
