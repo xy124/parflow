@@ -136,11 +136,16 @@ done
 echo "Building Sundials"
 if [ "$PF_CLEAN_FLAG" ]
 then
-    (cd $PARFLOW_SRC/sundials && make clean)
+    if test -f $PARFLOW_SRC/sundials/Makefile
+    then
+	(cd $PARFLOW_SRC/sundials && make clean)
+    fi
     (cd $PARFLOW_SRC/sundials && rm -f config.log config.status)
     if [ "$PF_VERYCLEAN_FLAG" ]
     then
 	(cd $PARFLOW_SRC/sundials && rm -fr lib/* )
+	(cd $PARFLOW_SRC/sundials && rm -f config.h libtool config/fortran_update.sh)
+	(cd $PARFLOW_SRC/sundials && rm -f `find . -name Makefile` )
     fi
 else
     if [ ! -f $PARFLOW_SRC/sundials/config.status ]
