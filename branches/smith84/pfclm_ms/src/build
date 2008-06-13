@@ -41,8 +41,6 @@ fi
 #=============================================================================
 . $PARFLOW_SRC/config/getarch
 
-    
-
 args=$*
 
 #=============================================================================
@@ -160,13 +158,13 @@ fi
 # Build CLM
 #
 #=============================================================================
-echo "Building CLM"
-if [ "$PF_CLEAN_FLAG" ]
-then
-    (cd $PARFLOW_SRC/parflow_lib/clm && make clean)
-else
-    (cd $PARFLOW_SRC/parflow_lib/clm && make)
-fi
+# echo "Building CLM"
+# if [ "$PF_CLEAN_FLAG" ]
+# then
+#    (cd $PARFLOW_SRC/parflow_lib/clm && make clean)
+# else
+#    (cd $PARFLOW_SRC/parflow_lib/clm && make)
+# fi
 
 #=============================================================================
 #

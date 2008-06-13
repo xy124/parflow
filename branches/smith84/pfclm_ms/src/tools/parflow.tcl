@@ -223,6 +223,10 @@ proc Parflow::pfrun { runname args } {
 
     puts [exec $Parflow::PARFLOW_DIR/bin/bootmc $NumProcs]
     puts [exec $Parflow::PARFLOW_DIR/bin/getmc $NumProcs]
+    #
+    # SGS this change done at some point breaks the pattern for how Parflow was setup to execute the "run" script. 
+    # Not all of the run scripts currently understand the arg change and even the ones that do are broken.
+    #
     ##puts [eval exec $Parflow::PARFLOW_DIR/bin/run $run_args $runname]
     puts [eval exec $Parflow::PARFLOW_DIR/bin/run  $runname $NumProcs $NumNodes  > pfout.txt]
     puts [exec $Parflow::PARFLOW_DIR/bin/freemc]
