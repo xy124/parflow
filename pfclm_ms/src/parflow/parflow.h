@@ -24,9 +24,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#ifndef _WIN32
-#include <values.h>
-#endif
+#include <limits.h>
+#include <float.h>
 
 #include <amps.h>
 

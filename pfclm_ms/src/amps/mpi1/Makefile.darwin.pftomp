@@ -14,12 +14,8 @@
 INTERNAL_FLAGS = -I/include -I$(PARFLOW_SRC)/amps/mpi1 -I$(PARFLOW_SRC)/parflow_lib -DAMPS_BSD_TIME -DAMPS_BYTE_SWAP -DAMPS_SPLIT_FFILE -DAMPS_PRINT_HOSTNAME -DAMPS_UNISTD
 
 INTERNAL_LIBS = \
-	      $(PARFLOW_SRC)/lib/parflow.linux.a \
-	      $(PARFLOW_SRC)/lib/amps.mpi1.linux.a 
-
-# SGS CLM is not needed for this version of Parflow, the calls
-# have been commented out
-#	      $(PARFLOW_SRC)/lib/clm.a
+	      $(PARFLOW_SRC)/lib/parflow.darwin.a \
+	      $(PARFLOW_SRC)/lib/amps.mpi1.darwin.a
 
 NODE_OBJ1 = ${PF_SRC:.c=.o}
 NODE_OBJ = ${NODE_OBJ1:.F=.o}

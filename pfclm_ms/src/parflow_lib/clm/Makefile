@@ -78,4 +78,4 @@ $(LIBRARY): $(OBJECTS)
 	ar rvu $@ $(OBJECTS)
 
 .F90.o:
-	ifort -c -g $<
+	$(PF_NODE_F90) -c -g $<

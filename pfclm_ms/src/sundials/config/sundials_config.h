@@ -18,8 +18,8 @@
 #define SUNDIALS_PACKAGE_VERSION "2.2.0"
 
 /* FCMIX: Define Fortran name-mangling macro */
-#define F77_FUNC(name,NAME) name ## _
-#define F77_FUNC_(name,NAME) name ## _
+
+
 
 /* FCMIX: Define case of function names */
 
@@ -34,4 +34,4 @@
 #define SUNDIALS_USE_GENERIC_MATH 1
 
 /* FNVECTOR: Allow user to specify different MPI communicator */
-#define SUNDIALS_MPI_COMM_F2C 1
+
