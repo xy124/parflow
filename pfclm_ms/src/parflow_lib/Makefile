@@ -197,6 +197,6 @@ PF_DEPEND = \
 	well.h 
 
 clean: 
-	@/bin/rm -f $(PF_LIBNAME).a
+	@/bin/rm -f *$(PF_OEXT) *$(PF_EXT)
 
 include $(PARFLOW_SRC)/amps/$(PF_COMM)/Makefile.$(PF_ARCH).pftomp
