@@ -511,6 +511,10 @@ void AdvanceRichards(PFModule *this_module,
 		     double start_time,      /* Starting time */
 		     double stop_time,       /* Stopping time */
 		     double dt,              /* Suggested dt, may be overridden */
+		     int compute_time_step,  /* Flag if true (!= 0)
+						then compute timestep
+						else use provided
+						dt */
 		     Vector *evap_trans,     /* Flux from land surface model */
 		     
 		                             /* Output */
@@ -642,69 +646,75 @@ void AdvanceRichards(PFModule *this_module,
 	  
 	if (converged)
 	{
-           PFModuleInvoke(void, select_time_step, (&dt, &dt_info, t, problem,
+	   if(compute_time_step) {
+	      PFModuleInvoke(void, select_time_step, (&dt, &dt_info, t, problem,
                                                    problem_data) );
  
-	   PFVCopy(instance_xtra -> density,    instance_xtra -> old_density);
-	   PFVCopy(instance_xtra -> viscosity,  instance_xtra -> old_viscosity);
-	   PFVCopy(instance_xtra -> saturation, instance_xtra -> old_saturation);
-	   PFVCopy(instance_xtra -> content->specie[0], instance_xtra -> old_pressure);
-	   PFVCopy(instance_xtra -> content->specie[1], instance_xtra -> old_temperature);
-
-          /* sk: call to the land surface model/subroutine*/
-           if (dump_files==1) {
-           ForSubgridI(is, GridSubgrids(grid))
-           {
-             subgrid = GridSubgrid(grid, is);
-             p_sub = VectorSubvector(instance_xtra -> pressure, is);
-             s_sub  = VectorSubvector(instance_xtra -> saturation, is);
-             t_sub  = VectorSubvector(instance_xtra -> temperature, is);
-             et_sub = VectorSubvector(evap_trans, is);
-             es_sub = VectorSubvector(instance_xtra -> clm_energy_source, is);
-             ft_sub = VectorSubvector(instance_xtra -> forc_t, is);
-             m_sub = VectorSubvector(instance_xtra -> mask, is);
-             po_sub = VectorSubvector(porosity, is);
- 
-             nx = SubgridNX(subgrid);
-             ny = SubgridNY(subgrid);
-             nz = SubgridNZ(subgrid);
- 
-             ix = SubgridIX(subgrid);
-             iy = SubgridIY(subgrid);
-             iz = SubgridIZ(subgrid);
- 
-             dx = SubgridDX(subgrid);
-             dy = SubgridDY(subgrid);
-             dz = SubgridDZ(subgrid);
- 
-             nx_f = SubvectorNX(et_sub);
-             ny_f = SubvectorNY(et_sub);
-             nz_f = SubvectorNZ(et_sub);
- 
-             sp  = SubvectorData(s_sub);
-             pp = SubvectorData(p_sub);
-             tp = SubvectorData(t_sub);
-             et = SubvectorData(et_sub);
-             es = SubvectorData(es_sub);
-             ft = SubvectorData(ft_sub);
-             ms = SubvectorData(m_sub);
-             po_dat = SubvectorData(po_sub);
- 
-             ip = SubvectorEltIndex(p_sub, ix, iy, iz);
-	     // printf("Before %d %d %d \n",nx, ny,nz);
-	     // CALL_CLM_LSM(pp,sp,tp,et,es,ft,ms,po_dat,dt,t,dx,dy,dz,ix,iy,nx,ny,nz,nx_f,ny_f,nz_f,ip,p,q,r,rank);
-	     // printf("After\n");
-           }
-          handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
-          FinalizeVectorUpdate(handle);
- 
-          handle = InitVectorUpdate(instance_xtra -> clm_energy_source, VectorUpdateAll);
-          FinalizeVectorUpdate(handle);
-
-          handle = InitVectorUpdate(instance_xtra -> forc_t, VectorUpdateAll);
-          FinalizeVectorUpdate(handle);
-          }
-
+	      PFVCopy(instance_xtra -> density,    instance_xtra -> old_density);
+	      PFVCopy(instance_xtra -> viscosity,  instance_xtra -> old_viscosity);
+	      PFVCopy(instance_xtra -> saturation, instance_xtra -> old_saturation);
+	      PFVCopy(instance_xtra -> content->specie[0], instance_xtra -> old_pressure);
+	      PFVCopy(instance_xtra -> content->specie[1], instance_xtra -> old_temperature);
+	      
+	      /* sk: call to the land surface model/subroutine*/
+	      if (dump_files==1) 
+	      {
+		 ForSubgridI(is, GridSubgrids(grid))
+		 {
+		    subgrid = GridSubgrid(grid, is);
+		    p_sub = VectorSubvector(instance_xtra -> pressure, is);
+		    s_sub  = VectorSubvector(instance_xtra -> saturation, is);
+		    t_sub  = VectorSubvector(instance_xtra -> temperature, is);
+		    et_sub = VectorSubvector(evap_trans, is);
+		    es_sub = VectorSubvector(instance_xtra -> clm_energy_source, is);
+		    ft_sub = VectorSubvector(instance_xtra -> forc_t, is);
+		    m_sub = VectorSubvector(instance_xtra -> mask, is);
+		    po_sub = VectorSubvector(porosity, is);
+		    
+		    nx = SubgridNX(subgrid);
+		    ny = SubgridNY(subgrid);
+		    nz = SubgridNZ(subgrid);
+		    
+		    ix = SubgridIX(subgrid);
+		    iy = SubgridIY(subgrid);
+		    iz = SubgridIZ(subgrid);
+		    
+		    dx = SubgridDX(subgrid);
+		    dy = SubgridDY(subgrid);
+		    dz = SubgridDZ(subgrid);
+		    
+		    nx_f = SubvectorNX(et_sub);
+		    ny_f = SubvectorNY(et_sub);
+		    nz_f = SubvectorNZ(et_sub);
+		    
+		    sp  = SubvectorData(s_sub);
+		    pp = SubvectorData(p_sub);
+		    tp = SubvectorData(t_sub);
+		    et = SubvectorData(et_sub);
+		    es = SubvectorData(es_sub);
+		    ft = SubvectorData(ft_sub);
+		    ms = SubvectorData(m_sub);
+		    po_dat = SubvectorData(po_sub);
+		    
+		    ip = SubvectorEltIndex(p_sub, ix, iy, iz);
+		    // printf("Before %d %d %d \n",nx, ny,nz);
+		    // CALL_CLM_LSM(pp,sp,tp,et,es,ft,ms,po_dat,dt,t,dx,dy,dz,ix,iy,nx,ny,nz,nx_f,ny_f,nz_f,ip,p,q,r,rank);
+		    // printf("After\n");
+		 }
+		 handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+		 FinalizeVectorUpdate(handle);
+		 
+		 handle = InitVectorUpdate(instance_xtra -> clm_energy_source, VectorUpdateAll);
+		 FinalizeVectorUpdate(handle);
+		 
+		 handle = InitVectorUpdate(instance_xtra -> forc_t, VectorUpdateAll);
+		 FinalizeVectorUpdate(handle);
+	      }
+	   } else  // Do not compute timestep
+	   {
+	      // Simply use DT provided; don't use select_time_step module.
+	      // Note DT will still be reduced if solution does not converge.
+	   }
 	}
 	else  /* Not converged, so decrease time step */
 	{
@@ -762,7 +772,7 @@ void AdvanceRichards(PFModule *this_module,
          * If this is the last iteration, set appropriate variables. 
          *--------------------------------------------------------------*/
          
-        printf("Stop time %40.20f \n", stop_time);
+        printf("SolverRichard::Advance :  stop time %40.20f \n", stop_time);
         if ( (t + dt) > stop_time )
         {   
            dt = stop_time - t;
@@ -797,7 +807,7 @@ void AdvanceRichards(PFModule *this_module,
 				 instance_xtra -> y_velocity, 
 				 instance_xtra -> z_velocity));
 
-	printf("Outflow , %e\n",outflow);
+	printf("SolverRichard::Advance : Outflow , %e\n",outflow);
 
 	if (retval != 0)
 	{
@@ -1476,6 +1486,9 @@ void      SolverRichards() {
    Vector       *porosity_out;
    Vector       *saturation_out;
 
+   // AdvanceRichards should use select_time_step module to compute dt.
+   int compute_time_step = 1; 
+                           
    /* 
     * sk: Vector that contains the sink terms from the land surface model 
     */ 
@@ -1491,6 +1504,7 @@ void      SolverRichards() {
 		   start_time, 
 		   stop_time, 
 		   dt, 
+		   compute_time_step, 
 		   evap_trans,
 		   &pressure_out, 
                    &porosity_out,

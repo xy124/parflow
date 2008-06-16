@@ -890,6 +890,7 @@ PFModule *SolverRichardsNewPublicXtra P((char *name ));
 void SolverRichardsFreePublicXtra P((void ));
 int SolverRichardsSizeOfTempData P((void ));
 
+
 /* subsrf_sim.c */
 void SubsrfSim P((ProblemData *problem_data , Vector *perm_x , Vector *perm_y , Vector *perm_z , int num_geounits , GeomSolid **geounits , GrGeomSolid **gr_geounits ));
 PFModule *SubsrfSimInitInstanceXtra P((Grid *grid , double *temp_data ));
@@ -897,6 +898,16 @@ void SubsrfSimFreeInstanceXtra P((void ));
 PFModule *SubsrfSimNewPublicXtra P((void ));
 void SubsrfSimFreePublicXtra P((void ));
 int SubsrfSimSizeOfTempData P((void ));
+void AdvanceRichards P((PFModule *this_module, 
+		       double start_time,      
+		       double stop_time,       
+		       double dt,              
+		       int compute_time_step,  
+		       Vector *evap_trans,     
+		       Vector **pressure_out,  
+		       Vector **porosity_out,
+			Vector **saturation_out));
+void SetupRichards P((PFModule *this_module));
 
 /* time_cycle_data.c */
 TimeCycleData *NewTimeCycleData P((int number_of_cycles , int *number_of_intervals ));

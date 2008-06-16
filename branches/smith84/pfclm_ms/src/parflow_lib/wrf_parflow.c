@@ -89,7 +89,9 @@ void wrfparflowadvance_()
    // SGS These need to come from arguments; passed by WRF
    double        start_time          = 0.0;
    double        stop_time           = 0.001;
-   double        dt                  = 0.0;
+   // SGS This looks very odd....came from sgs_richards_test logfile but 
+   // seems very small.
+   double        dt                  = 1.776357e-18;
    
    Grid         *grid;
    
@@ -98,7 +100,11 @@ void wrfparflowadvance_()
    Vector       *saturation_out;
    
    Vector       *evap_trans;
-   
+
+   // AdvanceRichards should not use select_time_step module to compute dt.
+   // Use the provided dt with possible subcycling if it does not converge.
+   int compute_time_step = 0; 
+                           
    /* Create the flow grid */
    grid = CreateGrid(GlobalsUserGrid);
    
@@ -109,6 +115,7 @@ void wrfparflowadvance_()
 		   start_time, 
 		   stop_time, 
 		   dt, 
+		   compute_time_step,
 		   evap_trans,
 		   &pressure_out, 
 		   &porosity_out,
