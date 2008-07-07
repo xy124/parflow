@@ -7,7 +7,10 @@
  * $Revision: 1.1.1.1 $
  *********************************************************************EHEADER*/
 
+
 #include "amps.h"
+
+#ifndef AMPS_EXCHANGE_SPECIALIZED
 
 void _amps_wait_exchange(amps_Handle handle)
 {
@@ -62,3 +65,5 @@ amps_Handle amps_IExchangePackage(amps_Package package)
 
    return( amps_NewHandle(NULL, 0, NULL, package));
 }
+
+#endif

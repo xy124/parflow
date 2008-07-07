@@ -9,6 +9,7 @@
 
 #include "amps.h"
 
+#ifndef AMPS_NEWPACKAGE_SPECIALIZED
 
 amps_Package amps_NewPackage(amps_Comm comm,
 			     int num_send,
@@ -43,3 +44,5 @@ void amps_FreePackage(amps_Package package)
     free(package -> recv_handles);
   free(package);
 }
+
+#endif
