@@ -31,6 +31,7 @@ AMPS_FLAGS = -DAMPS_BSD_TIME -DAMPS_BYTE_SWAP -DAMPS_SPLIT_FFILE -DAMPS_PRINT_HO
 
 # SGS should this be generated from something?
 AMPS_LIB                        = libamps.a
+AMPS_COMMON_LIB                 = libamps_common.a
 PARFLOW_LIB                     = libparflow.a
 
 PARFLOW_INCLUDE_DIR             = $(PARFLOW)/parflow_lib
@@ -38,7 +39,7 @@ PARFLOW_CONFIGURE_INCLUDE_DIR   = $(OBJECT)/include
 PARFLOW_LIB_DIR                 = $(OBJECT)/lib
 PARFLOW_BIN_DIR                 = $(OBJECT)/bin
 
-PARFLOW_LIBS = -L$(PARFLOW_LIB_DIR) -lparflow -lamps
+PARFLOW_LIBS = -L$(PARFLOW_LIB_DIR) -lparflow -lamps -lamps_common
 
 LIB_SUFFIX=@LIB_SUFFIX@
 

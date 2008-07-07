@@ -31,10 +31,10 @@ OBJS = \
 	amps_wait.o \
 	signal.o 
 
-$(PARFLOW_LIB_DIR)/$(AMPS_LIB): $(OBJS)
-	@AR@ ru $(PARFLOW_LIB_DIR)/$(AMPS_LIB) $(OBJS)
+$(PARFLOW_LIB_DIR)/$(AMPS_COMMON_LIB): $(OBJS)
+	@AR@ ru $(PARFLOW_LIB_DIR)/$(AMPS_COMMON_LIB) $(OBJS)
 
-amps: $(PARFLOW_LIB_DIR)/$(AMPS_LIB)
+amps: $(PARFLOW_LIB_DIR)/$(AMPS_COMMON_LIB)
 
 clean:
 	$(PARFLOW_CLEAN)
