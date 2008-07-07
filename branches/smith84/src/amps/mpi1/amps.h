@@ -20,7 +20,6 @@
 #endif
 #endif
 
-
 #include <strings.h>
 #include <stdio.h>
 #include <sys/times.h>
@@ -1019,6 +1018,8 @@ allocated by \Ref{amps_TAlloc} or \Ref{amps_CTAlloc}.
 
 #include "amps_proto.h"
 
+#define AMPS_EXCHANGE_SPECIALIZED 1
+#define AMPS_NEWPACKAGE_SPECIALIZED 1
 
 
 
