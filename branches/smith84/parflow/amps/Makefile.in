@@ -8,13 +8,13 @@ SRCDIR	      =	@srcdir@
 SUBDIR        = amps
 OBJECT        = ..
 
-default: amps
+default: all
 
 include $(OBJECT)/config/Makefile.config
 
 SUBDIRS = common $(AMPS) 
 
-amps:
+all:
 	@for DIR in $(SUBDIRS); do if test -d $$DIR; then (cd $$DIR && $(MAKE) $@) ; fi || exit 1; done
 
 clean:

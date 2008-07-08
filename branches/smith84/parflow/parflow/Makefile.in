@@ -1,5 +1,4 @@
 ##
-## File:	$URL$
 ## Package:	Parflow
 ## Copyright:	(c) 1997-2008 Lawrence Livermore National Security, LLC
 ## Revision:	$LastChangedRevision: 2026 $
@@ -14,7 +13,7 @@ OBJECT        = ..
 
 include $(OBJECT)/config/Makefile.config
 
-default: $(PARFLOW_BIN_DIR)/parflow
+default: all
 
 OBJS = \
 	parflow.o
@@ -22,6 +21,8 @@ OBJS = \
 $(PARFLOW_BIN_DIR)/parflow: $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) \
 			$(PARFLOW_LIBS) $(LDLIBS) -o $@
+
+all: $(PARFLOW_BIN_DIR)/parflow
 
 clean:
 	$(PARFLOW_CLEAN)

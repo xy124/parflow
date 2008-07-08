@@ -11,7 +11,7 @@
 #  Makefile for parflow tools.
 # 
 
-PROJECT=parflow
+PROJECT       = parflow
 
 PARFLOW	      =	@top_srcdir@
 SRCDIR	      =	@srcdir@
@@ -21,7 +21,9 @@ OBJECT        = .
 
 include $(OBJECT)/config/Makefile.config
 
-default: $(PARFLOW_TOOLS_BIN_DIR)/pfwell_cat $(PARFLOW_TOOLS_BIN_DIR)/pfwell_data gms_tools $(PARFLOW_TOOLS_BIN_DIR)/$(PROJECT)$(PARFLOW_TOOLS_SHLIB_SUFFIX)
+default: all
+
+all: $(PARFLOW_TOOLS_BIN_DIR)/pfwell_cat $(PARFLOW_TOOLS_BIN_DIR)/pfwell_data gms_tools $(PARFLOW_TOOLS_BIN_DIR)/$(PROJECT)$(PARFLOW_TOOLS_SHLIB_SUFFIX)
 
 INSTALL	    = sh @srcdir@/config/install-sh
 INSTDIR	    = @INSTDIR@
@@ -115,7 +117,7 @@ $(PARFLOW_TOOLS_BIN_DIR)/$(PROJECT)$(PARFLOW_TOOLS_SHLIB_SUFFIX): Makefile $(TOO
 clean:	
 	@$(PARFLOW_CLEAN) 
 
-install: default
+install: all
 	$(INSTALL) -d -m 755 $(PARFLOW_INSTALL_DIR)/lib
 	$(INSTALL) -d -m 755 $(PARFLOW_INSTALL_DIR)/bin
 	for i in bin/*; do				        \
