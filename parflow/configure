@@ -10894,6 +10894,80 @@ _ACEOF
 fi
 
 
+  { echo "$as_me:$LINENO: checking for gettimeofday" >&5
+echo $ECHO_N "checking for gettimeofday... $ECHO_C" >&6; }
+  if test "${casc_cv_gettimeofday+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+  if test "$cross_compiling" = yes; then
+  casc_cv_gettimeofday=no
+
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+  #include <sys/time.h>
+  int main()
+  {
+     struct timeval r_time;
+     return gettimeofday(&r_time, 0);
+  }
+
+_ACEOF
+rm -f conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  casc_cv_gettimeofday=yes
+else
+  echo "$as_me: program exited with status $ac_status" >&5
+echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+( exit $ac_status )
+casc_cv_gettimeofday=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
+fi
+
+ # end of TRY_RUN
+fi
+ # end of CACHE_VAL
+
+  { echo "$as_me:$LINENO: result: $casc_cv_gettimeofday" >&5
+echo "${ECHO_T}$casc_cv_gettimeofday" >&6; }
+  if test x$casc_cv_gettimeofday = xyes
+  then
+
+cat >>confdefs.h <<\_ACEOF
+#define CASC_HAVE_GETTIMEOFDAY 1
+_ACEOF
+
+  fi
+
+
+
 
 # Begin CASC_SUPPORT_SILO
 # Defines silo_PREFIX silo_INCLUDES and silo_LIBS if with-silo is specified.

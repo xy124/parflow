@@ -29,7 +29,7 @@
 
 #define amps_CommWorld 0
 
-#ifdef AMPS_BSD_TIME
+#ifdef CACS_GETTIMEOFDAY
 #define AMPS_TICKS_PER_SEC 10000
 #endif 
 

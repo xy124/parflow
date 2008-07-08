@@ -6,6 +6,8 @@
  *
  * $Revision: 1.1.1.1 $
  *********************************************************************EHEADER*/
+#include "parflow_config.h"
+
 #ifdef AMPS_MALLOC_DEBUG
 #include <dmalloc.h>
 #else
@@ -201,7 +203,7 @@ manually kill of dangling nodes.
 #define AMPS_INVOICE_OVERLAYED 2
 #define AMPS_INVOICE_NON_OVERLAYED 4
 
-#ifdef AMPS_BSD_TIME
+#ifdef CASC_HAVE_GETTIMEOFDAY
 typedef long amps_Clock_t;
 #define AMPS_TICKS_PER_SEC 10000
 typedef clock_t amps_CPUClock_t;
