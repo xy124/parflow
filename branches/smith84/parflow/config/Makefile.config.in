@@ -19,6 +19,9 @@
 
 SHELL         = /bin/sh
 
+INSTALL	                        = sh $(PARFLOW)/config/install-sh
+PARFLOW_INSTALL_DIR	        = @INSTDIR@
+
 # SGS Fix this to be a configure option
 AMPS                            = mpi1
 AMPS_DIR                        = amps/$(AMPS)

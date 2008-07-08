@@ -10,7 +10,7 @@ dnl
 AC_INIT(COPYRIGHT_and_DISCLAIMER)
 AC_CONFIG_HEADER(include/parflow_config.h:config/parflow_config.h.in)
 
-AC_CONFIG_AUX_DIR(acmacros)
+AC_CONFIG_AUX_DIR(../acmacros)
 
 # Get system type.
 AC_CANONICAL_SYSTEM

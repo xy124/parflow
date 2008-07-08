@@ -11,14 +11,13 @@ default: parflowexe
 
 include ./config/Makefile.config
 
-SUBDIR  = .
-SRCDIR  = @srcdir@
-OBJECT  = .
+PARFLOW	      =	@top_srcdir@
+
+SUBDIR        = .
+SRCDIR        = @srcdir@
+OBJECT        = .
 
 SUBDIRS = amps parflow_lib parflow
-
-INSTALL	    = sh @srcdir@/config/install-sh
-INSTDIR	    = @INSTDIR@
 
 parflowexe:
 	( cd amps && $(MAKE) amps) || exit 1
@@ -32,7 +31,16 @@ clean:
 	@$(PARFLOW_CLEAN)
 
 install:
-	$(INSTALL) -d -m 755 $(INSTDIR)/config
-	$(INSTALL) -d -m 755 $(INSTDIR)/lib
-	$(INSTALL) -d -m 755 $(INSTDIR)/bin
+	$(INSTALL) -d -m 755 $(PARFLOW_INSTALL_DIR)/lib
+	$(INSTALL) -d -m 755 $(PARFLOW_INSTALL_DIR)/bin
+	for i in lib/*; do				        \
+	   $(INSTALL) -c -m 644 $$i $(PARFLOW_INSTALL_DIR)/lib; \
+	done
+	for i in bin/*; do				        \
+	   $(INSTALL) -c -m 755 $$i $(PARFLOW_INSTALL_DIR)/bin; \
+	done
+	for i in batchmc bootmc freemc getmc killmc peekmc run; do           \
+	   $(INSTALL) -c -m 755 $(PARFLOW)/amps/$(AMPS)/$$i $(PARFLOW_INSTALL_DIR)/bin; \
+	done			
+
 
