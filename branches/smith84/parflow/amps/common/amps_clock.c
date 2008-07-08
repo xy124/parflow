@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include "amps.h"
 
-#ifdef AMPS_BSD_TIME
+#ifdef CASC_HAVE_GETTIMEOFDAY
 
 amps_Clock_t amps_start_clock=0;
 

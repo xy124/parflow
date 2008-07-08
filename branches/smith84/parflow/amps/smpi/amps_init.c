@@ -87,7 +87,7 @@ int amps_Init(int *argc, char **argv[])
    setbuf (stdout, NULL);
 #endif
 
-#ifdef AMPS_BSD_TIME
+#ifdef CASC_HAVE_GETTIMEOFDAY
    amps_clock_init();
 #endif
 
