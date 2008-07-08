@@ -20,7 +20,6 @@ OBJS = \
 	parflow.o
 
 $(PARFLOW_BIN_DIR)/parflow: $(OBJS)
-	echo "SGS $(PARFLOW_LIBS)"
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) \
 			$(PARFLOW_LIBS) $(LDLIBS) -o $@
 
