@@ -9,7 +9,7 @@ SUBDIR        = amps/$(AMPS)
 VPATH	      =	@srcdir@
 OBJECT        = ../..
 
-default: amps
+default: all
 
 include $(OBJECT)/config/Makefile.config
 
@@ -36,7 +36,7 @@ OBJS = \
 $(PARFLOW_LIB_DIR)/$(AMPS_LIB): $(OBJS)
 	@AR@ ru $(PARFLOW_LIB_DIR)/$(AMPS_LIB) $(OBJS)
 
-amps: $(PARFLOW_LIB_DIR)/$(AMPS_LIB)
+all: $(PARFLOW_LIB_DIR)/$(AMPS_LIB)
 
 clean:
 	$(PARFLOW_CLEAN)

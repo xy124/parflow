@@ -12,7 +12,7 @@ SUBDIR        = parflow_lib
 VPATH	      =	@srcdir@
 OBJECT        = ..
 
-default: parflowlib
+default: all
 
 include $(OBJECT)/config/Makefile.config
 
@@ -160,7 +160,7 @@ OBJS = \
 $(PARFLOW_LIB_DIR)/$(PARFLOW_LIB): $(OBJS)
 	@AR@ ru $(PARFLOW_LIB_DIR)/$(PARFLOW_LIB) $(OBJS)
 
-parflowlib: $(PARFLOW_LIB_DIR)/$(PARFLOW_LIB)
+all: $(PARFLOW_LIB_DIR)/$(PARFLOW_LIB)
 
 clean:
 	$(PARFLOW_CLEAN)
