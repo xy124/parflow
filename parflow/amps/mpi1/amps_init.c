@@ -12,12 +12,7 @@
 #include <sys/param.h>
 #include <stdlib.h>
 
-#ifdef AMPS_UNISTD
 #include <unistd.h>
-#else
-#include <sys/unistd.h>
-#endif
-
 #include <sys/times.h>
 
 #include "amps.h"
