@@ -843,7 +843,7 @@ amps_Fclose(file);
 /* The following routines are used to actually write data to a file.         */
 /* We use XDR like representation for all values written.                    */
 /*---------------------------------------------------------------------------*/
-#ifdef AMPS_BYTE_SWAP
+#ifndef CASC_HAVE_BIGENDIAN
 
 /*---------------------------------------------------------------------------*/
 /* On the nodes store numbers with wrong endian so we need to swap           */

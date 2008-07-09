@@ -286,7 +286,7 @@ typedef amps_HandleObject *amps_Handle;
 #define amps_WriteFloat(file, ptr, len) \
     fwrite( (ptr), sizeof(float), (len), (FILE *)(file) )
 
-#ifndef AMPS_BYTE_SWAP
+#ifdef CASC_HAVE_BIGENDIAN
 
 #define amps_WriteInt(file, ptr, len) \
     fwrite( (ptr), sizeof(int), (len), (FILE *)(file) )
@@ -309,7 +309,7 @@ typedef amps_HandleObject *amps_Handle;
 #define amps_ReadFloat(file, ptr, len) \
     fread( (ptr), sizeof(float), (len), (FILE *)(file) )
 
-#ifndef AMPS_BYTE_SWAP
+#ifdef CASC_HAVE_BIGENDIAN
 
 #define amps_ReadInt(file, ptr, len) \
     fread( (ptr), sizeof(int), (len), (FILE *)(file) )

@@ -99,7 +99,7 @@ int stride;
 
 }
 
-#ifdef AMPS_BYTE_SWAP
+#ifndef CASC_HAVE_BIGENDIAN
 
 #include <stdio.h>
 

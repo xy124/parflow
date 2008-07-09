@@ -25,6 +25,10 @@
 #undef CASC_HAVE_GETTIMEOFDAY
 #endif
 
+#ifndef CASC_HAVE_BIGENDIAN
+#undef CASC_HAVE_BIGENDIAN
+#endif
+
 /*
  * X11 libraries
  */

@@ -29,7 +29,7 @@
 #define tools_SizeofDouble sizeof(double)
 
 
-#ifdef TOOLS_BYTE_SWAP
+#ifndef CASC_HAVE_BIGENDIAN
  
 void tools_WriteInt();
  

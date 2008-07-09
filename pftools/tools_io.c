@@ -102,8 +102,7 @@ int len;
 
 #endif
 
-
-#ifdef TOOLS_BYTE_SWAP	
+#ifndef CASC_HAVE_BIGENDIAN
 
 #include <stdio.h>	
 

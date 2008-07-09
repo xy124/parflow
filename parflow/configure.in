@@ -293,6 +293,8 @@ dnl Check if BSD gettimeofday is present
 dnl
 CASC_CHECK_GETTIMEOFDAY
 
+CASC_CHECK_BIGENDIAN
+
 dnl
 dnl Silo support
 dnl
