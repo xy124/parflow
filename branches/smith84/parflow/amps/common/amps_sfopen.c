@@ -42,6 +42,7 @@ amps_SFclose(file);
 @param type Mode to open file [IN]
 @return shared fille handle
 */
+#ifndef AMPS_SFOPEN_SPECIALIZED
 amps_File amps_SFopen(char *filename,char *type)
 {
 
@@ -50,3 +51,4 @@ amps_File amps_SFopen(char *filename,char *type)
    else
       return fopen(filename, type);
 }
+#endif

@@ -693,6 +693,7 @@ MPILIBDIRS
 MPILIBS
 MPIFLAGS
 AMPS
+AMPS_LIBS
 SUNDIALS_C_FILES
 INSTDIR
 M4
@@ -10932,8 +10933,18 @@ echo "$as_me: error: Invalid AMPS version specified, use seq, mpi1, smpi, win32"
    { (exit 1); exit 1; }; }
   ;;
 esac
+
+case $AMPS in
+  seq)
+    AMPS_LIBS="-lamps_common"
+  ;;
+  *)
+    AMPS_LIBS="-lamps -lamps_common"
+  ;;
+esac
 { echo "$as_me:$LINENO: result: configuring AMPS $AMPS support" >&5
 echo "${ECHO_T}configuring AMPS $AMPS support" >&6; }
+
 
 
 cat >>confdefs.h <<_ACEOF
@@ -12194,6 +12205,7 @@ MPILIBDIRS!$MPILIBDIRS$ac_delim
 MPILIBS!$MPILIBS$ac_delim
 MPIFLAGS!$MPIFLAGS$ac_delim
 AMPS!$AMPS$ac_delim
+AMPS_LIBS!$AMPS_LIBS$ac_delim
 SUNDIALS_C_FILES!$SUNDIALS_C_FILES$ac_delim
 INSTDIR!$INSTDIR$ac_delim
 M4!$M4$ac_delim
@@ -12210,7 +12222,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 94; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 95; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

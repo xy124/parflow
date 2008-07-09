@@ -42,7 +42,9 @@ PARFLOW_CONFIGURE_INCLUDE_DIR   = $(OBJECT)/include
 PARFLOW_LIB_DIR                 = $(OBJECT)/lib
 PARFLOW_BIN_DIR                 = $(OBJECT)/bin
 
-PARFLOW_LIBS = -L$(PARFLOW_LIB_DIR) -lparflow -lamps -lamps_common
+AMPS_LIBS=@AMPS_LIBS@
+
+PARFLOW_LIBS = -L$(PARFLOW_LIB_DIR) -lparflow $(AMPS_LIBS)
 
 LIB_SUFFIX=@LIB_SUFFIX@
 

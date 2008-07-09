@@ -9,6 +9,7 @@
 
 #include "amps.h"
 
+#ifndef AMPS_NEWHANDLE_SPECIALIZED
 amps_Handle amps_NewHandle(comm, id, invoice, package)
 amps_Comm comm;
 int id;
@@ -28,3 +29,4 @@ amps_Package package;
 
    return handle;
 }
+#endif

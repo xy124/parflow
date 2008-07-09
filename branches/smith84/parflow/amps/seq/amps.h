@@ -7,6 +7,8 @@
  * $Revision: 1.1.1.1 $
  *********************************************************************EHEADER*/
 
+#include "parflow_config.h"
+
 #include <stdio.h>
 #include <sys/times.h>
 
@@ -14,8 +16,14 @@
 #include <gmalloc.h>
 #else
 #include <stdlib.h>
-#include <malloc.h>
 #endif
+
+#define AMPS_EXCHANGE_SPECIALIZED 
+#define AMPS_FOPEN_SPECIALIZED
+#define AMPS_NEWHANDLE_SPECIALIZED
+#define AMPS_SFCLOSE_SPECIALIZED
+#define AMPS_SFOPEN_SPECIALIZED
+#define AMPS_WAIT_SPECIALIZED
 
 #define amps_ThreadLocal(arg) arg
 #define amps_ThreadLocalDcl(type, arg) type arg
@@ -29,7 +37,7 @@
 
 #define amps_CommWorld 0
 
-#ifdef CACS_GETTIMEOFDAY
+#ifdef CASC_HAVE_GETTIMEOFDAY
 #define AMPS_TICKS_PER_SEC 10000
 #endif 
 

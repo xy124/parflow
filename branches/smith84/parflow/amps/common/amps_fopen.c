@@ -50,6 +50,9 @@ the current time.
 @param filename Filename of the file to operate on [IN]
 @param type Mode options [IN]
 @return File handle*/
+
+#ifndef AMPS_FOPEN_SPECIALIZED
+
 amps_File amps_Fopen(char *filename, char *type)
 {
    char temp[255];
@@ -58,3 +61,5 @@ amps_File amps_Fopen(char *filename, char *type)
 
    return fopen(temp, type);
 }
+
+#endif

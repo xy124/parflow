@@ -32,6 +32,8 @@ amps_SFclose(file);
 @memo Close a shared file
 @param file Shared file handle
 @return Error code */
+
+#ifndef AMPS_SFCLOSE_SPECIALIZED
 int amps_SFclose(amps_File file)
 {
    if(amps_Rank(amps_CommWorld))
@@ -39,3 +41,4 @@ int amps_SFclose(amps_File file)
    else
       return fclose(file);
 }
+#endif
