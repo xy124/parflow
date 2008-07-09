@@ -6,22 +6,26 @@
  *
  * $Revision: 1.1.1.1 $
  *********************************************************************EHEADER*/
+
+#include "parflow_config.h"
+
 #ifdef AMPS_MALLOC_DEBUG
 #include <gmalloc.h>
 #else
 #ifdef AMPS_MALLOC_EFENCE
 #include <efence.h>
 #else
-#include <malloc.h>
 #include <stdlib.h>
 #endif
 #endif
-
 
 #include <strings.h>
 #include <stdio.h>
 #include <sys/times.h>
 #include <mpi.h>
+
+#define AMPS_EXCHANGE_SPECIALIZED
+#define AMPS_NEWPACKAGE_SPECIALIZED
 
 #ifndef FALSE
 #define FALSE 0
