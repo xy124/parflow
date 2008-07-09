@@ -29,8 +29,18 @@ case "$with_amps" in
     AC_MSG_ERROR([Invalid AMPS version specified, use seq, mpi1, smpi, win32])
   ;;    
 esac
+
+case $AMPS in
+  seq)
+    AMPS_LIBS="-lamps_common"
+  ;;
+  *) 
+    AMPS_LIBS="-lamps -lamps_common"
+  ;;
+esac
 AC_MSG_RESULT([configuring AMPS $AMPS support])
 AC_SUBST(AMPS)
+AC_SUBST(AMPS_LIBS)
 AC_DEFINE_UNQUOTED(AMPS,$AMPS,AMPS porting layer)
 
 AC_ARG_WITH(amps,

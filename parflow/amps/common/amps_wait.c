@@ -55,6 +55,7 @@ The requirement for to always finish an initiated communication with
 @param handle communication handle
 @return Error code
 */
+#ifndef AMPS_WAIT_SPECIALIZED
 int amps_Wait(amps_Handle handle)
 {
    if(handle)
@@ -70,3 +71,4 @@ int amps_Wait(amps_Handle handle)
 
    return 0;
 }
+#endif
