@@ -289,6 +289,11 @@ else
 fi
 
 dnl
+dnl Determine AMPS porting layer to use
+dnl
+CASC_SUPPORT_AMPS
+
+dnl
 dnl Check if BSD gettimeofday is present
 dnl
 CASC_CHECK_GETTIMEOFDAY
