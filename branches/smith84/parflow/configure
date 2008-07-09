@@ -10939,7 +10939,9 @@ case $AMPS in
     AMPS_LIBS="-lamps_common"
   ;;
   *)
-    AMPS_LIBS="-lamps -lamps_common"
+  # This is horrifically bad design but there are all kinds of
+  # dependencies between amps and amps_common
+    AMPS_LIBS="-lamps -lamps_common -lamps -lamps_common"
   ;;
 esac
 { echo "$as_me:$LINENO: result: configuring AMPS $AMPS support" >&5
