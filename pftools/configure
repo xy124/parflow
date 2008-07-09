@@ -687,6 +687,7 @@ GREP
 EGREP
 ac_ct_F77
 FLIBS
+AMPS
 INSTDIR
 M4
 XARGS
@@ -1300,6 +1301,8 @@ Optional Packages:
   --with-F77=ARG          manually set F77 to ARG
   --with-AR=ARG           manually set AR to ARG
   --with-x                use the X Window System
+ --with-amps=AMPS_TYPE  Set the version of AMPS to use: seq, mpi1, smpi, win32
+ --with-amps-sequential-io  Use AMPS sequentail I/O
  --with-silo=PATH  Use SILO and optionally specify where SILO is installed.
 
 Some influential environment variables:
@@ -9442,6 +9445,65 @@ _ACEOF
 
 
 
+# Begin CASC_SUPPORT_AMPS
+# Determine which AMPS layer to support.
+# Defines AMPS and AMPS_SPLIT_FILE
+
+# Check whether --with-amps was given.
+if test "${with_amps+set}" = set; then
+  withval=$with_amps;
+else
+  with_amps=seq
+fi
+
+
+case "$with_amps" in
+  no)
+    AMPS=seq
+  ;;
+  seq)
+    AMPS=seq
+  ;;
+  mpi1)
+    AMPS=mpi1
+  ;;
+  smpi)
+    AMPS=smpi
+  ;;
+  win32)
+    AMPS=win32
+  ;;
+  *)
+    { { echo "$as_me:$LINENO: error: Invalid AMPS version specified, use seq, mpi1, smpi, win32" >&5
+echo "$as_me: error: Invalid AMPS version specified, use seq, mpi1, smpi, win32" >&2;}
+   { (exit 1); exit 1; }; }
+  ;;
+esac
+{ echo "$as_me:$LINENO: result: configuring AMPS $AMPS support" >&5
+echo "${ECHO_T}configuring AMPS $AMPS support" >&6; }
+
+
+cat >>confdefs.h <<_ACEOF
+#define AMPS $AMPS
+_ACEOF
+
+
+
+# Check whether --with-amps was given.
+if test "${with_amps+set}" = set; then
+  withval=$with_amps; cat >>confdefs.h <<\_ACEOF
+#define AMPS_SPLIT_FILE 1
+_ACEOF
+
+fi
+
+
+# END CASC_SUPPORT_AMPS
+
+
+
+
+
 # Begin CASC_SUPPORT_SILO
 # Defines silo_PREFIX silo_INCLUDES and silo_LIBS if with-silo is specified.
 
@@ -10309,6 +10371,7 @@ GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
 ac_ct_F77!$ac_ct_F77$ac_delim
 FLIBS!$FLIBS$ac_delim
+AMPS!$AMPS$ac_delim
 INSTDIR!$INSTDIR$ac_delim
 M4!$M4$ac_delim
 XARGS!$XARGS$ac_delim
@@ -10324,7 +10387,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 87; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 88; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
