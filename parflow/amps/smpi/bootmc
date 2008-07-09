@@ -28,7 +28,7 @@ then
     exit 0
 fi
 
-if [ "`mpirun 2> /dev/null`" = "Missing: program name" ] 
+if which -s mpirun 
 then
     #
     # MPICH
