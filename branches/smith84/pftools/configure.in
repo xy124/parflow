@@ -260,6 +260,8 @@ LIB_PATH="${LIB_PATH} ${FLIBS_PATH}"
 
 CASC_CHECK_BIGENDIAN
 
+CASC_SUPPORT_AMPS
+
 dnl
 dnl Silo support
 dnl

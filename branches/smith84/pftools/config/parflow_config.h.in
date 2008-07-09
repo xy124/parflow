@@ -20,6 +20,9 @@
 #ifndef included_PARFLOW_config
 #define included_PARFLOW_config
 
+#ifndef AMPS_SPLIT_FILE
+#undef AMPS_SPLIT_FILE
+#endif
 
 #ifndef CASC_HAVE_GETTIMEOFDAY
 #undef CASC_HAVE_GETTIMEOFDAY

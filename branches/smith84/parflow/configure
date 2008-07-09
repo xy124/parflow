@@ -1321,6 +1321,7 @@ Optional Packages:
   --with-mpi-libs=LIBS    LIBS is space-separated list of library names
                           needed for MPI, e.g. \"nsl socket mpi\"
  --with-amps=AMPS_TYPE  Set the version of AMPS to use: seq, mpi1, smpi, win32
+ --with-amps-sequential-io  Use AMPS sequentail I/O
  --with-silo=PATH  Use SILO and optionally specify where SILO is installed.
   --with-sundials=PATH	Use the Sundials solver package
 			and specify where it is.
@@ -10899,7 +10900,7 @@ fi
 
 # Begin CASC_SUPPORT_AMPS
 # Determine which AMPS layer to support.
-# Defines AMPS
+# Defines AMPS and AMPS_SPLIT_FILE
 
 # Check whether --with-amps was given.
 if test "${with_amps+set}" = set; then
@@ -10938,6 +10939,16 @@ echo "${ECHO_T}configuring AMPS $AMPS support" >&6; }
 cat >>confdefs.h <<_ACEOF
 #define AMPS $AMPS
 _ACEOF
+
+
+
+# Check whether --with-amps was given.
+if test "${with_amps+set}" = set; then
+  withval=$with_amps; cat >>confdefs.h <<\_ACEOF
+#define AMPS_SPLIT_FILE 1
+_ACEOF
+
+fi
 
 
 # END CASC_SUPPORT_AMPS
