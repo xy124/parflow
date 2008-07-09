@@ -35,7 +35,9 @@ case $AMPS in
     AMPS_LIBS="-lamps_common"
   ;;
   *) 
-    AMPS_LIBS="-lamps -lamps_common"
+  # This is horrifically bad design but there are all kinds of 
+  # dependencies between amps and amps_common
+    AMPS_LIBS="-lamps -lamps_common -lamps -lamps_common"
   ;;
 esac
 AC_MSG_RESULT([configuring AMPS $AMPS support])
