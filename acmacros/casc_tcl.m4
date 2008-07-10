@@ -58,11 +58,14 @@ if test "${tcl_PREFIX+set}" = set; then
       tcl_LIBS='-ltcl8.5'
       AC_MSG_RESULT([using $tcl_LIBS])
    else
-      AC_MSG_RESULT([using $tcl_LIBS])
-      AC_MSG_ERROR([Could not find tcl library in $tcl_PREFIX])
+      AC_MSG_RESULT([could not find a tcl library...assuming not needed])
    fi
-
-   tcl_LIBS="-L${tcl_PREFIX}/lib ${tcl_LIBS}"
+   
+   if test -n "${tcl_LIBS}"; then
+      tcl_LIBS="-L${tcl_PREFIX}/lib ${tcl_LIBS}"
+   else
+      tcl_LIBS=""
+   fi
 fi
 
 # END CASC_SUPPORT_TCL
