@@ -263,6 +263,19 @@ CASC_CHECK_BIGENDIAN
 CASC_SUPPORT_AMPS
 
 dnl
+dnl Tcl support
+dnl
+CASC_SUPPORT_TCL
+if test "${tcl_PREFIX+set}" = set; then
+  LIBS="$tcl_LIBS $LIBS"
+  CASC_SPLIT_LIBS_STRING(tcl_LIBS,tcl_LIB_PATH,tcl_LIB_NAME)
+  LIB_PATH="$tcl_LIB_PATH $LIB_PATH"
+  LIB_NAME="$tcl_LIB_NAME $LIB_NAME"
+  INC_PATH="$tcl_INCLUDES $INC_PATH"
+  AC_DEFINE(HAVE_TCL,1,TCL library is available so use it)
+fi
+
+dnl
 dnl Silo support
 dnl
 CASC_SUPPORT_SILO
@@ -292,6 +305,21 @@ if test "$prefix" = "NONE"; then
 fi
 
 INSTDIR=$prefix
+
+# SGS This could be done better but just test on OS for now
+case "$host_os" in
+  darwin*)
+    SHLIB_SUFFIX=".dylib"
+    SHLIB_LD="ld -dylib"
+    ;;
+  *) 
+    SHLIB_SUFFIX=".so"
+    SHLIB_LD="ld -shared"
+    ;;
+esac
+
+AC_SUBST(SHLIB_SUFFIX)
+AC_SUBST(SHLIB_LD)
 
 dnl
 dnl Make all of the macro substitutions for the generated output files

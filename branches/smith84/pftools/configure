@@ -688,6 +688,9 @@ EGREP
 ac_ct_F77
 FLIBS
 AMPS
+AMPS_LIBS
+SHLIB_SUFFIX
+SHLIB_LD
 INSTDIR
 M4
 XARGS
@@ -1303,6 +1306,7 @@ Optional Packages:
   --with-x                use the X Window System
  --with-amps=AMPS_TYPE  Set the version of AMPS to use: seq, mpi1, smpi, win32
  --with-amps-sequential-io  Use AMPS sequentail I/O
+ --with-tcl=PATH  Use TCL and optionally specify where TCL is installed.
  --with-silo=PATH  Use SILO and optionally specify where SILO is installed.
 
 Some influential environment variables:
@@ -9479,8 +9483,20 @@ echo "$as_me: error: Invalid AMPS version specified, use seq, mpi1, smpi, win32"
    { (exit 1); exit 1; }; }
   ;;
 esac
+
+case $AMPS in
+  seq)
+    AMPS_LIBS="-lamps_common"
+  ;;
+  *)
+  # This is horrifically bad design but there are all kinds of
+  # dependencies between amps and amps_common
+    AMPS_LIBS="-lamps -lamps_common -lamps -lamps_common"
+  ;;
+esac
 { echo "$as_me:$LINENO: result: configuring AMPS $AMPS support" >&5
 echo "${ECHO_T}configuring AMPS $AMPS support" >&6; }
+
 
 
 cat >>confdefs.h <<_ACEOF
@@ -9501,6 +9517,107 @@ fi
 # END CASC_SUPPORT_AMPS
 
 
+
+
+
+# Begin CASC_SUPPORT_TCL
+# Defines tcl_PREFIX tcl_INCLUDES and tcl_LIBS if with-tcl is specified.
+
+# Check whether --with-tcl was given.
+if test "${with_tcl+set}" = set; then
+  withval=$with_tcl;
+else
+  with_tcl=no
+fi
+
+
+case "$with_tcl" in
+  no|yes)
+    # TCL install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # TCL header files are there.
+    { echo "$as_me:$LINENO: checking for TCL installation" >&5
+echo $ECHO_N "checking for TCL installation... $ECHO_C" >&6; }
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/tcl.h; then
+        tcl_PREFIX=${dir}
+        break
+      fi
+    done
+    { echo "$as_me:$LINENO: result: $tcl_PREFIX" >&5
+echo "${ECHO_T}$tcl_PREFIX" >&6; }
+  ;;
+  *)
+    # TCL install path was specified.
+    { echo "$as_me:$LINENO: checking for TCL installation" >&5
+echo $ECHO_N "checking for TCL installation... $ECHO_C" >&6; }
+    tcl_PREFIX=$with_tcl
+    tcl_INCLUDES="-I${tcl_PREFIX}/include"
+    if test -f ${tcl_PREFIX}/include/tcl.h; then
+        { echo "$as_me:$LINENO: result: $tcl_PREFIX" >&5
+echo "${ECHO_T}$tcl_PREFIX" >&6; }
+    else
+        { echo "$as_me:$LINENO: result: $tcl_PREFIX" >&5
+echo "${ECHO_T}$tcl_PREFIX" >&6; }
+        { { echo "$as_me:$LINENO: error: TCL not found in $with_tcl" >&5
+echo "$as_me: error: TCL not found in $with_tcl" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  ;;
+esac
+
+# Determine which TCL library is built
+if test "${tcl_PREFIX+set}" = set; then
+   { echo "$as_me:$LINENO: checking for TCL library" >&5
+echo $ECHO_N "checking for TCL library... $ECHO_C" >&6; }
+   if test -f ${tcl_PREFIX}/lib/libtcl.so; then
+      tcl_LIBS='-ltcl'
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
+   elif test -f ${tcl_PREFIX}/lib/libtcl8.4.so; then
+      tcl_LIBS='-ltcl8.4'
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
+   elif test -f ${tcl_PREFIX}/lib/libtcl8.5.so; then
+      tcl_LIBS='-ltcl8.5'
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
+   else
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
+      { { echo "$as_me:$LINENO: error: Could not find tcl library in $tcl_PREFIX" >&5
+echo "$as_me: error: Could not find tcl library in $tcl_PREFIX" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
+   tcl_LIBS="-L${tcl_PREFIX}/lib ${tcl_LIBS}"
+fi
+
+# END CASC_SUPPORT_TCL
+
+
+if test "${tcl_PREFIX+set}" = set; then
+  LIBS="$tcl_LIBS $LIBS"
+
+# Split tcl_LIBS into the LIB_PATH part (tcl_LIB_PATH) and the LIB_NAME part (tcl_LIB_NAME)
+if test -n "${tcl_LIBS}"; then
+  for i in ${tcl_LIBS}; do
+    case "$i" in
+    -L*) tcl_LIB_PATH="${tcl_LIB_PATH} $i" ;;
+    *) tcl_LIB_NAME="${tcl_LIB_NAME} $i" ;;
+    esac
+  done
+fi
+
+  LIB_PATH="$tcl_LIB_PATH $LIB_PATH"
+  LIB_NAME="$tcl_LIB_NAME $LIB_NAME"
+  INC_PATH="$tcl_INCLUDES $INC_PATH"
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_TCL 1
+_ACEOF
+
+fi
 
 
 
@@ -9621,6 +9738,21 @@ if test "$prefix" = "NONE"; then
 fi
 
 INSTDIR=$prefix
+
+# SGS This could be done better but just test on OS for now
+case "$host_os" in
+  darwin*)
+    SHLIB_SUFFIX=".dylib"
+    SHLIB_LD="ld -dylib"
+    ;;
+  *)
+    SHLIB_SUFFIX=".so"
+    SHLIB_LD="ld -shared"
+    ;;
+esac
+
+
+
 
 
 
@@ -10372,6 +10504,9 @@ EGREP!$EGREP$ac_delim
 ac_ct_F77!$ac_ct_F77$ac_delim
 FLIBS!$FLIBS$ac_delim
 AMPS!$AMPS$ac_delim
+AMPS_LIBS!$AMPS_LIBS$ac_delim
+SHLIB_SUFFIX!$SHLIB_SUFFIX$ac_delim
+SHLIB_LD!$SHLIB_LD$ac_delim
 INSTDIR!$INSTDIR$ac_delim
 M4!$M4$ac_delim
 XARGS!$XARGS$ac_delim
@@ -10387,7 +10522,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 88; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 91; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
