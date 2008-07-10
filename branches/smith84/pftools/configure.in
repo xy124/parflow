@@ -326,6 +326,17 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(SHLIB_LD)
 
 dnl
+dnl Check some shared library building options
+dnl This would be better to replace with a full 
+dnl shared library building package but don't
+dnl have time just yet.
+dnl
+
+AX_C_CHECK_FLAG(-fpic,,,SHLIB_CFLAGS="-fpic",)	
+
+AC_SUBST(SHLIB_CFLAGS)
+
+dnl
 dnl Make all of the macro substitutions for the generated output files
 dnl
 

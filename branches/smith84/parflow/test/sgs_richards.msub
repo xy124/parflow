@@ -10,9 +10,9 @@
 
 ##### These are shell commands
 date
-cd /g/g10/smithsg/parflow/pfclm_ms/src/test
+cd $PARFLOW_DIR/../parflow/parflow/test
 AMPS_EXE_DIR=`pwd`
 export AMPS_EXE_DIR
-srun -n1 /g/g10/smithsg/parflow/pfclm_ms/exe.Linux/bin/parflow default_richards
+srun -n1 $PARFLOW_DIR/bin/parflow default_richards
 
 echo 'Done'
