@@ -48,6 +48,15 @@ if test "${tcl_PREFIX+set}" = set; then
    elif test -f ${tcl_PREFIX}/lib/libtcl8.5.so; then
       tcl_LIBS='-ltcl8.5'
       AC_MSG_RESULT([using $tcl_LIBS])
+   elif test -f ${tcl_PREFIX}/lib/libtcl.dylib; then
+      tcl_LIBS='-ltcl'
+      AC_MSG_RESULT([using $tcl_LIBS])
+   elif test -f ${tcl_PREFIX}/lib/libtcl8.4.dylib; then
+      tcl_LIBS='-ltcl8.4'
+      AC_MSG_RESULT([using $tcl_LIBS])
+   elif test -f ${tcl_PREFIX}/lib/libtcl8.5.dylib; then
+      tcl_LIBS='-ltcl8.5'
+      AC_MSG_RESULT([using $tcl_LIBS])
    else
       AC_MSG_RESULT([using $tcl_LIBS])
       AC_MSG_ERROR([Could not find tcl library in $tcl_PREFIX])

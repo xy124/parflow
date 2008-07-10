@@ -702,6 +702,9 @@ SRCDIR_COMPILE_PREFIX
 INC_PATH
 LIB_PATH
 LIB_NAME
+SH_INC_PATH
+SH_LIB_PATH
+SH_LIB_NAME
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -9582,6 +9585,18 @@ echo "${ECHO_T}using $tcl_LIBS" >&6; }
       tcl_LIBS='-ltcl8.5'
       { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
 echo "${ECHO_T}using $tcl_LIBS" >&6; }
+   elif test -f ${tcl_PREFIX}/lib/libtcl.dylib; then
+      tcl_LIBS='-ltcl'
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
+   elif test -f ${tcl_PREFIX}/lib/libtcl8.4.dylib; then
+      tcl_LIBS='-ltcl8.4'
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
+   elif test -f ${tcl_PREFIX}/lib/libtcl8.5.dylib; then
+      tcl_LIBS='-ltcl8.5'
+      { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
+echo "${ECHO_T}using $tcl_LIBS" >&6; }
    else
       { echo "$as_me:$LINENO: result: using $tcl_LIBS" >&5
 echo "${ECHO_T}using $tcl_LIBS" >&6; }
@@ -9612,6 +9627,10 @@ fi
   LIB_PATH="$tcl_LIB_PATH $LIB_PATH"
   LIB_NAME="$tcl_LIB_NAME $LIB_NAME"
   INC_PATH="$tcl_INCLUDES $INC_PATH"
+
+  SH_LIB_PATH="$tcl_LIB_PATH $SH_LIB_PATH"
+  SH_LIB_NAME="$tcl_LIB_NAME $SH_LIB_NAME"
+  SH_INC_PATH="$tcl_INCLUDES $SH_INC_PATH"
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_TCL 1
@@ -9750,6 +9769,10 @@ case "$host_os" in
     SHLIB_LD="ld -shared"
     ;;
 esac
+
+
+
+
 
 
 
@@ -10518,11 +10541,14 @@ SRCDIR_COMPILE_PREFIX!$SRCDIR_COMPILE_PREFIX$ac_delim
 INC_PATH!$INC_PATH$ac_delim
 LIB_PATH!$LIB_PATH$ac_delim
 LIB_NAME!$LIB_NAME$ac_delim
+SH_INC_PATH!$SH_INC_PATH$ac_delim
+SH_LIB_PATH!$SH_LIB_PATH$ac_delim
+SH_LIB_NAME!$SH_LIB_NAME$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 91; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 94; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
