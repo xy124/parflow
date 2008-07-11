@@ -576,7 +576,7 @@ PACKAGE_VERSION=
 PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
-ac_unique_file="COPYRIGHT_and_DISCLAIMER"
+ac_unique_file="config/parflow_config.h.in"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

@@ -7,7 +7,7 @@ dnl Modified:    $LastChangedDate: 2008-06-24 15:06:53 -0700 (Tue, 24 Jun 2008) 
 dnl Description: autoconfig configuration file
 dnl
 
-AC_INIT(COPYRIGHT_and_DISCLAIMER)
+AC_INIT(config/parflow_config.h.in)
 AC_CONFIG_HEADER(include/parflow_config.h:config/parflow_config.h.in)
 
 AC_CONFIG_AUX_DIR(../acmacros)
