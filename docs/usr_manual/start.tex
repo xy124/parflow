@@ -17,8 +17,13 @@ simple groundwater problem, supplied with the \parflow{} distribution.
 
 \parflow{} requires a Standard ANSI C and Fortran 77 compiler (or f2c)
 to build code.  \parflow{} also requires \code{TCL/TK} version 8.0 (or
-higher).  \code{TCL/TK} can be obtained from: \\
-\code{http://www.sunlabs.com/research/tcl/}.  
+higher).  \code{TCL/TK} can be obtained from:
+\\ \code{http://www.tcl.tk}.
+
+Note this version of \parflow{} uses a new configure/make system based on
+the standard GNU autoconf configure system.  This replaces the home
+grown set of scripts used in previous versions and should be more
+portable.
 
 The following steps are designed to take you through the steps of
 installing \parflow{} from a source distribution.  This assumes that 
@@ -33,36 +38,23 @@ The following environment variables should be set up in your \file{.profile}
 file (if you are using \code{bash} or a bourne syntax shell):
 
 \begin{display}\begin{verbatim}
-export PARFLOW_SRC=~/parflow/src
 export PARFLOW_DIR=~/parflow/exe
-export PARFLOW_HELP=~/parflow/docs
 export PARFLOW_HTML_VIEWER=/usr/local/bin/netscape
-
 \end{verbatim}\end{display}
 
 If you are using a \code{csh} like shell you will need the following in your
 \file{.cshrc} file:
 
 \begin{display}\begin{verbatim}
-setenv PARFLOW_SRC ~/parflow/src
 setenv PARFLOW_DIR ~/parflow/exe
-setenv PARFLOW_HELP ~/parflow/docs
 setenv PARFLOW_HTML_VIEWER /usr/local/bin/netscape
 \end{verbatim}\end{display}
 
 The \code{PARFLOW_HTML_VIEWER} variable should be set to a HTML
 browser of your choice.  This is used to choose the browser that will
 be used to view the online documentation.  The other variables point
-to locations of directory structures used by \parflow{}.  The variable
-\code{PARFLOW_DIR} specifies the location of the installed version of
-\parflow{}  This is where executables and support files will be placed.
-If you have a directory which is shared on multiple architectures you
-can set different \code{PARFLOW_DIR}s on the different machines (for
-example
-\code{~/parflow/exe.t3d} and \code{~/parflow/exe.irix}).  \code{PARFLOW_SRC} is the location of the source code for \parflow{} and affiliated tools. \code{PARFLOW_HELP} is the location of the HTML help files.
-We will use the \file{~/parflow} directory as the root directory for
-building \parflow{} in this user manual; you can use a different
-directory if you wish.
+to where \parflow{} will be installed. This is where executables and
+support files will be placed.
 
 %------------------------------
 \item
@@ -98,27 +90,81 @@ zcat ../parflow.tar.Z | tar xf -
 %------------------------------
 
 \item
-Next, we need to build the parflow and other tools which make up the
-\parflow{} suite.  
+
+Since \parflow{} is composed of several different parts which might
+require different compilers (e.g. on some MPP architectures the
+front-end machine is different from the nodes) the build process
+involves compiling several different parts.
+
+The first thing that should be built is the Sundials solver library.
+
+This can be done with something as simple as:
 
 \begin{display}\begin{verbatim}
-cd $PARFLOW_SRC
-./build install 
-./build install docs
+cd sundials
+./configure --prefix=$PARFLOW_DIR
+make
+make install
 \end{verbatim}\end{display}
 
-The first command will build \parflow{} and the bundled tools and
-install them in the \code{\$PARFLOW_DIR} directory.  The second
-command will build and install the documentation.
+See the Sundials documenation for further information.  Note the
+compiler choices for Sundials should probably also be used when
+building \parflow{}.
 
-After the tools are built, be sure to execute the Unix rehash function 
-if you are using a \code{csh} like shell.
+\item
+
+Next build the \parflow{} library and executable.  The library is
+used when \parflow{} is used as a component of another simulation
+(e.g. WRF).  
 
 \begin{display}\begin{verbatim}
-rehash
+cd parflow
+./configure --prefix=$PARFLOW_DIR --with-sundials=$PARFLOW_DIR --with-amps=mpi1
+make 
+make install
 \end{verbatim}\end{display}
 
-%------------------------------
+This will build a parallel version of \parflow{} using the MPI1
+libraries.
+
+You can control build options for \parflow{}, use
+
+\begin{display}\begin{verbatim}
+ ./configure --help 
+\end{verbatim}\end{display}
+
+to see other configure options.   
+
+Note that \parflow{} defaults to building a sequential version so
+\code{--with-amps} is needed when building for a parallel computer.  You
+can explicitly specify the path to the MPI to use with the
+\code{--with-mpi} option to configure.
+
+-----------------------------------------------------------------------------
+Step 3: Build and install pftools
+-----------------------------------------------------------------------------
+
+pftools is a package of utilities and a TCL library that is used to
+setup and postprocess \parflow{} files.  The input files to \parflow{} are
+TCL scripts so TCL must be installed on the system.
+
+A typical configure and build looks like:
+
+\begin{display}\begin{verbatim}
+cd pftools
+./configure --prefix=$PARFLOW_DIR --with-amps=mpi1
+make 
+make install
+\end{verbatim}\end{display}
+
+Note that pftools is NOT parallel but some options for how files are
+written are based on the communication layer so pftools needs to know
+what what used to build the \parflow{} library.
+
+If TCL is not installed in the system locations (/usr or /usr/local) you need
+to specify the path with the \code{--with-tcl=<PATH>} configure option.
+
+See \code{./configure --help} for additional configure options for pftools.
 
 \end{enumerate}
 
