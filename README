@@ -84,6 +84,7 @@ cd pftools
 ./configure --prefix=$PARFLOW_DIR --with-amps=mpi1
 make 
 make install
+make doc_install
 
 Note that pftools is NOT parallel but some options for how files are
 written are based on the communication layer so pftools needs to know

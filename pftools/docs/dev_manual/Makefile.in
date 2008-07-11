@@ -15,18 +15,14 @@ PROJECT       = parflow
 
 PARFLOW	      =	@top_srcdir@
 SRCDIR	      =	@srcdir@
-SUBDIR        = docs/usr_manual
+SUBDIR        = docs/dev_manual
 VPATH	      =	@srcdir@
 OBJECT        = ../..
 
 include $(OBJECT)/config/Makefile.config
 
-MANUAL = usr_manual
-INSTALL_DIR = $(PARFLOW_INSTALL_DIR)/docs/usr_manual
-
-ONLINE_OPTS =\
- -show_section_numbers\
- -bottom_navigation
+MANUAL=dev_manual
+INSTALL_DIR = $(PARFLOW_INSTALL_DIR)/docs/dev_manual
 
 LINK_FILES = do_online \
 	     inputps.tex \
@@ -36,15 +32,25 @@ LINK_FILES = do_online \
              parflow.perl \
              parflow.bib
 
+ONLINE_OPTS =\
+ -show_section_numbers\
+ -bottom_navigation
+
 FILES =\
  manual.tex\
  defs.tex\
- files.tex\
  intro.tex\
- models.tex \
- pfsystem.tex\
- start.tex \
- version.tex
+ documentation.tex\
+ codeorg.tex\
+ modules.tex\
+ input.tex\
+ equations.tex\
+ grid.tex\
+ discretize.tex\
+ visualization.tex\
+ administrative.tex\
+ ref.tex\
+ ref.grid.tex
 
 all:
 
@@ -58,9 +64,9 @@ manual.ps: manual.dvi
 
 manual/manual.html: manual.dvi
 	@latex2html $(ONLINE_OPTS) manual.tex
-	@../lib/do_online manual
+	@./do_online manual
 
-#	bibtex manual
+#	@bibtex manual
 manual.dvi: Makefile $(FILES)
 	@for i in ${LINK_FILES}; do     \
 	   if [ ! -h $$i ] ; then    \
@@ -68,7 +74,6 @@ manual.dvi: Makefile $(FILES)
 	   fi \
 	done 
 	@latex manual
-	@bibtex manual
 	@makeindex manual.idx
 	@latex manual
 	@latex manual
@@ -82,6 +87,7 @@ doc_install:
 	done
 	@$(INSTALL) -c -m 644 manual.ps $(INSTALL_DIR)/$(MANUAL).ps
 
+
 clean:
 	$(PARFLOW_CLEAN)
 
@@ -93,3 +99,4 @@ veryclean: clean
 	done 
 	@/bin/rm -f  manual.ps version.tex Makefile
 	@/bin/rm -fr manual
+

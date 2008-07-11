@@ -15,18 +15,14 @@ PROJECT       = parflow
 
 PARFLOW	      =	@top_srcdir@
 SRCDIR	      =	@srcdir@
-SUBDIR        = docs/usr_manual
+SUBDIR        = docs/amps_manual
 VPATH	      =	@srcdir@
 OBJECT        = ../..
 
 include $(OBJECT)/config/Makefile.config
 
-MANUAL = usr_manual
-INSTALL_DIR = $(PARFLOW_INSTALL_DIR)/docs/usr_manual
-
-ONLINE_OPTS =\
- -show_section_numbers\
- -bottom_navigation
+MANUAL=amps_manual
+INSTALL_DIR = $(PARFLOW_INSTALL_DIR)/docs/amps_manual
 
 LINK_FILES = do_online \
 	     inputps.tex \
@@ -36,14 +32,12 @@ LINK_FILES = do_online \
              parflow.perl \
              parflow.bib
 
+ONLINE_OPTS =\
+ -show_section_numbers\
+ -bottom_navigation
+
 FILES =\
- manual.tex\
- defs.tex\
- files.tex\
- intro.tex\
- models.tex \
- pfsystem.tex\
- start.tex \
+ manual.tex \
  version.tex
 
 all:
@@ -58,7 +52,7 @@ manual.ps: manual.dvi
 
 manual/manual.html: manual.dvi
 	@latex2html $(ONLINE_OPTS) manual.tex
-	@../lib/do_online manual
+	@./do_online manual
 
 #	bibtex manual
 manual.dvi: Makefile $(FILES)
@@ -72,7 +66,6 @@ manual.dvi: Makefile $(FILES)
 	@makeindex manual.idx
 	@latex manual
 	@latex manual
-
 install:
 
 doc_install:
@@ -91,5 +84,6 @@ veryclean: clean
 	    rm $$i ; \
 	   fi \
 	done 
-	@/bin/rm -f  manual.ps version.tex Makefile
+	@/bin/rm -f  version.tex manual.ps Makefile
 	@/bin/rm -fr manual
+
