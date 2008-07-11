@@ -1,6 +1,14 @@
 MANUAL=dev_manual
 INSTALL_DIR = $(PARFLOW_HELP)/dev_manual
 
+LINK_FILES = do_online \
+	     inputps.tex \
+             html.sty \
+             html.perl \
+	     parflow.sty \
+             parflow.perl \
+             parflow.bib
+
 ONLINE_OPTS =\
  -show_section_numbers\
  -bottom_navigation
@@ -23,6 +31,9 @@ FILES =\
 
 all: manual.ps manual/manual.html
 
+version.tex : ../../parflow/parflow_lib/version.h
+	echo "\def\PFVersion{"`cut -d$ -f2 $PARFLOW_SRC/config/version.h`"}" > version.tex
+
 manual.ps: manual.dvi
 	@dvips -o manual.ps manual
 
@@ -32,6 +43,11 @@ manual/manual.html: manual.dvi
 
 #	@bibtex manual
 manual.dvi: Makefile $(FILES)
+	@for i in ${LINK_FILES}; do     \
+	   if [ ! -h $$i ] ; then    \
+	     ln -s ../lib/$$i . ;\
+	   fi \
+	done 
 	@latex manual
 	@makeindex manual.idx
 	@latex manual
@@ -55,6 +71,11 @@ clean:
 	@/bin/rm -f *.idx *.ilg *.ind
 
 veryclean: clean
+	@for i in ${LINK_FILES}; do     \
+	   if [ -h $$i ] ; then    \
+	    rm $$i ; \
+	   fi \
+	done 
 	@/bin/rm -f  manual.ps
 	@/bin/rm -fr manual
 
