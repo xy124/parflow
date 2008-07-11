@@ -65,11 +65,13 @@
 #ifndef ERROR_HEADER
 #define ERROR_HEADER
 
+#include "parflow_config.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 
-#ifdef PF_HAVE_HDF
-#include <hdf.h>
+#ifdef HAVE_HDF5
+#include <hdf5.h>
 #endif
 
 #include <tcl.h>
@@ -79,7 +81,7 @@
  * Error messages 
  *-----------------------------------------------------------------------*/
 
-#if PF_HAVE_HDF
+#if HAVE_HD5
 
 static char *LOADSDSUSAGE  = "Usage: pfloadsds filename [ds_num]\n";
 static char *SAVESDSUSAGE  = "Usage: pfsavesds dataset -filetype filename\n       file types: float64 float32 int32 uint32 int16 uint16 int8 uint8\n";
