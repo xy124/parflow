@@ -23,11 +23,14 @@ all:
 	( cd parflow_lib && $(MAKE) all) || exit 1
 	( cd parflow && $(MAKE) all ) || exit 1
 
-veryclean: clean
-
 clean:
 	@for DIR in $(SUBDIRS); do if test -d $$DIR; then (cd $$DIR && $(MAKE) $@) ; fi || exit 1; done
 	@$(PARFLOW_CLEAN)
+
+veryclean: clean
+	@for DIR in $(SUBDIRS); do if test -d $$DIR; then (cd $$DIR && $(MAKE) $@) ; fi || exit 1; done
+	@$(RM) -fr include  autom4te.cache bin 	
+	@$(RM) Makefile config/Makefile.config
 
 install: all
 	$(INSTALL) -d -m 755 $(PARFLOW_INSTALL_DIR)/lib

@@ -28,5 +28,8 @@ clean:
 	$(PARFLOW_CLEAN)
 	@$(RM) $(PARFLOW_BIN_DIR)/parflow
 
+veryclean:
+	@$(RM) Makefile
+
 include $(SRCDIR)/Makefile.depend
 

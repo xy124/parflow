@@ -37,7 +37,11 @@ $(PARFLOW_LIB_DIR)/$(AMPS_COMMON_LIB): $(OBJS)
 all: $(PARFLOW_LIB_DIR)/$(AMPS_COMMON_LIB)
 
 clean:
-	$(PARFLOW_CLEAN)
+	@$(PARFLOW_CLEAN)
+
+veryclean: clean
+	@$(RM) Makefile
+
 
 include $(SRCDIR)/Makefile.depend
 

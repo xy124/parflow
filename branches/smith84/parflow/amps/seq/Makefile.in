@@ -18,7 +18,13 @@ OBJS =
 all:
 
 clean:
-	$(PARFLOW_CLEAN)
+	@$(PARFLOW_CLEAN)
+
+veryclean: clean
+	@$(RM) Makefile
+
+
+
 
 
 
