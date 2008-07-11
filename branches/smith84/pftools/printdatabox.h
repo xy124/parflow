@@ -22,8 +22,8 @@
 
 #include "parflow_config.h"
 
-#ifdef HAVE_HDF5
-#include <hdf5.h>
+#ifdef HAVE_HDF4
+#include <hdf.h>
 #endif
 
 #include <stdio.h>

@@ -947,7 +947,7 @@ char          *argv[];
 
 }
 
-#ifdef HAVE_HDF5
+#ifdef HAVE_HDF
 
 /*-----------------------------------------------------------------------
  * routine for `pfloadsds' command
@@ -1123,7 +1123,7 @@ char             *argv[];
 }
 
 
-#ifdef HAVE_HDF5
+#ifdef HAVE_HDF4
 
 /*-----------------------------------------------------------------------
  * routine for `pfsavesds' command

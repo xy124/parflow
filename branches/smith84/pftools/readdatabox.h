@@ -25,9 +25,9 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_HDF5
-#include <hdf5.h>
-// #include <netcdf.h>
+#ifdef HAVE_HDF4
+#include <hdf.h>
+#include <netcdf.h>
 #endif
 
 #include "databox.h"

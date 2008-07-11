@@ -54,9 +54,9 @@
  */
 
 // HDF is not working
-// #ifndef HAVE_HDF5
-// #undef HAVE_HDF5
-// #endif
+#ifndef HAVE_HDF5
+#undef HAVE_HDF5
+#endif
 
 /*
  * Silo 
