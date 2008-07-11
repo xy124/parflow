@@ -29,7 +29,7 @@ clean:
 
 veryclean: clean
 	@for DIR in $(SUBDIRS); do if test -d $$DIR; then (cd $$DIR && $(MAKE) $@) ; fi || exit 1; done
-	@$(RM) -fr include  autom4te.cache bin 	
+	@$(RM) -fr include  autom4te.cache bin lib
 	@$(RM) Makefile config/Makefile.config
 
 install: all
