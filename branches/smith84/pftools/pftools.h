@@ -21,15 +21,15 @@
 #ifndef PFTOOLS_HEADER
 #define PFTOOLS_HEADER
 
-
+#include "parflow_config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef PF_HAVE_HDF
-#include <hdf.h>
+#ifdef HAVE_HDF5
+#include <hdf5.h>
 #endif
 
 #include <tcl.h>

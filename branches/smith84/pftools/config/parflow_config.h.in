@@ -53,9 +53,10 @@
  * HDF5 common data format library
  */
 
-#ifndef HAVE_HDF5
-#undef HAVE_HDF5
-#endif
+// HDF is not working
+// #ifndef HAVE_HDF5
+// #undef HAVE_HDF5
+// #endif
 
 /*
  * Silo 
