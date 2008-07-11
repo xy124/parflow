@@ -17,8 +17,8 @@ svn co svn+ssh://atlas/usr/gapps/thcs/subversion/wrf/trunk wrf
 Compiling Parflow on Atlas
 -----------------------------------------------------------------------------
 
-cd <somewhere>/parflow/src 
-./build install
+cd <somewhere>/parflow
+. misc/build_scripts/build.parflow.atlas
 
 -----------------------------------------------------------------------------
 Compiling WRF on Atlas
@@ -52,8 +52,8 @@ is compiled with F90 support.
 # Setup the MPI environment
 . /usr/casc/samrai/openmpi/openmpi-1.2.6/setup.sh
 
-cd <somewhere>pfclm/ms/src 
-./build install
+cd <somewhere>/parflow
+. misc/build_scripts/build.parflow.tux
 
 -----------------------------------------------------------------------------
 Compiling WRF on CASC Tux cluster
