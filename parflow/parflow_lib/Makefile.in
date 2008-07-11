@@ -165,6 +165,9 @@ all: $(PARFLOW_LIB_DIR)/$(PARFLOW_LIB)
 clean:
 	$(PARFLOW_CLEAN)
 
+veryclean: clean
+	@$(RM) Makefile
+
 include $(SRCDIR)/Makefile.depend
 
 
