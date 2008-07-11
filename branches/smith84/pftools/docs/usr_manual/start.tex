@@ -140,13 +140,14 @@ Note that \parflow{} defaults to building a sequential version so
 can explicitly specify the path to the MPI to use with the
 \code{--with-mpi} option to configure.
 
------------------------------------------------------------------------------
-Step 3: Build and install pftools
------------------------------------------------------------------------------
+\item
 
 pftools is a package of utilities and a TCL library that is used to
 setup and postprocess \parflow{} files.  The input files to \parflow{} are
 TCL scripts so TCL must be installed on the system.
+
+The pftools directory also contains the documentation which can be
+installed using the \code{doc_install} target.
 
 A typical configure and build looks like:
 
@@ -155,6 +156,7 @@ cd pftools
 ./configure --prefix=$PARFLOW_DIR --with-amps=mpi1
 make 
 make install
+make doc_install
 \end{verbatim}\end{display}
 
 Note that pftools is NOT parallel but some options for how files are
