@@ -515,7 +515,6 @@ Vector      *z_velocity;
 	        /* Calculate right face velocity.
 		   diff >= 0 implies flow goes left to right */
 	        diff    = pp[ip] - pp[ip+1];
-                //if (fabs(diff) <=1.0e-8) diff = 0.0;
 		u_right = ffx * PMean(pp[ip], pp[ip+1], 
 				      permxp[ip], permxp[ip+1])
 		              * (diff / dx )
@@ -526,7 +525,6 @@ Vector      *z_velocity;
 	        /* Calculate front face velocity.
 		   diff >= 0 implies flow goes back to front */
 	        diff    = pp[ip] - pp[ip+sy_p];
-                //if (fabs(diff) <=1.0e-8) diff = 0.0;
 		u_front = ffy * PMean(pp[ip], pp[ip+sy_p], permyp[ip], 
 				      permyp[ip+sy_p])
 		              * (diff / dy )
@@ -536,23 +534,14 @@ Vector      *z_velocity;
 
 	        /* Calculate upper face velocity.
 		   diff >= 0 implies flow goes lower to upper */
-		//lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
-		lower_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
-		//lower_cond = (pp[ip] / dz);
-		//upper_cond = (pp[ip+sz_p] / dz) + 0.5 * dp[ip+sz_p] * gravity;
-		upper_cond = (pp[ip+sz_p] / dz) - 0.5 * dp[ip+sz_p] * gravity;
-		//upper_cond = (pp[ip+sz_p] / dz); 
-		//diff = (lower_cond - upper_cond) - (dp[ip]+dp[ip+sz_p])*gravity*0.5 ;
+		lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
+		upper_cond = (pp[ip+sz_p] / dz) + 0.5 * dp[ip+sz_p] * gravity;
 		diff = lower_cond - upper_cond;
-                //if (fabs(diff) <=1.0e-12) diff = 0.0;
 		u_upper = ffz * PMean(pp[ip], pp[ip+sz_p], 
 				      permzp[ip], permzp[ip+sz_p])
 		              * diff
-		           //   * RPMean(lower_cond, upper_cond, rpp[ip]*dp[ip]/vp[ip], 
-				//       rpp[ip+sz_p]*dp[ip+sz_p]/vp[ip+sz_p]);
-		              * RPMean(lower_cond, upper_cond, rpp[ip]/vp[ip], 
-				       rpp[ip+sz_p]/vp[ip+sz_p])
-                              *0.5*(dp[ip]+dp[ip+sz_p]);
+		              * RPMean(lower_cond, upper_cond, rpp[ip]*dp[ip]/vp[ip], 
+				      rpp[ip+sz_p]*dp[ip+sz_p]/vp[ip+sz_p]);
                 zvp[ip] = 1.0/(ffz) * u_upper;
 
 	        fp[ip]      += dt * ( u_right + u_front + u_upper );
@@ -773,25 +762,18 @@ Vector      *z_velocity;
 		     {
 		     dir = -1;
 		     lower_cond = (pp[ip-sz_p] / dz) 
-                                  //  - 0.5 * dp[ip-sz_p] * gravity;
-                                    + 0.5 * dp[ip-sz_p] * gravity;
-		     //upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
-		     upper_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
+                                    - 0.5 * dp[ip-sz_p] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 
 		     u_old = ffz 
 		       * PMean(pp[ip-sz_p], pp[ip], 
 			       permzp[ip-sz_p], permzp[ip])
 		       * diff
-		       //* RPMean(lower_cond, upper_cond, 
-			//	rpp[ip-sz_p]*dp[ip-sz_p]/vp[ip-sz_p], rpp[ip]*dp[ip]/vp[ip]); 
 		       * RPMean(lower_cond, upper_cond, 
-				rpp[ip-sz_p]/vp[ip-sz_p], rpp[ip]/vp[ip])
-                                  *0.5*(dp[ip]+dp[ip+sz_p]); 
-		     //lower_cond = (value / dz) - 0.25 * dp[ip] * gravity;
-		     lower_cond = (value / dz) + 0.25 * dp[ip] * gravity;
-		     //upper_cond = (pp[ip] / dz) + 0.25 * dp[ip] * gravity;
-		     upper_cond = (pp[ip] / dz) - 0.25 * dp[ip] * gravity;
+				rpp[ip-sz_p]*dp[ip-sz_p]/vp[ip-sz_p], rpp[ip]*dp[ip]/vp[ip]); 
+		     lower_cond = (value / dz) - 0.25 * dp[ip] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.25 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_new = RPMean(lower_cond, upper_cond, 
 				    rpp[ip-sz_p]*dp[ip-sz_p]/vp[ip-sz_p], rpp[ip]*dp[ip]/vp[ip]);
@@ -802,25 +784,18 @@ Vector      *z_velocity;
 		  case  1:
 		     {
 		     dir = 1;
-		     //lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
-		     lower_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
+		     lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
 		     upper_cond = (pp[ip+sz_p] / dz) 
 		                    - 0.5 * dp[ip+sz_p] * gravity;
-		                    //+ 0.5 * dp[ip+sz_p] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_old = ffz 
 		       * PMean(pp[ip], pp[ip+sz_p], 
 			       permzp[ip], permzp[ip+sz_p])
 		       * diff
-		       //* RPMean(lower_cond, upper_cond, 
-			//	rpp[ip]*dp[ip]/vp[ip], rpp[ip+sz_p]*dp[ip+sz_p]/vp[ip+sz_p]);
 		       * RPMean(lower_cond, upper_cond, 
-				rpp[ip]/vp[ip], rpp[ip+sz_p]/vp[ip+sz_p])
-                       *0.5*(dp[ip]+dp[ip+sz_p]);
-		     //lower_cond = (pp[ip] / dz) - 0.25 * dp[ip] * gravity;
-		     lower_cond = (pp[ip] / dz) + 0.25 * dp[ip] * gravity;
-		     //upper_cond = (value / dz) + 0.25 * dp[ip] * gravity;
-		     upper_cond = (value / dz) - 0.25 * dp[ip] * gravity;
+			rpp[ip]*dp[ip]/vp[ip], rpp[ip+sz_p]*dp[ip+sz_p]/vp[ip+sz_p]);
+		     lower_cond = (pp[ip] / dz) - 0.25 * dp[ip] * gravity;
+		     upper_cond = (value / dz) + 0.25 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_new = RPMean(lower_cond, upper_cond,
 				    rpp[ip]*dp[ip]/vp[ip], rpp[ip+sz_p]*dp[ip+sz_p]/vp[ip+sz_p]);
@@ -928,10 +903,8 @@ Vector      *z_velocity;
 		  case -1:
 		     dir = -1;
 		     lower_cond = (pp[ip-sz_p] / dz) 
-		                  // - 0.5 * dp[ip-sz_p] * gravity;
-		                    + 0.5 * dp[ip-sz_p] * gravity;
-		     //upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
-		     upper_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
+		                   - 0.5 * dp[ip-sz_p] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_old = ffz * PMean(pp[ip-sz_p], pp[ip], 
 					 permzp[ip-sz_p], permzp[ip])
@@ -942,11 +915,9 @@ Vector      *z_velocity;
 		     break;
 		  case  1:
 		     dir = 1;
-		     //lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
-		     lower_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
+		     lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
 		     upper_cond = (pp[ip+sz_p] / dz)
-		                 //   + 0.5 * dp[ip+sz_p] * gravity;
-		                    - 0.5 * dp[ip+sz_p] * gravity;
+		                    + 0.5 * dp[ip+sz_p] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_old = ffz * PMean(0, 0, permzp[ip], permzp[ip+sz_p])
 		       * diff

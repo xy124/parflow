@@ -354,9 +354,10 @@ pfset Solver.Nonlinear.ResidualTol                       1e-1
 pfset Solver.Nonlinear.EtaChoice                         EtaConstant
 pfset Solver.Nonlinear.EtaValue                          1e-5
 pfset Solver.Nonlinear.UseJacobian                       True
+#pfset Solver.Nonlinear.UseJacobian                       False 
 pfset Solver.Nonlinear.DerivativeEpsilon                 1e-2
 
-pfset Solver.Linear.KrylovDimension                      10
+pfset Solver.Linear.KrylovDimension                      15
 
 pfset Solver.Linear.Preconditioner                       MGSemi
 pfset Solver.Linear.Preconditioner.MGSemi.MaxIter        1
