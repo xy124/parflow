@@ -8,6 +8,8 @@
  *********************************************************************EHEADER*/
 
 #include "parflow.h"
+#include "llnlmath.h"
+#include "llnltyps.h"
 
 
 
@@ -26,13 +28,10 @@ typedef struct
    Problem      *problem;
 
    PFModule     *density_module;
-   PFModule     *heat_capacity_module;
-   PFModule     *viscosity_module;
    PFModule     *saturation_module;
    PFModule     *rel_perm_module;
-   PFModule     *thermal_conductivity;
    PFModule     *phase_source;
-   PFModule     *bc_temperature;
+   PFModule     *bc_pressure;
    PFModule     *bc_internal;
 } InstanceXtra;
 
@@ -43,32 +42,59 @@ typedef struct
 #define PMean(a, b, c, d)    HarmonicMean(c, d)
 #define RPMean(a, b, c, d)   UpstreamMean(a, b, c, d)
 
+/*  This routine provides the interface between KINSOL and ParFlow
+    for function evaluations.  */
+
+void     KINSolFunctionEval(size, pressure, fval, current_state)
+int      size;
+N_Vector pressure;
+N_Vector fval;
+void    *current_state;
+{
+   PFModule  *nl_function_eval = StateFunc(        ((State*)current_state) );
+   ProblemData *problem_data   = StateProblemData( ((State*)current_state) );
+   Vector      *old_pressure   = StateOldPressure(((State*)current_state) );
+   Vector      *saturation     = StateSaturation(  ((State*)current_state) );
+   Vector      *old_saturation = StateOldSaturation(((State*)current_state) );
+   Vector      *density        = StateDensity(     ((State*)current_state) );
+   Vector      *old_density    = StateOldDensity(  ((State*)current_state) );
+   double       dt             = StateDt(          ((State*)current_state) );
+   double       time           = StateTime(        ((State*)current_state) );
+   double       *outflow       = StateOutflow(     ((State*)current_state) );
+   Vector       *evap_trans    = StateEvapTrans(   ((State*)current_state) );
+   Vector       *ovrl_bc_flx   = StateOvrlBcFlx(   ((State*)current_state) );
+ 
+ 
+   PFModuleInvoke(void, nl_function_eval, 
+		  (pressure, fval, problem_data, saturation, old_saturation, 
+		   density, old_density, dt, time, old_pressure, outflow, evap_trans,
+                   ovrl_bc_flx) );
+ 
+   return;
+}
+
+
 /*  This routine evaluates the nonlinear function based on the current 
-    temperature values.  This evaluation is basically an application
-    of the stencil to the temperature array. */
+    pressure values.  This evaluation is basically an application
+    of the stencil to the pressure array. */
 
-void    TempFunctionEval(temperature, fval, problem_data, pressure, saturation, 
-		       old_saturation, density, old_density, heat_capacity_water, heat_capacity_rock, viscosity, dt, 
-                       time, old_temperature, evap_trans, x_velocity, y_velocity, z_velocity)
+void    NlFunctionEval(pressure, fval, problem_data, saturation, 
+		       old_saturation, density, old_density, dt, 
+                       time, old_pressure, outflow, evap_trans, ovrl_bc_flx)
 
-Vector      *temperature;       /* Current temperature values */
+Vector      *pressure;       /* Current pressure values */
 Vector      *fval;           /* Return values of the nonlinear function */
 ProblemData *problem_data;   /* Geometry data for problem */
-Vector      *pressure;
+Vector      *old_pressure;
 Vector      *saturation;     /* Saturation / work vector */
 Vector      *old_saturation; /* Saturation values at previous time step */
 Vector      *density;        /* Density vector */
 Vector      *old_density;    /* Density values at previous time step */
-Vector      *heat_capacity_water;
-Vector      *heat_capacity_rock;
-Vector      *viscosity;
 double       dt;             /* Time step size */
 double       time;           /* New time value */
-Vector      *old_temperature;
+double      *outflow;       /*sk Outflow due to overland flow*/
 Vector      *evap_trans;     /*sk sink term from land surface model*/
-Vector      *x_velocity;
-Vector      *y_velocity;
-Vector      *z_velocity;
+Vector      *ovrl_bc_flx;     /*sk overland flow boundary fluxes*/ 
 
 {
    PFModule      *this_module     = ThisPFModule;
@@ -77,19 +103,29 @@ Vector      *z_velocity;
 
    Problem     *problem           = (instance_xtra -> problem);
 
-   PFModule    *density_module       = (instance_xtra -> density_module);
-   PFModule    *heat_capacity_module = (instance_xtra -> heat_capacity_module);
-   PFModule    *viscosity_module     = (instance_xtra -> viscosity_module);
-   PFModule    *saturation_module    = (instance_xtra -> saturation_module);
-   PFModule    *thermal_conductivity = (instance_xtra -> thermal_conductivity);
-   PFModule    *rel_perm_module      = (instance_xtra -> rel_perm_module);
-   PFModule    *phase_source         = (instance_xtra -> phase_source);
-   PFModule    *bc_temperature          = (instance_xtra -> bc_temperature);
-   PFModule    *bc_internal          = (instance_xtra -> bc_internal);
+   PFModule    *density_module    = (instance_xtra -> density_module);
+   PFModule    *saturation_module = (instance_xtra -> saturation_module);
+   PFModule    *rel_perm_module   = (instance_xtra -> rel_perm_module);
+   PFModule    *phase_source      = (instance_xtra -> phase_source);
+   PFModule    *bc_pressure       = (instance_xtra -> bc_pressure);
+   PFModule    *bc_internal       = (instance_xtra -> bc_internal);
 
    /* Re-use saturation vector to save memory */
    Vector      *rel_perm          = saturation;
    Vector      *source            = saturation;
+
+   /* Overland flow variables */ //sk
+   Vector      *KW, *KE, *KN, *KS;
+   Vector      *qx, *qy;
+   Subvector   *kw_sub, *ke_sub, *kn_sub, *ks_sub, *qx_sub, *qy_sub;
+   Subvector   *x_sl_sub, *y_sl_sub, *mann_sub;
+   Subvector   *obf_sub;
+   double      *kw_, *ke_, *kn_, *ks_, *qx_, *qy_;
+   double      *x_sl_dat, *y_sl_dat, *mann_dat;
+   double      *obf_dat;
+   double      dir_x, dir_y;
+   int         t;
+   double      q_overlnd;
 
  //  double      press[12][12][10],pressbc[12][12],xslope[12][12],yslope[12][12];
 //   double      press[2][1][390],pressbc[400][1],xslope[58][30],yslope[58][30];
@@ -98,24 +134,24 @@ Vector      *z_velocity;
    Vector      *permeability_x    = ProblemDataPermeabilityX(problem_data);
    Vector      *permeability_y    = ProblemDataPermeabilityY(problem_data);
    Vector      *permeability_z    = ProblemDataPermeabilityZ(problem_data);
+   Vector      *sstorage          = ProblemDataSpecificStorage(problem_data);  //sk
+   Vector      *x_sl              = ProblemDataTSlopeX(problem_data);  //sk
+   Vector      *y_sl              = ProblemDataTSlopeY(problem_data);  //sk
+   Vector      *man               = ProblemDataMannings(problem_data);  //sk
 
-   double       gravity           = 0.0;
-   //double       gravity           = ProblemGravity(problem);
+   double       gravity           = ProblemGravity(problem);
+   double       viscosity         = ProblemPhaseViscosity(problem, 0);
 
    Subgrid     *subgrid;
 
-   Subvector   *p_sub, *t_sub, *d_sub, *v_sub, *od_sub, *s_sub, *ot_sub, *os_sub, *po_sub, *op_sub, *ss_sub, *et_sub, *hcw_sub, *hcr_sub;
-
+   Subvector   *p_sub, *d_sub, *od_sub, *s_sub, *os_sub, *po_sub, *op_sub, *ss_sub, *et_sub;
    Subvector   *f_sub, *rp_sub, *permx_sub, *permy_sub, *permz_sub;
 
-   Grid        *grid              = VectorGrid(temperature);
+   Grid        *grid              = VectorGrid(pressure);
+   Grid        *grid2d            = VectorGrid(x_sl);
 
-   double      *pp, *tp, *odp, *otp, *sp, *osp, *pop, *fp, *dp, *vp, *rpp, *opp, *ss, *et, *hcwp, *hcrp;
+   double      *pp, *odp, *sp, *osp, *pop, *fp, *dp, *rpp, *opp, *ss, *et;
    double      *permxp, *permyp, *permzp;
-
-   /* Fluid flow velcocities */
-   Subvector   *xv_sub, *yv_sub, *zv_sub;
-   double      *xvp,*yvp,*zvp;
 
    int          i, j, k, r, is;
    int          ix, iy, iz;
@@ -125,9 +161,6 @@ Vector      *z_velocity;
    int          nx_po, ny_po, nz_po;
    int          sy_p, sz_p;
    int          ip, ipo,io;
-
-   int          water = 0;
-   int          rock  = 1;
 
    double       dtmp, dx, dy, dz, vol, ffx, ffy, ffz;
    double       u_right, u_front, u_upper;
@@ -151,10 +184,27 @@ Vector      *z_velocity;
    /* Initialize function values to zero. */
    PFVConstInit(0.0, fval);
 
-   /* Pass temperature values to neighbors.  */
-   handle = InitVectorUpdate(temperature, VectorUpdateAll);
+   /* Pass pressure values to neighbors.  */
+   handle = InitVectorUpdate(pressure, VectorUpdateAll);
    FinalizeVectorUpdate(handle);
  
+   KW = NewVector( grid2d, 1, 1);
+   InitVector(KW, 0.0);
+
+   KE = NewVector( grid2d, 1, 1);
+   InitVector(KE, 0.0);
+   
+   KN = NewVector( grid2d, 1, 1);
+   InitVector(KN, 0.0);
+
+   KS = NewVector( grid2d, 1, 1);
+   InitVector(KS, 0.0);
+
+   qx = NewVector( grid2d, 1, 1);
+   InitVector(qx, 0.0);
+
+   qy = NewVector( grid2d, 1, 1);
+   InitVector(qy, 0.0);
 
    /* Pass permeability values */
    /*
@@ -167,15 +217,15 @@ Vector      *z_velocity;
    handle = InitVectorUpdate(permeability_z, VectorUpdateAll);
    FinalizeVectorUpdate(handle); */
 
-   /* Calculate temperatrue dependent properties: density and saturation */
+   /* Calculate pressure dependent properties: density and saturation */
 
-   PFModuleInvoke(void, density_module, (0, temperature, density, &dtmp, &dtmp, 
+   PFModuleInvoke(void, density_module, (0, pressure, density, &dtmp, &dtmp, 
 					 CALCFCN));
 
    PFModuleInvoke(void, saturation_module, (saturation, pressure, density, 
-					    1.0 , problem_data, CALCFCN));
+					    gravity, problem_data, CALCFCN));
 
-   /* bc_struct = PFModuleInvoke(BCStruct *, bc_temperature, 
+   /* bc_struct = PFModuleInvoke(BCStruct *, bc_pressure, 
 			      (problem_data, grid, gr_domain, time));*/
 
    /*@ Why are the above things calculated here again; they were allready
@@ -196,10 +246,9 @@ Vector      *z_velocity;
       subgrid = GridSubgrid(grid, is);
 	
       d_sub  = VectorSubvector(density, is);
-      hcw_sub = VectorSubvector(heat_capacity_water, is);
       od_sub = VectorSubvector(old_density, is);
-      t_sub = VectorSubvector(temperature, is);
-      ot_sub = VectorSubvector(old_temperature, is);
+	  p_sub = VectorSubvector(pressure, is);
+	  op_sub = VectorSubvector(old_pressure, is);
       s_sub  = VectorSubvector(saturation, is);
       os_sub = VectorSubvector(old_saturation, is);
       po_sub = VectorSubvector(porosity, is);
@@ -228,11 +277,10 @@ Vector      *z_velocity;
       nz_po = SubvectorNZ(po_sub);
 
       dp  = SubvectorData(d_sub);
-      hcwp = SubvectorData(hcw_sub);
       odp = SubvectorData(od_sub);
       sp  = SubvectorData(s_sub);
-      tp = SubvectorData(t_sub);
-      otp = SubvectorData(ot_sub);
+	  pp = SubvectorData(p_sub);
+	  opp = SubvectorData(op_sub);
       osp = SubvectorData(os_sub);
       pop = SubvectorData(po_sub);
       fp  = SubvectorData(f_sub);
@@ -244,13 +292,12 @@ Vector      *z_velocity;
 		ip, nx_f, ny_f, nz_f, 1, 1, 1,
 		ipo, nx_po, ny_po, nz_po, 1, 1, 1,
 	     { 
-             fp[ip] = (tp[ip]*dp[ip]*sp[ip] - otp[ip]*odp[ip]*osp[ip])*hcwp[ip]*pop[ipo]*vol;;
-             
+             fp[ip] = (sp[ip]*dp[ip] - osp[ip]*odp[ip])*pop[ipo]*vol;			 
 	     });
    }
 #endif
 
-   /*@ Add in contributions from rock*/
+   /*@ Add in contributions from compressible storage */
 
 #if 1
 
@@ -258,10 +305,14 @@ Vector      *z_velocity;
    {
       subgrid = GridSubgrid(grid, is);
 	
-      t_sub = VectorSubvector(temperature, is);
-      ot_sub = VectorSubvector(old_temperature, is);
-      hcr_sub = VectorSubvector(heat_capacity_rock, is);
-      po_sub = VectorSubvector(porosity, is);
+      ss_sub  = VectorSubvector(sstorage, is);
+
+	  d_sub  = VectorSubvector(density, is);
+      od_sub = VectorSubvector(old_density, is);
+	  p_sub = VectorSubvector(pressure, is);
+      op_sub = VectorSubvector(old_pressure, is);
+      s_sub  = VectorSubvector(saturation, is);
+      os_sub = VectorSubvector(old_saturation, is);
       f_sub  = VectorSubvector(fval, is);
 	 
       ix = SubgridIX(subgrid);
@@ -284,10 +335,12 @@ Vector      *z_velocity;
 	 
       ss = SubvectorData(ss_sub);
 
-      tp = SubvectorData(t_sub);
-      otp = SubvectorData(ot_sub);
-      hcrp = SubvectorData(hcr_sub);
-      pop = SubvectorData(po_sub);
+      dp  = SubvectorData(d_sub);
+      odp = SubvectorData(od_sub);
+      sp  = SubvectorData(s_sub);
+	  pp = SubvectorData(p_sub);
+      opp = SubvectorData(op_sub);
+      osp = SubvectorData(os_sub);
       fp  = SubvectorData(f_sub);
 
       
@@ -296,7 +349,8 @@ Vector      *z_velocity;
       BoxLoopI1(i, j, k, ix, iy, iz, nx, ny, nz,
 		ip, nx_f, ny_f, nz_f, 1, 1, 1,
 	     {
-			 fp[ip] += vol * hcrp[ip] * (1.0 - pop[ip]) * (tp[ip] - otp[ip]);
+			 fp[ip] += ss[ip]*vol*(pp[ip]*sp[ip]*dp[ip] - opp[ip]*osp[ip]*odp[ip]);
+                         //press[i][j][k]=pp[ip];
 	     });
    }
 #endif
@@ -344,17 +398,16 @@ Vector      *z_velocity;
       BoxLoopI1(i, j, k, ix, iy, iz, nx, ny, nz,
 		ip, nx_f, ny_f, nz_f, 1, 1, 1,
 	     {
-                //if (i==0&&j==0&&k==4) sp[ip] = -1.0e+4;
-	        fp[ip] -= vol * dt * sp[ip];
+	        fp[ip] -= vol * dt * (sp[ip] + et[ip]);
 	     });
    }
 #endif
 
-   bc_struct = PFModuleInvoke(BCStruct *, bc_temperature, 
+   bc_struct = PFModuleInvoke(BCStruct *, bc_pressure, 
 			      (problem_data, grid, gr_domain, time));
 
 
-   /* Get boundary temperature values for Dirichlet boundaries.   */
+   /* Get boundary pressure values for Dirichlet boundaries.   */
    /* These are needed for upstream weighting in mobilities - need boundary */
    /* values for rel perms and densities. */
 
@@ -362,7 +415,7 @@ Vector      *z_velocity;
    {
       subgrid = GridSubgrid(grid, is);
 	 
-      p_sub   = VectorSubvector(temperature, is);
+      p_sub   = VectorSubvector(pressure, is);
 
       nx_p = SubvectorNX(p_sub);
       ny_p = SubvectorNY(p_sub);
@@ -399,14 +452,9 @@ Vector      *z_velocity;
    /* Calculate relative permeability values overwriting current 
       phase source values */
 
-   /*PFModuleInvoke(void, rel_perm_module, 
-		  (rel_perm, temperature, density, 1.0, problem_data, 
-		   CALCFCN));*/
-
-   PFModuleInvoke(void, thermal_conductivity,
-                  (rel_perm, pressure, saturation, gravity, problem_data,
-                   CALCFCN));
-
+   PFModuleInvoke(void, rel_perm_module, 
+		  (rel_perm, pressure, density, gravity, problem_data, 
+		   CALCFCN));
 
 #if 1
    /* Calculate contributions from second order derivatives and gravity */
@@ -414,9 +462,13 @@ Vector      *z_velocity;
    {
       subgrid = GridSubgrid(grid, is);
 	
-      p_sub     = VectorSubvector(temperature, is);
+      p_sub     = VectorSubvector(pressure, is);
+      d_sub     = VectorSubvector(density, is);
       rp_sub    = VectorSubvector(rel_perm, is);
       f_sub     = VectorSubvector(fval, is);
+      permx_sub = VectorSubvector(permeability_x, is);
+      permy_sub = VectorSubvector(permeability_y, is);
+      permz_sub = VectorSubvector(permeability_z, is);
 	 
       ix = SubgridIX(subgrid) - 1;
       iy = SubgridIY(subgrid) - 1;
@@ -442,8 +494,12 @@ Vector      *z_velocity;
       sz_p = ny_p * nx_p;
 
       pp    = SubvectorData(p_sub);
+      dp    = SubvectorData(d_sub);
       rpp   = SubvectorData(rp_sub);
       fp    = SubvectorData(f_sub);
+      permxp = SubvectorData(permx_sub);
+      permyp = SubvectorData(permy_sub);
+      permzp = SubvectorData(permz_sub);
       
       ip = SubvectorEltIndex(p_sub, ix, iy, iz);
 
@@ -453,29 +509,35 @@ Vector      *z_velocity;
 //	   if(k==0) printf("i, j, t, io, qy %d %d %d %d %e\n",i,j,t,io,pp[ip]);
 	        /* Calculate right face velocity.
 		   diff >= 0 implies flow goes left to right */
-	       diff    = pp[ip] - pp[ip+1];
-		u_right = ffx 
+	        diff    = pp[ip] - pp[ip+1];
+		u_right = ffx * PMean(pp[ip], pp[ip+1], 
+				      permxp[ip], permxp[ip+1])
 		              * (diff / dx )
-		              * RPMean(pp[ip], pp[ip+1], rpp[ip],
-				       rpp[ip+1]);
+		              * RPMean(pp[ip], pp[ip+1], rpp[ip]*dp[ip],
+				       rpp[ip+1]*dp[ip+1])
+		              / viscosity;
 
 	        /* Calculate front face velocity.
 		   diff >= 0 implies flow goes back to front */
 	        diff    = pp[ip] - pp[ip+sy_p];
-		u_front = ffy 
+		u_front = ffy * PMean(pp[ip], pp[ip+sy_p], permyp[ip], 
+				      permyp[ip+sy_p])
 		              * (diff / dy )
-		              * RPMean(pp[ip], pp[ip+sy_p], rpp[ip],
-				       rpp[ip+sy_p]);
+		              * RPMean(pp[ip], pp[ip+sy_p], rpp[ip]*dp[ip],
+				       rpp[ip+sy_p]*dp[ip+sy_p])
+		              / viscosity;
 		
 	        /* Calculate upper face velocity.
 		   diff >= 0 implies flow goes lower to upper */
-		lower_cond = (pp[ip] / dz) - 0.5 * gravity;
-		upper_cond = (pp[ip+sz_p] / dz) + 0.5 * gravity;
+		lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
+		upper_cond = (pp[ip+sz_p] / dz) + 0.5 * dp[ip+sz_p] * gravity;
 		diff = lower_cond - upper_cond;
-		u_upper = ffz 
+		u_upper = ffz * PMean(pp[ip], pp[ip+sz_p], 
+				      permzp[ip], permzp[ip+sz_p])
 		              * diff
-		              * RPMean(lower_cond, upper_cond, rpp[ip], 
-				       rpp[ip+sz_p]);
+		              * RPMean(lower_cond, upper_cond, rpp[ip]*dp[ip], 
+				       rpp[ip+sz_p]*dp[ip+sz_p])
+		              / viscosity;
 
 	        fp[ip]      += dt * ( u_right + u_front + u_upper );
 		fp[ip+1]    -= dt * u_right;
@@ -501,96 +563,37 @@ Vector      *z_velocity;
 
 #endif
 
-#if 1
-   /* Calculate contributions from convection*/
-   ForSubgridI(is, GridSubgrids(grid))
-   {             
-      subgrid = GridSubgrid(grid, is); 
-                 
-      t_sub     = VectorSubvector(temperature, is);
-      s_sub     = VectorSubvector(saturation, is);
-      f_sub     = VectorSubvector(fval, is); 
-      hcw_sub   = VectorSubvector(heat_capacity_water, is);
-      xv_sub    = VectorSubvector(x_velocity, is);
-      yv_sub    = VectorSubvector(y_velocity, is);
-      zv_sub    = VectorSubvector(z_velocity, is);
-                                        
-      ix = SubgridIX(subgrid) - 1;
-      iy = SubgridIY(subgrid) - 1; 
-      iz = SubgridIZ(subgrid) - 1; 
-                 
-      nx = SubgridNX(subgrid) + 1; 
-      ny = SubgridNY(subgrid) + 1; 
-      nz = SubgridNZ(subgrid) + 1;
-                               
-      dx = SubgridDX(subgrid); 
-      dy = SubgridDY(subgrid);          
-      dz = SubgridDZ(subgrid);
-                 
-      ffx = dy * dz; 
-      ffy = dx * dz; 
-      ffz = dx * dy; 
-                 
-      nx_p = SubvectorNX(p_sub); 
-      ny_p = SubvectorNY(p_sub); 
-      nz_p = SubvectorNZ(p_sub);
- 
-      sy_p = nx_p;
-      sz_p = ny_p * nx_p;
- 
-      tp    = SubvectorData(t_sub);
-      sp    = SubvectorData(s_sub);
-      fp    = SubvectorData(f_sub);
-      hcwp    = SubvectorData(hcw_sub);
- 
-      xvp = SubvectorData(xv_sub);
-      yvp = SubvectorData(yv_sub);
-      zvp = SubvectorData(zv_sub);
-
-
-      ip = SubvectorEltIndex(p_sub, ix, iy, iz);
- 
-      BoxLoopI1(i, j, k, ix, iy, iz, nx, ny, nz,
-                ip, nx_p, ny_p, nz_p, 1, 1, 1,
-             {
-                /* Calculate right face temperature at i+1/2.
-                   diff >= 0 implies flow goes left to right */
-                diff    = tp[ip] - tp[ip+1];
-                u_right = ffx * 0.5 * (sp[ip] + sp[ip+1]) * 0.5 * (hcwp[ip] + hcwp[ip+1]) * diff * xvp[ip]; 
- 
-                /* Calculate front face velocity.
-                   diff >= 0 implies flow goes back to front */
-                diff    = tp[ip] - tp[ip+sy_p];
-                u_front = ffy * 0.5 * (sp[ip] + sp[ip+sy_p]) * 0.5 * (hcwp[ip] + hcwp[ip+sy_p]) * diff * yvp[ip];
- 
-                /* Calculate upper face velocity.
-                   diff >= 0 implies flow goes lower to upper */
-                diff = tp[ip] - tp[ip-sz_p];
-                u_upper = ffz * 0.5 * (sp[ip] + sp[ip+sz_p]) * 0.5 * (hcwp[ip] + hcwp[ip+sz_p]) * diff * zvp[ip];
- 
-                /*fp[ip]      += dt * ( u_right + u_front + u_upper );
-                fp[ip+1]    -= dt * u_right;
-                fp[ip+sy_p] -= dt * u_front;
-                fp[ip+sz_p] -= dt * u_upper;*/
-             });
-   }
- 
-#endif
-
-
-
    /*  Calculate correction for boundary conditions */
 #if 1   
    ForSubgridI(is, GridSubgrids(grid))
    {
       subgrid = GridSubgrid(grid, is);
 	 
+      d_sub     = VectorSubvector(density, is);
       rp_sub    = VectorSubvector(rel_perm, is);
       f_sub     = VectorSubvector(fval, is);
+      permx_sub = VectorSubvector(permeability_x, is);
+      permy_sub = VectorSubvector(permeability_y, is);
+      permz_sub = VectorSubvector(permeability_z, is);
 
-      p_sub     = VectorSubvector(temperature, is);
-      op_sub = VectorSubvector(temperature, is);
+	  p_sub     = VectorSubvector(pressure, is);
+	  op_sub = VectorSubvector(old_pressure, is);
       os_sub = VectorSubvector(old_saturation, is);
+
+      // sk Overland flow
+	  kw_sub = VectorSubvector(KW, is);
+	  ke_sub = VectorSubvector(KE, is);
+	  kn_sub = VectorSubvector(KN, is);
+	  ks_sub = VectorSubvector(KS, is);
+	  qx_sub = VectorSubvector(qx, is);
+	  qy_sub = VectorSubvector(qy, is);
+	  x_sl_sub = VectorSubvector(x_sl, is);
+          y_sl_sub = VectorSubvector(y_sl, is);
+	  mann_sub = VectorSubvector(man, is);
+          gnx = GetInt("ComputationalGrid.NX");
+          gny = GetInt("ComputationalGrid.NY");
+          obf_sub = VectorSubvector(ovrl_bc_flx,is);
+
 
       dx = SubgridDX(subgrid);
       dy = SubgridDY(subgrid);
@@ -615,8 +618,23 @@ Vector      *z_velocity;
       sy_p = nx_p;
       sz_p = ny_p * nx_p;
 
+      dp     = SubvectorData(d_sub);
       rpp    = SubvectorData(rp_sub);
       fp     = SubvectorData(f_sub);
+      permxp = SubvectorData(permx_sub);
+      permyp = SubvectorData(permy_sub);
+      permzp = SubvectorData(permz_sub);
+
+      kw_ = SubvectorData(kw_sub);
+      ke_ = SubvectorData(ke_sub);
+      kn_ = SubvectorData(kn_sub);
+      ks_ = SubvectorData(ks_sub);
+      qx_ = SubvectorData(qx_sub);
+      qy_ = SubvectorData(qy_sub);
+      x_sl_dat = SubvectorData(x_sl_sub);
+      y_sl_dat = SubvectorData(y_sl_sub);
+      mann_dat = SubvectorData(mann_sub);
+      obf_dat  = SubvectorData(obf_sub);
 
       pp = SubvectorData(p_sub);
       opp = SubvectorData(op_sub);
@@ -647,26 +665,30 @@ Vector      *z_velocity;
 		     dir = -1;
    		     diff  = pp[ip-1] - pp[ip];
 		     u_old = ffx 
+		       * PMean(pp[ip-1], pp[ip], permxp[ip-1], permxp[ip])
 		       * (diff / dx )
 		       * RPMean(pp[ip-1], pp[ip], 
-				rpp[ip-1], rpp[ip]); 
+				rpp[ip-1]*dp[ip-1], rpp[ip]*dp[ip]) 
+		       / viscosity;
 		     diff = value - pp[ip];
 		     u_new = RPMean(value, pp[ip], 
-				    rpp[ip-1], rpp[ip]);
+				    rpp[ip-1]*dp[ip-1], rpp[ip]*dp[ip]);
 		     break;
 		  case  1:
 		     dir = 1;
    		     diff  = pp[ip] - pp[ip+1];
 		     u_old = ffx 
+		       * PMean(pp[ip], pp[ip+1], permxp[ip], permxp[ip+1])
 		       * (diff / dx )
 		       * RPMean(pp[ip], pp[ip+1],
-				rpp[ip], rpp[ip+1]); 
+				rpp[ip]*dp[ip], rpp[ip+1]*dp[ip+1]) 
+		       / viscosity;
 		     diff = pp[ip] - value;
 		     u_new = RPMean(pp[ip], value,
-				    rpp[ip], rpp[ip+1]);
+				    rpp[ip]*dp[ip], rpp[ip+1]*dp[ip+1]);
 		     break;
 		  }
-		  u_new = u_new * ffx  
+		  u_new = u_new * ffx * ( permxp[ip] / viscosity ) 
 		               * 2.0 * (diff/dx);
 		  /*
 	       if ((k == 0) && (i == 7) && (j == 0))
@@ -684,26 +706,32 @@ Vector      *z_velocity;
 		     dir = -1;
    		     diff  = pp[ip-sy_p] - pp[ip];
 		     u_old = ffy 
+		       * PMean(pp[ip-sy_p], pp[ip], 
+			       permyp[ip-sy_p], permyp[ip])
 		       * (diff / dy )
 		       * RPMean(pp[ip-sy_p], pp[ip], 
-				rpp[ip-sy_p], rpp[ip]); 
+				rpp[ip-sy_p]*dp[ip-sy_p], rpp[ip]*dp[ip]) 
+		       / viscosity;
 		     diff =  value - pp[ip];
 		     u_new = RPMean(value, pp[ip], 
-				    rpp[ip-sy_p], rpp[ip]);
+				    rpp[ip-sy_p]*dp[ip-sy_p], rpp[ip]*dp[ip]);
 		     break;
 		  case  1:
 		     dir = 1;
    		     diff  = pp[ip] - pp[ip+sy_p];
 		     u_old = ffy 
+		       * PMean(pp[ip], pp[ip+sy_p], 
+			       permyp[ip], permyp[ip+sy_p])
 		       * (diff / dy )
 		       * RPMean(pp[ip], pp[ip+sy_p], 
-				rpp[ip], rpp[ip+sy_p]);
+				rpp[ip]*dp[ip], rpp[ip+sy_p]*dp[ip+sy_p])
+		       / viscosity;
 		     diff = pp[ip] - value;
 		     u_new = RPMean(pp[ip], value,
-				    rpp[ip], rpp[ip+sy_p]);
+				    rpp[ip]*dp[ip], rpp[ip+sy_p]*dp[ip+sy_p]);
 		     break;
 		  }
-		  u_new = u_new * ffy 
+		  u_new = u_new * ffy * ( permyp[ip] / viscosity ) 
                                * 2.0 * (diff/dy);
 		  /*
 	       if ((k == 0) && (i == 0) && (j == 0))
@@ -720,42 +748,48 @@ Vector      *z_velocity;
 		     {
 		     dir = -1;
 		     lower_cond = (pp[ip-sz_p] / dz) 
-                                    - 0.5 * gravity;
-		     upper_cond = (pp[ip] / dz) + 0.5 * gravity;
+                                    - 0.5 * dp[ip-sz_p] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 
 		     u_old = ffz 
+		       * PMean(pp[ip-sz_p], pp[ip], 
+			       permzp[ip-sz_p], permzp[ip])
 		       * diff
 		       * RPMean(lower_cond, upper_cond, 
-				rpp[ip-sz_p], rpp[ip]); 
+				rpp[ip-sz_p]*dp[ip-sz_p], rpp[ip]*dp[ip]) 
+		       / viscosity;
 
-		     lower_cond = (value / dz) - 0.25 * gravity;
-		     upper_cond = (pp[ip] / dz) + 0.25 * gravity;
+		     lower_cond = (value / dz) - 0.25 * dp[ip] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.25 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_new = RPMean(lower_cond, upper_cond, 
-				    rpp[ip-sz_p], rpp[ip]);
+				    rpp[ip-sz_p]*dp[ip-sz_p], rpp[ip]*dp[ip]);
 		     break;
 		     }   /* End case -1 */
 		  case  1:
 		     {
 		     dir = 1;
-		     lower_cond = (pp[ip] / dz) - 0.5 * gravity;
+		     lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
 		     upper_cond = (pp[ip+sz_p] / dz) 
-		                    - 0.5 * gravity;
+		                    - 0.5 * dp[ip+sz_p] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_old = ffz 
+		       * PMean(pp[ip], pp[ip+sz_p], 
+			       permzp[ip], permzp[ip+sz_p])
 		       * diff
 		       * RPMean(lower_cond, upper_cond, 
-				rpp[ip], rpp[ip+sz_p]);
-		     lower_cond = (pp[ip] / dz) - 0.25 * gravity;
-		     upper_cond = (value / dz) + 0.25 * gravity;
+				rpp[ip]*dp[ip], rpp[ip+sz_p]*dp[ip+sz_p])
+		       / viscosity;
+		     lower_cond = (pp[ip] / dz) - 0.25 * dp[ip] * gravity;
+		     upper_cond = (value / dz) + 0.25 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
 		     u_new = RPMean(lower_cond, upper_cond,
-				    rpp[ip], rpp[ip+sz_p]);
+				    rpp[ip]*dp[ip], rpp[ip+sz_p]*dp[ip+sz_p]);
 		     break;
 		     }   /* End case 1 */
 		  }
-		  u_new = u_new * ffz 
+		  u_new = u_new * ffz * ( permzp[ip] / viscosity ) 
                                * 2.0 * diff;
 		  /*
 	       if ((k == 25) && (i==1) && (j == 0) )
@@ -800,18 +834,22 @@ Vector      *z_velocity;
 		  case -1:
 		     dir = -1;
    		     diff  = pp[ip-1] - pp[ip];
-		     u_old = ffx 
+		     u_old = ffx * PMean(pp[ip-1], pp[ip], 
+					 permxp[ip-1], permxp[ip])
 		       * (diff / dx )
 		       * RPMean(pp[ip-1], pp[ip], 
-				rpp[ip-1], rpp[ip]); 
+				rpp[ip-1]*dp[ip-1], rpp[ip]*dp[ip]) 
+		       / viscosity;
 		     break;
 		  case  1:
 		     dir = 1;
    		     diff  = pp[ip] - pp[ip+1];
-		     u_old = ffx 
+		     u_old = ffx * PMean(pp[ip], pp[ip+1], 
+					 permxp[ip], permxp[ip+1])
 		       * (diff / dx )
 		       * RPMean(pp[ip], pp[ip+1], 
-				rpp[ip], rpp[ip+1]); 
+				rpp[ip]*dp[ip], rpp[ip+1]*dp[ip+1]) 
+		       / viscosity;
 		     break;
 		  }
 		  u_new = ffx;
@@ -823,18 +861,22 @@ Vector      *z_velocity;
 		  case -1:
 		     dir = -1;
    		     diff  = pp[ip-sy_p] - pp[ip];
-		     u_old = ffy 
+		     u_old = ffy * PMean(pp[ip-sy_p], pp[ip], 
+					 permyp[ip-sy_p], permyp[ip])
 		       * (diff / dy )
 		       * RPMean(pp[ip-sy_p], pp[ip], 
-				rpp[ip-sy_p], rpp[ip]); 
+				rpp[ip-sy_p]*dp[ip-sy_p], rpp[ip]*dp[ip]) 
+		       / viscosity;
 		     break;
 		  case  1:
 		     dir = 1;
    		     diff  = pp[ip] - pp[ip+sy_p];
-		     u_old = ffy 
+		     u_old = ffy * PMean(pp[ip], pp[ip+sy_p], 
+					 permyp[ip], permyp[ip+sy_p])
 		       * (diff / dy )
 		       * RPMean(pp[ip], pp[ip+sy_p], 
-				rpp[ip], rpp[ip+sy_p]);
+				rpp[ip]*dp[ip], rpp[ip+sy_p]*dp[ip+sy_p])
+		       / viscosity;
 		     break;
 		  }
 		  u_new = ffy;
@@ -846,24 +888,27 @@ Vector      *z_velocity;
 		  case -1:
 		     dir = -1;
 		     lower_cond = (pp[ip-sz_p] / dz) 
-		                    - 0.5 * gravity;
-		     upper_cond = (pp[ip] / dz) + 0.5 * gravity;
+		                    - 0.5 * dp[ip-sz_p] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
 		     diff = lower_cond - upper_cond;
-		     u_old = ffz 
+		     u_old = ffz * PMean(pp[ip-sz_p], pp[ip], 
+					 permzp[ip-sz_p], permzp[ip])
 		       * diff
 		       * RPMean(lower_cond, upper_cond, 
-				rpp[ip-sz_p], rpp[ip]); 
+				rpp[ip-sz_p]*dp[ip-sz_p], rpp[ip]*dp[ip]) 
+		       / viscosity;
 		     break;
 		  case  1:
 		     dir = 1;
-		     lower_cond = (pp[ip] / dz) - 0.5 * gravity;
+		     lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
 		     upper_cond = (pp[ip+sz_p] / dz)
-		                    + 0.5 * gravity;
+		                    + 0.5 * dp[ip+sz_p] * gravity;
 		     diff = lower_cond - upper_cond;
-		     u_old = ffz 
+		     u_old = ffz * PMean(0, 0, permzp[ip], permzp[ip+sz_p])
 		       * diff
 		       * RPMean(lower_cond, upper_cond,
-				rpp[ip], rpp[ip+sz_p]);
+				rpp[ip]*dp[ip], rpp[ip+sz_p]*dp[ip+sz_p])
+		       / viscosity;
 		     break;
 		  }
 		  u_new = ffz;
@@ -888,6 +933,235 @@ Vector      *z_velocity;
 	    break;
 	 }     /* End fluxbc case */
 
+	 case OverlandBC:
+	 {
+            BCStructPatchLoop(i, j, k, fdir, ival, bc_struct, ipatch, is,
+	    {
+               ip   = SubvectorEltIndex(p_sub, i, j, k);
+
+	       if (fdir[0])
+	       {
+
+		  switch(fdir[0])
+		  {
+		  case -1:
+		     dir = -1;
+   		     diff  = pp[ip-1] - pp[ip];
+		     u_old = ffx * PMean(pp[ip-1], pp[ip], 
+					 permxp[ip-1], permxp[ip])
+		       * (diff / dx )
+		       * RPMean(pp[ip-1], pp[ip], 
+				rpp[ip-1]*dp[ip-1], rpp[ip]*dp[ip]) 
+		       / viscosity;
+		     break;
+		  case  1:
+		     dir = 1;
+   		     diff  = pp[ip] - pp[ip+1];
+		     u_old = ffx * PMean(pp[ip], pp[ip+1], 
+					 permxp[ip], permxp[ip+1])
+		       * (diff / dx )
+		       * RPMean(pp[ip], pp[ip+1], 
+				rpp[ip]*dp[ip], rpp[ip+1]*dp[ip+1]) 
+		       / viscosity;
+		     break;
+		  }
+		  u_new = ffx;
+	       }
+	       else if (fdir[1])
+	       {
+
+		  switch(fdir[1])
+		  {
+		  case -1:
+		     dir = -1;
+   		     diff  = pp[ip-sy_p] - pp[ip];
+		     u_old = ffy * PMean(pp[ip-sy_p], pp[ip], 
+					 permyp[ip-sy_p], permyp[ip])
+		       * (diff / dy )
+		       * RPMean(pp[ip-sy_p], pp[ip], 
+				rpp[ip-sy_p]*dp[ip-sy_p], rpp[ip]*dp[ip]) 
+		       / viscosity;
+		     break;
+		  case  1:
+		     dir = 1;
+   		     diff  = pp[ip] - pp[ip+sy_p];
+		     u_old = ffy * PMean(pp[ip], pp[ip+sy_p], 
+					 permyp[ip], permyp[ip+sy_p])
+		       * (diff / dy )
+		       * RPMean(pp[ip], pp[ip+sy_p], 
+				rpp[ip]*dp[ip], rpp[ip+sy_p]*dp[ip+sy_p])
+		       / viscosity;
+		     break;
+		  }
+		  u_new = ffy;
+	       }
+	       else if (fdir[2])
+	       {
+
+		  switch(fdir[2])
+		  {
+		  case -1:
+		     dir = -1;
+		     lower_cond = (pp[ip-sz_p] / dz) 
+		                    - 0.5 * dp[ip-sz_p] * gravity;
+		     upper_cond = (pp[ip] / dz) + 0.5 * dp[ip] * gravity;
+		     diff = lower_cond - upper_cond;
+		     u_old = ffz * PMean(pp[ip-sz_p], pp[ip], 
+					 permzp[ip-sz_p], permzp[ip])
+		       * diff
+		       * RPMean(lower_cond, upper_cond, 
+				rpp[ip-sz_p]*dp[ip-sz_p], rpp[ip]*dp[ip]) 
+		       / viscosity;
+		     break;
+		  case  1:
+		     dir = 1;
+		     lower_cond = (pp[ip] / dz) - 0.5 * dp[ip] * gravity;
+		     upper_cond = (pp[ip+sz_p] / dz)
+		                    + 0.5 * dp[ip+sz_p] * gravity;
+		     diff = lower_cond - upper_cond;
+		     u_old = ffz * PMean(0, 0, permzp[ip], permzp[ip+sz_p])
+		       * diff
+		       * RPMean(lower_cond, upper_cond,
+				rpp[ip]*dp[ip], rpp[ip+sz_p]*dp[ip+sz_p])
+		       / viscosity;
+		   break;
+		  }
+		  u_new = ffz;
+	       }
+
+	       /* Remove the boundary term computed above */
+	       fp[ip] -= dt * dir * u_old;
+
+	       /*
+	       if ((fdir[2] > 0) && (i == 0) && (j == 0))
+		  printf("f before flux BC additions: %12.8f \n", fp[ip]);
+		  */
+		   //printf("u_new %e %e %e %e\n",u_new,dx,dy,dz);
+		   u_new = u_new * bc_patch_values[ival]; //sk: here we go in and implement surface routing!
+
+		   fp[ip] += dt * dir * u_new;
+	       /*
+	       if ((fdir[2] < 0) && (i == 0) && (j == 0))
+		  printf("f after flux BC additions: %12.8f \n\n",
+			 fp[ip]);
+			 */
+	    });
+ 
+
+            BCStructPatchLoopOvrlnd(i, j, k, fdir, ival, bc_struct, ipatch, is,
+            {
+                        if (fdir[2])
+                        {
+                                switch(fdir[2])
+                                {
+                                case 1:
+			   io   = SubvectorEltIndex(p_sub, i, j, 0);
+			   ip   = SubvectorEltIndex(p_sub, i, j, k);
+			   io   = SubvectorEltIndex(p_sub, i, j, 0);
+
+                   dir_x = 0.0;
+                   dir_y = 0.0;
+                   if(x_sl_dat[io] > 0.0) dir_x = -1.0;
+                   if(y_sl_dat[io] > 0.0) dir_y = -1.0;
+                   if(x_sl_dat[io] < 0.0) dir_x = 1.0; 
+                   if(y_sl_dat[io] < 0.0) dir_y = 1.0; 
+
+   	       qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]),0.5) / mann_dat[io]) * RPowerR(max((pp[ip]),0.0),(5.0/3.0));
+               //printf("x_slopes %d %d %d %e %e %e %e \n",i,j,k,x_sl_dat[io],qx_[io],pp[ip],mann_dat[io]);
+               qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]),0.5) / mann_dat[io]) * RPowerR(max((pp[ip]),0.0),(5.0/3.0));
+               //printf("y_slopes %d %d %d %e %e %e %e \n",i,j,k,y_sl_dat[io],qy_[io],pp[ip],mann_dat[io]);
+		   break;
+				}
+			}
+
+	     });
+
+	    BCStructPatchLoop(i, j, k, fdir, ival, bc_struct, ipatch, is,
+	    {
+			if (fdir[2])
+			{
+			   switch(fdir[2])
+			   {
+			   case 1:
+			   io   = SubvectorEltIndex(p_sub, i, j, 0);
+
+		           ke_[io] = max(qx_[io],0.0) - max(-qx_[io+1],0.0);
+		           kw_[io] = max(qx_[io-1],0.0) - max(-qx_[io],0.0);
+
+		           kn_[io] = max(qy_[io],0.0) - max(-qy_[io+sy_p],0.0);
+		           ks_[io] = max(qy_[io-sy_p],0.0) - max(-qy_[io],0.0);
+		   
+ 			   break;
+			   }
+			}
+
+		  });
+
+
+            *outflow = 0.0;
+            BCStructPatchLoop(i, j, k, fdir, ival, bc_struct, ipatch, is,
+	    {
+			if (fdir[2])
+			{
+				switch(fdir[2])
+				{
+				case 1:
+                                dir = 1;
+               ip   = SubvectorEltIndex(p_sub, i, j, k);
+			   io   = SubvectorEltIndex(p_sub, i, j, 0);
+
+           q_overlnd = 0.0;
+           q_overlnd = vol * (max(pp[ip],0.0) - max(opp[ip],0.0)) /dz +
+			             dt * vol * ((ke_[io]-kw_[io])/dx + (kn_[io] - ks_[io])/dy) / dz;
+		   
+                   /*if ( i == 0 && j == 0){ //left-lower corner
+                     obf_dat[io]= fabs(kw_[io]) + fabs(ks_[io]);
+                   } else if (i == 0 && j > 0 && j < (gny-1)) { // west face
+                     obf_dat[io]= fabs(kw_[io]);
+                   } else if (i == (gnx-1) && j == (gny-1)) { //right-upper corner
+                     obf_dat[io]= fabs(ke_[io]) + fabs(kn_[io]);
+                   } else if (j == 0 && i > 0 && i < (gnx-1)) { //south face
+                     obf_dat[io]= fabs(ks_[io]);
+                   } else if ( i == (gnx-1) && j == 0 ) { //right-lower corner
+                     obf_dat[io] = fabs(ks_[io]) + fabs(ke_[io]);   
+                   } else if (i == (gnx-1) && j > 0 && j < (gny-1)) { //east face
+                     obf_dat[io]= fabs(ke_[io]);
+                   } else if (i > 0 && i < (gnx-1) && j == (gny-1)) { //north face
+                     obf_dat[io] = kn_[io];
+                   } else if (i == 0 && j == (gny-1)) { //left-upper corner
+                     obf_dat[io] = fabs(kw_[io]) + fabs(kn_[io]);
+                   } else { //interior
+                     obf_dat[io] = qx_[io];
+                   }*/
+         
+                   obf_dat[io] = 0.0;
+                   if ( i >= 0 && i <= (gnx-1) && j == 0 && qy_[io] < 0.0 ){ //south face
+                     obf_dat[io]+= fabs(qy_[io]);
+                   } else if (i == 0 && j >= 0 && j <= (gny-1) && qx_[io] < 0.0) { // west face
+                     obf_dat[io]+= fabs(qx_[io]);
+                   } else if (i >= 0 && i <= (gnx-1) && j == (gny-1) && qy_[io] > 0.0) { //north face
+                     obf_dat[io]+= fabs(qy_[io]);
+                   } else if (i == (gnx-1) && j >= 0 && j <= (gny-1) && qx_[io] > 0.0) { //east face
+                     obf_dat[io]+= fabs(qx_[io]);
+                   } else if (i > 0 && i < (gnx-1) && j > 0 && j < (gny-1)) { //interior
+                     obf_dat[io] = qx_[io];
+                   }
+
+               
+                   if (j==0&&i==0){
+                     *outflow=fabs(ks_[io])+fabs(kw_[io]);
+                   }
+         
+	       fp[ip] += q_overlnd;
+
+   			   break;
+				}
+			}
+
+	     });
+
+	    break;
+	 }     /* End OverlandBC case */
 
 	 }     /* End switch BCtype */
       }        /* End ipatch loop */
@@ -899,23 +1173,23 @@ Vector      *z_velocity;
    FreeBCStruct(bc_struct);
 #if 1
    PFModuleInvoke( void, bc_internal, (problem, problem_data, fval, NULL, 
-				       time, temperature, CALCFCN));
+				       time, pressure, CALCFCN));
 #endif
 
 #if 1
 
-   /* Set temperatures outside domain to zero.  
+   /* Set pressures outside domain to zero.  
     * Recall: equation to solve is f = 0, so components of f outside 
-    * domain are set to the respective temperature value.
+    * domain are set to the respective pressure value.
     *
-    * Should change this to set temperatures to scaling value.
-    * CSW: Should I set this to temperature * vol * dt ??? */
+    * Should change this to set pressures to scaling value.
+    * CSW: Should I set this to pressure * vol * dt ??? */
 
    ForSubgridI(is, GridSubgrids(grid))
    {
       subgrid = GridSubgrid(grid, is);
 	 
-      p_sub = VectorSubvector(temperature, is);
+      p_sub = VectorSubvector(pressure, is);
       f_sub = VectorSubvector(fval, is);
 
       /* RDF: assumes resolutions are the same in all 3 directions */
@@ -943,15 +1217,22 @@ Vector      *z_velocity;
 
    EndTiming(public_xtra -> time_index);
 
+   FreeVector(KW);
+   FreeVector(KE);
+   FreeVector(KN);
+   FreeVector(KS);
+   FreeVector(qx);
+   FreeVector(qy); 
+
    return;
 }
 
 
 /*--------------------------------------------------------------------------
- * TempFunctionEvalInitInstanceXtra
+ * NlFunctionEvalInitInstanceXtra
  *--------------------------------------------------------------------------*/
 
-PFModule    *TempFunctionEvalInitInstanceXtra(problem, grid, temp_data)
+PFModule    *NlFunctionEvalInitInstanceXtra(problem, grid, temp_data)
 Problem     *problem;
 Grid        *grid;
 double      *temp_data;
@@ -973,18 +1254,14 @@ double      *temp_data;
    {
       (instance_xtra -> density_module) =
          PFModuleNewInstance(ProblemPhaseDensity(problem), () );
-      (instance_xtra -> heat_capacity_module) =
-         PFModuleNewInstance(ProblemPhaseHeatCapacity(problem), () );
       (instance_xtra -> saturation_module) =
          PFModuleNewInstance(ProblemSaturation(problem), (NULL, NULL) );
-      (instance_xtra -> thermal_conductivity) =
-         PFModuleNewInstance(ProblemThermalConductivity(problem), (NULL) );
       (instance_xtra -> rel_perm_module) =
          PFModuleNewInstance(ProblemPhaseRelPerm(problem), (NULL, NULL) );
       (instance_xtra -> phase_source) =
          PFModuleNewInstance(ProblemPhaseSource(problem), (grid));
-      (instance_xtra -> bc_temperature) =
-         PFModuleNewInstance(ProblemBCTemperature(problem), (problem));
+      (instance_xtra -> bc_pressure) =
+         PFModuleNewInstance(ProblemBCPressure(problem), (problem));
       (instance_xtra -> bc_internal) =
          PFModuleNewInstance(ProblemBCInternal(problem), () );
 
@@ -992,12 +1269,12 @@ double      *temp_data;
    else
    {
       PFModuleReNewInstance((instance_xtra -> density_module), ());
-      PFModuleReNewInstance((instance_xtra -> heat_capacity_module), ());
-      PFModuleReNewInstance((instance_xtra -> saturation_module),(NULL, NULL));
-      PFModuleReNewInstance((instance_xtra -> thermal_conductivity), (NULL, NULL));
-      PFModuleReNewInstance((instance_xtra -> rel_perm_module),(NULL, NULL));
+      PFModuleReNewInstance((instance_xtra -> saturation_module), 
+			    (NULL, NULL));
+      PFModuleReNewInstance((instance_xtra -> rel_perm_module), 
+			    (NULL, NULL));
       PFModuleReNewInstance((instance_xtra -> phase_source), (NULL));
-      PFModuleReNewInstance((instance_xtra -> bc_temperature), (problem));
+      PFModuleReNewInstance((instance_xtra -> bc_pressure), (problem));
       PFModuleReNewInstance((instance_xtra -> bc_internal), ());
    }
 
@@ -1007,10 +1284,10 @@ double      *temp_data;
 
 
 /*--------------------------------------------------------------------------
- * TempFunctionEvalFreeInstanceXtra
+ * NlFunctionEvalFreeInstanceXtra
  *--------------------------------------------------------------------------*/
 
-void  TempFunctionEvalFreeInstanceXtra()
+void  NlFunctionEvalFreeInstanceXtra()
 {
    PFModule      *this_module   = ThisPFModule;
    InstanceXtra  *instance_xtra = PFModuleInstanceXtra(this_module);
@@ -1019,10 +1296,9 @@ void  TempFunctionEvalFreeInstanceXtra()
    {
       PFModuleFreeInstance(instance_xtra -> density_module);
       PFModuleFreeInstance(instance_xtra -> saturation_module);
-    //  PFModuleFreeInstance(instance_xtra -> thermal_conductivity);
       PFModuleFreeInstance(instance_xtra -> rel_perm_module);
       PFModuleFreeInstance(instance_xtra -> phase_source);
-      PFModuleFreeInstance(instance_xtra -> bc_temperature);
+      PFModuleFreeInstance(instance_xtra -> bc_pressure);
       PFModuleFreeInstance(instance_xtra -> bc_internal);
       
       tfree(instance_xtra);
@@ -1031,10 +1307,10 @@ void  TempFunctionEvalFreeInstanceXtra()
 
 
 /*--------------------------------------------------------------------------
- * TempFunctionEvalNewPublicXtra
+ * NlFunctionEvalNewPublicXtra
  *--------------------------------------------------------------------------*/
 
-PFModule   *TempFunctionEvalNewPublicXtra()
+PFModule   *NlFunctionEvalNewPublicXtra()
 {
    PFModule      *this_module   = ThisPFModule;
    PublicXtra    *public_xtra;
@@ -1051,10 +1327,10 @@ PFModule   *TempFunctionEvalNewPublicXtra()
 
 
 /*--------------------------------------------------------------------------
- * TempFunctionEvalFreePublicXtra
+ * NlFunctionEvalFreePublicXtra
  *--------------------------------------------------------------------------*/
 
-void  TempFunctionEvalFreePublicXtra()
+void  NlFunctionEvalFreePublicXtra()
 {
    PFModule    *this_module   = ThisPFModule;
    PublicXtra  *public_xtra   = PFModulePublicXtra(this_module);
@@ -1068,10 +1344,10 @@ void  TempFunctionEvalFreePublicXtra()
 
 
 /*--------------------------------------------------------------------------
- * TempFunctionEvalSizeOfTempData
+ * NlFunctionEvalSizeOfTempData
  *--------------------------------------------------------------------------*/
 
-int  TempFunctionEvalSizeOfTempData()
+int  NlFunctionEvalSizeOfTempData()
 {
    return 0;
 }
