@@ -493,16 +493,23 @@ double      *temp_data;
       
      
       flag = KINMalloc(kin_mem,KINSolFunctionEval,uscalen);
-      if (flag == KIN_SUCCESS) printf("\nKINSOL ALLOCATED SUCCESSFULLY \n");
-      if (flag == KIN_MEM_NULL) {
+      if (flag == KIN_SUCCESS) 
+	 printf("\nKINSOL ALLOCATED SUCCESSFULLY \n");
+      if (flag == KIN_MEM_NULL) 
+      {
         printf("\nKINSOL COULD NOT ALLOCATE MEMORY \n");
-        return;}
-      if (flag == KIN_MEM_FAIL) {
+        return NULL;
+      }
+      if (flag == KIN_MEM_FAIL) 
+      {
         printf("\nMEMEORY ALLOCATION REQUEST FAILED\n");
-        return;}
-      if (flag == KIN_ILL_INPUT) {
+        return NULL;
+      }
+      if (flag == KIN_ILL_INPUT) 
+      {
         printf("\nINPUT ARGUMENT HAS ILLEGAL VALUE\n");
-        return;}
+        return NULL;
+      }
 
       /* Specifies pointer to user-defined memory */
       instance_xtra -> kin_mem = kin_mem;
@@ -554,18 +561,27 @@ void  KinsolNonlinSolverFreeInstanceXtra()
 
    if (instance_xtra)
    {
-      PFModuleFreeInstance((instance_xtra -> press_function_eval));
-      PFModuleFreeInstance((instance_xtra -> temp_function_eval));
+      PFModuleFreeInstance(instance_xtra -> press_function_eval);
+      PFModuleFreeInstance(instance_xtra -> temp_function_eval);
       if (instance_xtra -> richards_jacobian_eval != NULL)
       {
-         PFModuleFreeInstance((instance_xtra -> richards_jacobian_eval));
+         PFModuleFreeInstance(instance_xtra -> richards_jacobian_eval);
       }
 
       if (instance_xtra -> precond_pressure != NULL)
-         PFModuleFreeInstance((instance_xtra -> precond_pressure));
+      {
+         PFModuleFreeInstance(instance_xtra -> precond_pressure);
+      }
 
-      if (instance_xtra -> precond_temperature != NULL)
-         PFModuleFreeInstance((instance_xtra -> precond_temperature));
+      if (instance_xtra -> precond_temperature != NULL) 
+      {
+         PFModuleFreeInstance(instance_xtra -> precond_temperature);
+      }
+
+      if (instance_xtra -> temperature_jacobian_eval != NULL) 
+      {
+         PFModuleFreeInstance(instance_xtra -> temperature_jacobian_eval);
+      }
 
       N_VDestroy_Parflow(instance_xtra -> uscalen);
       N_VDestroy_Parflow(instance_xtra -> fscalen);

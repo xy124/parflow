@@ -81,9 +81,9 @@ typedef struct
 #define DataTotalMem(data)  ((data) -> total_members)
 #define DataNum(data)       ((data) -> num)
 #define DataMember(data, hashkey, entryPtr) \
-        ((int)(entryPtr = Tcl_FindHashEntry(&DataMembers(data), hashkey)) \
-        ? (Databox *)Tcl_GetHashValue(entryPtr) \
-        : (Databox *) NULL)
+   ( ((entryPtr = Tcl_FindHashEntry(&DataMembers(data), hashkey)) != 0)	\
+   ? (Databox *)Tcl_GetHashValue(entryPtr)				\
+   : (Databox *) NULL)
 #define FreeData(data) (free((Data *)data))
 
 
@@ -134,6 +134,8 @@ int MDiffCommand P((ClientData clientData , Tcl_Interp *interp , int argc , char
 int SaveDiffCommand P((ClientData clientData , Tcl_Interp *interp , int argc , char *argv []));
 int DiffEltCommand P((ClientData clientData , Tcl_Interp *interp , int argc , char *argv []));
 int DeleteCommand P((ClientData clientData , Tcl_Interp *interp , int argc , char *argv []));
+
+void Axpy(double alpha, Databox *X,  Databox *Y);
 
 #undef P
 
