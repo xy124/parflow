@@ -474,6 +474,8 @@ void AdvanceRichards(PFModule *this_module,
    char          dt_info;
    char          file_prefix[64], file_postfix[64];
 
+   sprintf(file_prefix, GlobalsOutFileName);
+
    /***********************************************************************/
    /*                                                                     */
    /*                Begin the main computational section                 */
