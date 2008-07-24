@@ -469,5 +469,37 @@ pfset Solver.Linear.Preconditioner.MGSemi.MaxLevels      100
 pfrun crater
 pfundist crater
 
+#
+# Tests 
+#
+source pftest.tcl
+set passed 1
+
+if ![pftestFile crater.out.perm_x.pfb "Max difference in perm_x" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile crater.out.perm_y.pfb "Max difference in perm_y" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile crater.out.perm_z.pfb "Max difference in perm_z" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile crater.out.porosity.pfb "Max difference in porosity" $sig_digits] {
+    set passed 0
+}
+
+foreach i "00000 00001 00002 00003 00004 00005 00006 00007 00008 00009 00010" {
+    if ![pftestFile crater.out.press.$i.pfb "Max difference in Pressure for timestep $i" $sig_digits] {
+	set passed 0
+    }
+    if ![pftestFile crater.out.satur.$i.pfb "Max difference in Saturation for timestep $i" $sig_digits] {
+	set passed 0
+    }
+}
 
 
+if $passed {
+    puts "crater2D : PASSED"
+} {
+    puts "crater2D : FAILED"
+}

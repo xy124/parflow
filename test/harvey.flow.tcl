@@ -367,8 +367,41 @@ set head [pfhhead $press]
 pfsave $head -pfb harvey_flow.$k.head.pfb
 }
 
-cd ".."
-
 # this could run other tcl scripts now an example is below
 #puts stdout "running SLIM"
 #source bromide_trans.sm.tcl
+
+#
+# Tests 
+#
+source pftest.tcl
+
+set passed 1
+
+if ![pftestFile harvey_flow.1.out.press.pfb "Max difference in Pressure" $sig_digits] {
+    set passed 0
+}
+
+if ![pftestFile harvey_flow.1.out.porosity.pfb "Max difference in Porosity" $sig_digits] {
+    set passed 0
+}
+
+if ![pftestFile harvey_flow.1.head.pfb "Max difference in Head" $sig_digits] {
+    set passed 0
+}
+
+if ![pftestFile harvey_flow.1.out.perm_x.pfb "Max difference in perm_x" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile harvey_flow.1.out.perm_y.pfb "Max difference in perm_y" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile harvey_flow.1.out.perm_z.pfb "Max difference in perm_z" $sig_digits] {
+    set passed 0
+}
+
+if $passed {
+    puts "harvey_flow.1 : PASSED"
+} {
+    puts "harvey_flow.1 : FAILED"
+}
