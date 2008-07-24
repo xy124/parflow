@@ -465,3 +465,35 @@ pfundist forsyth2
 
 
 
+
+#
+# Tests 
+#
+source pftest.tcl
+set passed 1
+
+if ![pftestFile forsyth2.out.perm_x.pfb "Max difference in perm_x" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile forsyth2.out.perm_y.pfb "Max difference in perm_y" $sig_digits] {
+    set passed 0
+}
+if ![pftestFile forsyth2.out.perm_z.pfb "Max difference in perm_z" $sig_digits] {
+    set passed 0
+}
+
+foreach i "00000 00001" {
+    if ![pftestFile forsyth2.out.press.$i.pfb "Max difference in Pressure for timestep $i" $sig_digits] {
+    set passed 0
+}
+    if ![pftestFile forsyth2.out.satur.$i.pfb "Max difference in Saturation for timestep $i" $sig_digits] {
+    set passed 0
+}
+}
+
+
+if $passed {
+    puts "forsyth2 : PASSED"
+} {
+    puts "forsyth2 : FAILED"
+}
