@@ -506,6 +506,7 @@ NameArray NA_NewNameArray(char *string)
 int NA_AppendToArray(NameArray name_array, char *string)
 {
    int size;
+   int i;
   
    char *ptr;
 
@@ -539,7 +540,7 @@ int NA_AppendToArray(NameArray name_array, char *string)
    if(name_array -> tok_string)
 	   free(name_array -> tok_string);
 
-   for(int i = 0; i < name_array -> num; i++) 
+   for(i = 0; i < name_array -> num; i++) 
    {
       free(name_array -> names[i]);
    }
@@ -564,20 +565,22 @@ int NA_AppendToArray(NameArray name_array, char *string)
 
 void NA_FreeNameArray(NameArray name_array)
 {
-	if(name_array)
-	{
-		if(name_array -> string)
-			free(name_array -> string);
-		if(name_array -> tok_string)
-			free(name_array -> tok_string);
-		for(int i = 0; i < name_array -> num; i++) 
-		{
-		   free(name_array -> names[i]);
-		}
-		if(name_array -> names)
-			free(name_array -> names);
-		free(name_array);
-	}
+   int i;
+
+   if(name_array)
+   {
+      if(name_array -> string)
+	 free(name_array -> string);
+      if(name_array -> tok_string)
+	 free(name_array -> tok_string);
+      for(i = 0; i < name_array -> num; i++) 
+      {
+	 free(name_array -> names[i]);
+      }
+      if(name_array -> names)
+	 free(name_array -> names);
+      free(name_array);
+   }
 }
 
 int NA_NameToIndex(NameArray name_array, char *name)
