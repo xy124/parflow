@@ -49,8 +49,8 @@
   integer  :: counter(nx,ny) 
   character*100 :: RI
 
-allocate (pressure_data(nx,ny,nz),saturation_data(nx,ny,nz),evap_trans_data(nx,ny,nz),mask_data(nx,ny,nz),porosity_data(nx,ny,nz))
 
+allocate (pressure_data(nx,ny,nz),saturation_data(nx,ny,nz),evap_trans_data(nx,ny,nz),mask_data(nx,ny,nz),porosity_data(nx,ny,nz))
 !=== End Variable List ===================================================
 ix = ix + 1 !Correction for CLM/Fortran space
 iy = iy + 1 !Correction for CLM/Fortran space
@@ -90,7 +90,7 @@ drv%nt = 18
 write(RI,*) rank
 
 if (time == 0.0d0) then ! Check if initialization necessary 
-! print *,"INITIALIZATION"
+ print *,"INITIALIZATION"
 
 !  open(10,file='drv_clmin.dat.'//trim(adjustl(RI)),form='formatted',status='old',action='read')
 
@@ -176,7 +176,7 @@ if (time == 0.0d0) then ! Check if initialization necessary
   call drv_readvegpf (drv, grid, tile, clm)  
 
 !=== Initialize CLM and DIAG variables
-!print *,"Initialize CLM and DIAG variables"
+print *,"Initialize CLM and DIAG variables"
   do t=1,drv%nch 
      clm%kpatch = t
      call drv_clmini (drv, grid, tile(t), clm(t))           !Initialize CLM Variables
@@ -186,12 +186,12 @@ if (time == 0.0d0) then ! Check if initialization necessary
   !call topomask(clm,drv)
 
 !@ Call to subroutine that reads in 2D array(s) of input data (e.g. hksat)
-!print *,"Call to subroutine that reads in 2D array(s) of input data (e.g. porosity)"
+print *,"Call to subroutine that reads in 2D array(s) of input data (e.g. porosity)"
   call read_array(drv,clm,rank)
 
 !@ Initialize the CLM topography mask
-!print *,"Initialize the CLM topography mask"
-!print *,"DIMENSIONS",nx,nx_f,drv%nc,drv%nr,drv%nch
+print *,"Initialize the CLM topography mask"
+print *,"DIMENSIONS",nx,nx_f,drv%nc,drv%nr,drv%nch
 counter = 0
 do t=1,drv%nch
 i=tile(t)%col
@@ -209,7 +209,7 @@ j=tile(t)%row
 enddo
 
 !@ Call to subroutine to open (2D-) output files
-!print *,"Open (2D-) output files"
+print *,"Open (2D-) output files"
   call open_files(clm,drv,rank,ix,iy) 
 
 !=== Read restart file or set initial conditions
@@ -217,7 +217,7 @@ enddo
 !call drv_date2time(otime,drv%doy,drv%day,drv%gmt, &
 !             drv%syr,drv%smo,drv%sda,drv%shr,drv%smn,drv%sss)
 
-!print *,"Read restart file"
+print *,"Read restart file"
   call drv_restart(1,drv,tile,clm,rank)  !(1=read,2=write)
 
 !call MPI_BCAST(clm,drv%nch,clm1d,0,MPI_COMM_WORLD,error)
@@ -233,10 +233,11 @@ endif !======= End of the initialization ================
 !if (dt /= 0.0d0) drv%ts = dt * 3600.0d0
 !clm%dtime = dble(drv%ts)
 
+print*, "implied array copy of clm%qlux/old/veg"
  clm%qflx_infl_old = clm%qflx_infl
  clm%qflx_tran_veg_old = clm%qflx_tran_veg
 
-!print *,"Call the Readout"
+print *,"Call the Readout"
  call pfreadout(clm,drv,tile,saturation_data,pressure_data,rank,ix,iy) 
 
 !=========================================================================
