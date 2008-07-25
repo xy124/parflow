@@ -103,6 +103,8 @@ typedef struct
 
    int iteration_number;
 
+   double dump_index;
+
 } InstanceXtra; 
 
 
@@ -146,8 +148,6 @@ void SetupRichards(PFModule *this_module) {
    double        dtmp;
 
    CommHandle   *handle;
-
-   double        dump_index;
 
    int           any_file_dumped;
 
@@ -214,7 +214,7 @@ void SetupRichards(PFModule *this_module) {
    dt = 0.0e0;
 
    instance_xtra -> iteration_number = instance_xtra -> file_number = start_count;
-   dump_index = 1.0;
+   instance_xtra -> dump_index = 1.0;
 
    if ( ( (t >= stop_time) || (instance_xtra -> iteration_number > public_xtra -> max_iterations) ) 
    && ( take_more_time_steps == 1) )
@@ -450,7 +450,6 @@ void AdvanceRichards(PFModule *this_module,
    double       dx,dy,dz;
    int          rank;
 
-   double        dump_index;
    int           any_file_dumped;
    int           dump_files;
    int           retval;
@@ -509,7 +508,7 @@ void AdvanceRichards(PFModule *this_module,
 
    t = start_time;
 
-   dump_index = 1.0;
+   instance_xtra -> dump_index = 1.0;
 
    do  /* while take_more_time_steps */
    {
@@ -616,10 +615,10 @@ void AdvanceRichards(PFModule *this_module,
 
 	    if ( dump_interval > 0 )
 	    {
-	       print_dt = start_time + dump_index*dump_interval - t;
+	       print_dt = start_time +  instance_xtra -> dump_index*dump_interval - t;
 
 	       //      if ( dt >= print_dt )
-	       if ( t == (dump_index*dump_interval) )
+	       if ( t == ( instance_xtra -> dump_index*dump_interval) )
 	       {
 		  // dt = print_dt;
 		  dt_info = 'p';
@@ -695,7 +694,7 @@ void AdvanceRichards(PFModule *this_module,
 	 WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
 
 	 any_file_dumped = 1;
-	 dump_index++;
+	  instance_xtra -> dump_index++;
       }
 
       /*if ( ( print_satur ) && ( dump_files ) )*/
