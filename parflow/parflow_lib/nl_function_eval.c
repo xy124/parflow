@@ -124,11 +124,7 @@ Vector      *ovrl_bc_flx;     /*sk overland flow boundary fluxes*/
    double      *x_sl_dat, *y_sl_dat, *mann_dat;
    double      *obf_dat;
    double      dir_x, dir_y;
-   int         t;
    double      q_overlnd;
-
- //  double      press[12][12][10],pressbc[12][12],xslope[12][12],yslope[12][12];
-//   double      press[2][1][390],pressbc[400][1],xslope[58][30],yslope[58][30];
 
    Vector      *porosity          = ProblemDataPorosity(problem_data);
    Vector      *permeability_x    = ProblemDataPermeabilityX(problem_data);

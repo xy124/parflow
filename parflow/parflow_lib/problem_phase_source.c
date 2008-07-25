@@ -63,10 +63,6 @@ double       time;
    PFModule      *this_module   = ThisPFModule;
    PublicXtra    *public_xtra   = PFModulePublicXtra(this_module);
 
-   Vector           *perm_x = ProblemDataPermeabilityX(problem_data);
-   Vector           *perm_y = ProblemDataPermeabilityY(problem_data);
-   Vector           *perm_z = ProblemDataPermeabilityZ(problem_data);
-
    Grid             *grid = VectorGrid(phase_source);
 
    GrGeomSolid      *gr_solid, *gr_domain;

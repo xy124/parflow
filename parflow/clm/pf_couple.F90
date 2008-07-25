@@ -131,8 +131,9 @@ subroutine pf_couple(drv,clm,tile,evap_trans_data)
   
   error = 0.0d0
   error = endwatb - begwatb - (tot_infl_mm - tot_tran_veg_mm) ! + tot_drain_mm
-   
-  write(199,'(1i,1x,f,1x,5e)') clm(1)%istep,drv%time,error,tot_infl_mm,tot_tran_veg_mm,begwatb,endwatb
+ 
+! SGS failed to compile with gfortran  
+!  write(199,'(1i,1x,f,1x,5e)') clm(1)%istep,drv%time,error,tot_infl_mm,tot_tran_veg_mm,begwatb,endwatb
   !print *,""
   !print *,"Error (%):",error
 !@ End: mass balance  

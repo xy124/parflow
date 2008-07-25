@@ -146,7 +146,6 @@ void      SolverImpes()
    ProblemData  *problem_data        = (instance_xtra -> problem_data);
 
    Grid         *grid                = (instance_xtra -> grid);
-   Grid         *grid2d              = (instance_xtra -> grid2d);
    Grid         *x_grid              = (instance_xtra -> x_grid);
    Grid         *y_grid              = (instance_xtra -> y_grid);
    Grid         *z_grid              = (instance_xtra -> z_grid);

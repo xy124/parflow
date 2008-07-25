@@ -1076,14 +1076,13 @@ int *ComputeTop(PFModule    *this_module,  /* The module */
 ) {
 
    PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
-   InstanceXtra  *instance_xtra    = PFModuleInstanceXtra(this_module);
 
    int      ix, iy, iz;
    int      nx, ny, nz;
    int      r;
    int      ir;
    
-   int      is, i, j, k, ips, iel, ipicv;
+   int      is, i, j, k;
 
    int      num_regions;
    int      *region_indices;
@@ -1091,7 +1090,6 @@ int *ComputeTop(PFModule    *this_module,  /* The module */
    Type0         *dummy0;
    Type1         *dummy1;
    Type2         *dummy2;
-   Type3         *dummy3;
 
    Grid          *grid = VectorGrid(vector);
 
@@ -1141,7 +1139,6 @@ int *ComputeTop(PFModule    *this_module,  /* The module */
       ForSubgridI(is, subgrids)
       {
 	 Subgrid       *subgrid   = SubgridArraySubgrid(subgrids, is);
-	 Subvector     *subvector = VectorSubvector(vector, is);
 
 	 ix = SubgridIX(subgrid);
 	 iy = SubgridIY(subgrid);

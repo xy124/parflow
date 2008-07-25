@@ -120,7 +120,6 @@ void SetupRichards(PFModule *this_module) {
 
    int           print_subsurf_data  = (public_xtra -> print_subsurf_data);
    int           print_press         = (public_xtra -> print_press);
-   int           print_velocities    = (public_xtra -> print_velocities);
    int           print_satur         = (public_xtra -> print_satur);
    int           print_wells         = (public_xtra -> print_wells);
 
@@ -140,9 +139,7 @@ void SetupRichards(PFModule *this_module) {
    int           take_more_time_steps;
 
    double        t;
-   double        ct = 0.0;
    double        dt = 0.0;
-   double        cdt = 0.0;
    double        gravity = ProblemGravity(problem);
 
    double        dtmp;
@@ -169,8 +166,6 @@ void SetupRichards(PFModule *this_module) {
    /* do turning bands (and other stuff maybe) */
    PFModuleInvoke(void, set_problem_data, (problem_data));
    gr_domain = ProblemDataGrDomain(problem_data);
-   Vector *porosity  = ProblemDataPorosity(problem_data);
-
 
    if ( print_subsurf_data )
    {
@@ -409,22 +404,21 @@ void AdvanceRichards(PFModule *this_module,
    PublicXtra    *public_xtra      = PFModulePublicXtra(this_module);
    InstanceXtra  *instance_xtra    = PFModuleInstanceXtra(this_module);
 
+#ifdef HAVE_CLM
 //  sk: For the couple with CLM 
    int p = GetInt("Process.Topology.P");
    int q = GetInt("Process.Topology.Q");
    int r = GetInt("Process.Topology.R");
+#endif
 
    Problem      *problem           = (public_xtra -> problem);
 
    int           max_iterations      = (public_xtra -> max_iterations);
-   int           print_subsurf_data  = (public_xtra -> print_subsurf_data);
    int           print_press         = (public_xtra -> print_press);
    int           print_velocities    = (public_xtra -> print_velocities);
    int           print_satur         = (public_xtra -> print_satur);
    int           print_wells         = (public_xtra -> print_wells);
 
-   PFModule     *set_problem_data    = (instance_xtra -> set_problem_data);
-   PFModule     *ic_phase_pressure   = (instance_xtra -> ic_phase_pressure);
    PFModule     *problem_saturation  = (instance_xtra -> problem_saturation);
    PFModule     *phase_density       = (instance_xtra -> phase_density);
    PFModule     *select_time_step    = (instance_xtra -> select_time_step);
@@ -434,7 +428,6 @@ void AdvanceRichards(PFModule *this_module,
    ProblemData  *problem_data        = (instance_xtra -> problem_data);
 
    Grid         *grid                = (instance_xtra -> grid);
-   Grid         *grid2d              = (instance_xtra -> grid2d);
 
    int           start_count         = ProblemStartCount(problem);
    double        dump_interval       = ProblemDumpInterval(problem);
@@ -442,11 +435,10 @@ void AdvanceRichards(PFModule *this_module,
   Vector *porosity  = ProblemDataPorosity(problem_data);
 
 /* sk: Vector that contains the outflow at the boundary*/
-   Vector       *fval;
    Subgrid      *subgrid;
-   Subvector    *p_sub, *s_sub, *f_sub, *et_sub, *m_sub, *po_sub;
-   double       *pp,*sp, *fp, *et, *ms, *po_dat;
-   int          is,nx,ny,nz,nx_f,ny_f,nz_f,nch,ip,ix,iy,iz; 
+   Subvector    *p_sub, *s_sub, *et_sub, *m_sub, *po_sub;
+   double       *pp,*sp, *et, *ms, *po_dat;
+   int          is,nx,ny,nz,nx_f,ny_f,nz_f,ip,ix,iy,iz; 
    double       dx,dy,dz;
    int          rank;
 
@@ -466,7 +458,6 @@ void AdvanceRichards(PFModule *this_module,
    double        gravity = ProblemGravity(problem);
 
    double        outflow = 0.0; //sk Outflow due to overland flow
-   double        *outflow_log;
 
    CommHandle   *handle;
 
@@ -1360,8 +1351,6 @@ void      SolverRichards() {
 
    Problem      *problem           = (public_xtra -> problem);
    
-   int           start_count         = ProblemStartCount(problem);
-
    double        start_time          = ProblemStartTime(problem);
    double        stop_time           = ProblemStopTime(problem);
    double        dt                  = 0.0;
