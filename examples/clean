@@ -1,5 +1,5 @@
 rm -f *pfb*
-rm -f *.txt
+rm -f pfout.txt
 rm -f *.log
 rm -f .hostfile
 rm -f .amps.*

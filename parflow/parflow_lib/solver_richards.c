@@ -482,11 +482,17 @@ void AdvanceRichards(PFModule *this_module,
    /*                                                                     */
    /***********************************************************************/
 
-   PFModuleInvoke(void, select_time_step, (&cdt, &dt_info, ct, problem,
-   problem_data) );
- 
-   rank = amps_Rank(amps_CommWorld);
+   if(compute_time_step) {
+      PFModuleInvoke(void, select_time_step, (&cdt, &dt_info, ct, problem,
+      problem_data) );
+   }
+   else  // Do not compute timestep
+   {
+      // Simply use DT provided; don't use select_time_step module.
+      // Note DT will still be reduced if solution does not converge.
+   }
 
+   rank = amps_Rank(amps_CommWorld);
 
    /* Check to see if pressure solves are requested */
    /* start_count < 0 implies that subsurface data ONLY is requested */
@@ -563,21 +569,9 @@ void AdvanceRichards(PFModule *this_module,
 	 /*******************************************************************/
 	 if (converged)
 	 {
-	    if(compute_time_step) {
-	       PFModuleInvoke(void, select_time_step, (&dt, &dt_info, t, problem,
-	       problem_data) );
-	       
-	       
-	       PFVCopy(instance_xtra -> density,    instance_xtra -> old_density);
-	       PFVCopy(instance_xtra -> saturation, instance_xtra -> old_saturation);
-	       PFVCopy(instance_xtra -> pressure,   instance_xtra -> old_pressure);
-	       
-	    }
-	    else  // Do not compute timestep
-	    {
-	       // Simply use DT provided; don't use select_time_step module.
-	       // Note DT will still be reduced if solution does not converge.
-	    }
+	    PFVCopy(instance_xtra -> density,    instance_xtra -> old_density);
+	    PFVCopy(instance_xtra -> saturation, instance_xtra -> old_saturation);
+	    PFVCopy(instance_xtra -> pressure,   instance_xtra -> old_pressure);
 	 }
 	 else  /* Not converged, so decrease time step */
 	 {
