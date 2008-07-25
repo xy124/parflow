@@ -509,6 +509,8 @@ void AdvanceRichards(PFModule *this_module,
 
    t = start_time;
 
+   dump_index = 1.0;
+
    do  /* while take_more_time_steps */
    {
      
