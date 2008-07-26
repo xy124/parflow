@@ -126,7 +126,7 @@ pfset Geom.upper_aquifer.Perm.Sigma   1.0
 pfset Geom.upper_aquifer.Perm.Sigma   0.48989794
 pfset Geom.upper_aquifer.Perm.NumLines 150
 pfset Geom.upper_aquifer.Perm.RZeta  5.0
-pfset Geom.upper_aquifer.Perm.KMax  100.0
+pfset Geom.upper_aquifer.Perm.KMax  100.0000001
 pfset Geom.upper_aquifer.Perm.DelK  0.2
 pfset Geom.upper_aquifer.Perm.Seed  33333
 pfset Geom.upper_aquifer.Perm.LogNormal Log
@@ -141,7 +141,7 @@ pfset Geom.lower_aquifer.Perm.Sigma   1.0
 pfset Geom.lower_aquifer.Perm.Sigma   0.48989794
 pfset Geom.lower_aquifer.Perm.NumLines 150
 pfset Geom.lower_aquifer.Perm.RZeta  5.0
-pfset Geom.lower_aquifer.Perm.KMax  100.0
+pfset Geom.lower_aquifer.Perm.KMax  100.0000001
 pfset Geom.lower_aquifer.Perm.DelK  0.2
 pfset Geom.lower_aquifer.Perm.Seed  33333
 pfset Geom.lower_aquifer.Perm.LogNormal Log
