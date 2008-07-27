@@ -330,6 +330,8 @@ pfundist default_single
 #
 source pftest.tcl
 
+set sig_digits 4
+
 set passed 1
 
 if ![pftestFile default_single.out.press.00000.pfb "Max difference in Pressure" $sig_digits] {
