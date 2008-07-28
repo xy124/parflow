@@ -9,6 +9,7 @@
 default: all
 
 TESTS= \
+	test_X.tcl \
 	default_single.tcl \
 	default_richards.tcl \
 	forsyth2.tcl \

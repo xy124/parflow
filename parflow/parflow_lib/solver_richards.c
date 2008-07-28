@@ -715,6 +715,7 @@ void AdvanceRichards(PFModule *this_module,
       if( (!amps_Rank(amps_CommWorld)) && (err_norm >= 0.0) )
       {
 	 printf("l2-error in pressure: %20.8e\n", err_norm);
+	 printf("tcl: set pressure_l2_error(%d) %20.8e\n", instance_xtra -> iteration_number, err_norm);
 	 fflush(NULL);
       }
 
