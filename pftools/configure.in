@@ -440,6 +440,7 @@ $MKDIR_P bin
 AC_OUTPUT([
 Makefile
 config/Makefile.config 
+chunk/code/chunk.f
 ${makefiles}
 ],[
 dnl These are the commands that will execute after the file generations.

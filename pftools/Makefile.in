@@ -19,7 +19,7 @@ SUBDIR        = .
 VPATH	      =	@srcdir@
 OBJECT        = .
 
-SUBDIRS       = docs
+SUBDIRS       = chunk docs
 
 SCRIPTS = \
 	pfhelp \

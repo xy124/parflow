@@ -10218,7 +10218,7 @@ $MKDIR_P $subdirs
 $MKDIR_P lib
 $MKDIR_P bin
 
-ac_config_files="$ac_config_files Makefile config/Makefile.config ${makefiles}"
+ac_config_files="$ac_config_files Makefile config/Makefile.config chunk/code/chunk.f ${makefiles}"
 
 ac_config_commands="$ac_config_commands default"
 
@@ -10798,6 +10798,7 @@ do
     "include/parflow_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/parflow_config.h:config/parflow_config.h.in" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "config/Makefile.config") CONFIG_FILES="$CONFIG_FILES config/Makefile.config" ;;
+    "chunk/code/chunk.f") CONFIG_FILES="$CONFIG_FILES chunk/code/chunk.f" ;;
     "${makefiles}") CONFIG_FILES="$CONFIG_FILES ${makefiles}" ;;
     "default") CONFIG_COMMANDS="$CONFIG_COMMANDS default" ;;
 
