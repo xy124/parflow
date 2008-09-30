@@ -8,8 +8,10 @@
 ##
 
 .SUFFIXES:
-.SUFFIXES: .o .F .f .c .C .cc
+.SUFFIXES: .o .F .f .c .C .cc .F90
 
+.F90.o:
+	$(FC) $(FCFLAGS) -c @SRCDIR_COMPILE_PREFIX@$< -o $@
 .F.o:
 	$(F77) $(FFLAGS) -c @SRCDIR_COMPILE_PREFIX@$< -o $@
 .f.o:
@@ -37,6 +39,8 @@ PARFLOW_LIB_DEPEND = $(PARFLOW_LIB_DIR)/libparflow.a
 
 PARFLOW_TOOLS_INCLUDE=-I/usr/X11R6/include/
 
+CHUNK_DIR=@CHUNK_DIR@
+
 # Need to link to the tk/tcl libs
 # tk/tcl libs need X11 and dynamic link stuff in dl
 #
@@ -52,6 +56,9 @@ XARGS	      = @XARGS@
 F77           = @F77@
 FFLAGS        = @F77_FLAGS@ $(FFLAGS_EXTRA)
 
+FC            = @FC@
+FCFLAGS       = @FCFLAGS@
+
 CC            = @CC@
 CFLAGS        = @C_FLAGS@ $(CFLAGS_EXTRA) @SHLIB_CFLAGS@
 
@@ -64,8 +71,8 @@ CPPFLAGS      = @CPPFLAGS@ -I. \
 
 AR	      = @AR@
 
-LDFLAGS       = @LD_FLAGS@ -L$(LIB_PARFLOW_TOOLS) @LIB_PATH@ $(LDFLAGS_EXTRA)
-LDLIBS        = $(LDLIBS_EXTRA) @LIB_NAME@
+LDFLAGS       = @LD_FLAGS@ @LIB_PATH@ $(LDFLAGS_EXTRA)
+LDLIBS        = $(LDLIBS_EXTRA) $(PARFLOW_TOOLS_LIBS) @LIB_NAME@
 
 PARFLOW_TOOLS_SHLIB_SUFFIX=@SHLIB_SUFFIX@
 PARFLOW_TOOLS_SHLIB_LD=@SHLIB_LD@
