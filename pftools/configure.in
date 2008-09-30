@@ -23,6 +23,8 @@ AC_ARG_WITH(F90,
    [  --with-F90=ARG          manually set F90 to ARG])
 AC_ARG_WITH(AR,
    [  --with-AR=ARG           manually set AR to ARG])
+AC_ARG_WITH(chunk,
+   [  --with-chunk            build with Chunk])
 
 dnl
 dnl Initialize common macros to empty strings
@@ -350,6 +352,22 @@ if test "${hdf5_PREFIX+set}" = set; then
   AC_DEFINE(HAVE_HDF5,1,HDF5 library is available so use it)
 fi
 AC_SUBST(hdf5_LIBS)
+
+
+dnl
+dnl Chunk Support
+dnl
+dnl CHUNK_DIR is empty when not building with Chunk.  This will case the
+dnl directory to be skipped in the compilation.
+CHUNK_DIR=""
+PARFLOW_HAVE_CHUNK="no"
+if test "$with_chunk" = "yes"; then
+   PARFLOW_HAVE_CHUNK="yes"
+   CHUNK_DIR="chunk"
+   AC_DEFINE(HAVE_CHUNK)	  
+fi
+AC_SUBST(CHUNK_DIR)
+AC_SUBST(PARFLOW_HAVE_CHUNK)
 
 debug_ext=debug
 if test "$enable_opt" = "yes"; then
