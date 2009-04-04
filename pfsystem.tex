@@ -834,7 +834,7 @@ pfset SpecificStorage.GeomNames       ""
 pfset Geom.domain.SpecificStorage.Value 1.0e-4
 \end{verbatim}
 
-\parflow{} has the capability to deal with a multiphase system, but we only have one (water) at Cape Cod.  As we stated earlier, we set density and viscosity artificially (and later gravity) both to 1.0.  Again, this is merely a trick to solve for hydraulic conductivity and pressure head.  If you were to set density and viscosity to their true values, the code would calculate {\bf k} (permeability).  By using the “normalized” values instead, you effectively imbed the conversion of {\bf k} to {\bf K} (hydraulic conductivity).  So this way, we get hydraulic conductivity, which is what we want for Cape Cod.
+\parflow{} has the capability to deal with a multiphase system, but we only have one (water) at Cape Cod.  As we stated earlier, we set density and viscosity artificially (and later gravity) both to 1.0.  Again, this is merely a trick to solve for hydraulic conductivity and pressure head.  If you were to set density and viscosity to their true values, the code would calculate {\bf k} (permeability).  By using the “normalized” values instead, you effectively imbed the conversion of {\bf k} to {\bf K} (hydraulic conductivity).  So this way, we get hydraulic conductivity, which is what we want for this problem.
 
 \begin{verbatim}
 #----------------------------------------------------------------------------
@@ -934,7 +934,7 @@ Again, \parflow{} has more capabilities that we are using for Cape Cod.  We will
 pfset Wells.Names ""
 \end{verbatim}
 
-You can give certain periods of time names if you want to (ie. Pre-injection, post-injection, etc) but we don’t have multiple time intervals and we’re steady state, so keep it simple.  We have only one time cycle and it’s constant for the duration of the simulation.  We accomplish this by giving it a repeat value of -1, which repeats indefinitely.  The length of the cycle is the length specified below (an integer) multiplied by the base unit value we specified earlier.
+You can give certain periods of time names if you want to (ie. Pre-injection, post-injection, etc).  Here, however we do not have multiple time intervals and are simulating in steady state, so time cycle keys are simple.  We have only one time cycle and it’s constant for the duration of the simulation.  We accomplish this by giving it a repeat value of -1, which repeats indefinitely.  The length of the cycle is the length specified below (an integer) multiplied by the base unit value we specified earlier.
 
 \begin{verbatim}
 #----------------------------------------------------------------------------
@@ -946,7 +946,7 @@ pfset Cycle.constant.alltime.Length	 1
 pfset Cycle.constant.Repeat		-1
 \end{verbatim}
 
-Now, we assign Boundary Conditions for each face (each of the Patches in the domain defined before).  Recall the previously stated Patches and associate them w/the boundary conditions that follow.
+Now, we assign Boundary Conditions for each face (each of the Patches in the domain defined before).  Recall the previously stated Patches and associate them with the boundary conditions that follow.
 
 \begin{verbatim}
 pfset BCPressure.PatchNames "left right front back bottom top"
@@ -1032,7 +1032,7 @@ pfset Mannings.GeomNames ""
 pfset Mannings.Geom.domain.Value 0.
 \end{verbatim}
 
-Phase sources allows you to add sources other than wells and boundaries, but we don’t have any so it’s constant, 0.0 over entire domain.
+Phase sources allows you to add sources other than wells and boundaries, but we do not have any so this key is constant, 0.0 over entire domain.
 
 \begin{verbatim}
 #----------------------------------------------------------------------------

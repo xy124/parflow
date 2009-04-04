@@ -46,14 +46,14 @@ installing \parflow{} from a source distribution.  \parflow{} uses the \code{gnu
 
 \begin{enumerate}
 \item {\bf Setup} \\
-Decide where you wish to install Parflow and associated libraries. The following environment variable should be set up in your \file{.profile} file. Set the environment variable \code{PARFLOW_DIR} to your chosen location (if you are using \code{bash} or a bourne syntax shell):
+Decide where you wish to install Parflow and associated libraries. The following environment variable should be set up in your \file{.profile}, \file{.cshrc}, or other file. Set the environment variable \code{PARFLOW_DIR} to your chosen location (if you are using \code{bash} or a bourne syntax shell):
 \begin{display}\begin{verbatim}
-export PARFLOW_DIR=~/parflow/exe
+export PARFLOW_DIR=~/parflow
 \end{verbatim}\end{display}
 If you are using a \code{csh} like shell you will need the following in your
 \file{.cshrc} file:
 \begin{display}\begin{verbatim}
-setenv PARFLOW_SRC ~/parflow/src
+setenv PARFLOW_DIR ~/parflow
 \end{verbatim}\end{display}
 
 The variable
@@ -62,24 +62,11 @@ The variable
 If you have a directory which is shared on multiple architectures you
 can set different \code{PARFLOW_DIR}s on the different machines (for
 example
-\code{~/parflow/exe.t3d} and \code{~/parflow/exe.irix}). 
+\code{~/parflow-foo} and \code{~/parflow-bar}). 
 We will use the \file{~/parflow} directory as the root directory for
 building \parflow{} in this user manual; you can use a different
 directory if you wish.
 
-You should also add \code{\$PARFLOW_DIR/bin} to your 
-\code{PATH} environment variable.  
-If you are using \code{bash} or a bourne syntax shell):
-
-\begin{display}\begin{verbatim}
-PATH=$PATH:$PARFLOW_DIR/bin
-\end{verbatim}\end{display}
-
-If you are using a \code{csh} like shell:
-
-\begin{display}\begin{verbatim}
-set path=($path $PARFLOW_DIR/bin)
-\end{verbatim}\end{display}
 
 %------------------------------
 
@@ -267,63 +254,6 @@ pfset Wells.new_well.alltime.Injection.Concentration.water.tce.Fraction 0.1
 For more information on defining the problem,
 see \S~\ref{Defining the Problem}.
 
-%==============================
-\subsection*{Converting the Pressure Output}
-
-%% = we should delete or modify this since we don't use XPFTools anymore, although it still works.
-
-Next, let us convert the pressure output computed by \parflow{}
-to hydraulic head.
-Do the following:
-\begin{enumerate}
-
-\item
-Start the \file{xpftools} utility.
-This is a utility which is used to do file conversions and other simple
-operations on \parflow{} output files.
-
-\item
-To read in the data, use the \menu{Data} pulldown menu and select the
-\menu{Load} \menu{ParFlow Binary} option.  
-
-\item
-In the file browser select the \file{default_single.out.press.00000.pfb}
-file.
-
-\item
-
-Select the \menu{Compute Hydraulic Head} option from the \menu{Functions} 
-pulldown menu.
-
-\item 
-
-In the \menu{Compute Hydraulic Head} popup, us the selector error next to
-the \menu{Pressure Head} field to select \file{dataset0} (the
-\file{default_single.out.press.00000.pfb} file).
-
-\item 
-
-Press the \menu{Compute Function} button at the bottom of the panel.  This
-creates a new dataset labeled \file{dataset1}. 
-
-\item
-To save the hydraulic head data in a \parflow{} file,
-\menu{Close} the \menu{Hydraulic Head} panel and select 
-\menu{Save ParFlow Data}
-from the \menu{Dataset} pulldown menu.
-
-\item
-
-In the file selector box type the filename
-\file{default_single.out.hhead.00000.pfb} 
-and save the dataset.  
-
-You have now computed and created a new \parflow{} binary file with the
-hydraulic head.
-
-\end{enumerate}
-For more information on manipulating and analyzing \parflow{} data,
-see \S~\ref{Manipulating Data}.
 
 %==============================
 \section{ParFlow Solvers}
