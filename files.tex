@@ -2901,6 +2901,16 @@ and modeling specifics there are some key values used by various
 algorithms and general control flags for \parflow{}.  These
 are described next :
 
+\pfkey{string}{Solver.Linear}{PCG}
+{This key specifies the linear solver used for solver {\bf IMPES}.  Choices for this key are {\bf MGSemi, PPCG, PCG} and {\bf   CGHS}.  The choice
+%% == we need to check the solvers used here to match the descriptions
+{\bf MGSemi} is a mulitgrid linear solver (not a preconditioned conjugate gradient).  The choice {\bf PPCG} is a preconditioned conjugate gradient solver.
+The choice {\bf PCG} is a conjugate gradient solver with a multigrid preconditioner.  The choice {\bf CGHS} is a conjugate gradient solver.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.Linear   MGSemi
+\end{verbatim}\end{display}
+
 \pfkey{integer}{Solver.SadvectOrder}{2}
 {
 This key controls the order of the explicit method used in
@@ -2909,7 +2919,7 @@ a standard upwind first order or 2 for a second order
 Godunov method.
 }
 \begin{display}\begin{verbatim}
-Solver.SadvectOrder 1
+pfset Solver.SadvectOrder 1
 \end{verbatim}\end{display}
 
 \pfkey{integer}{Solver.AdvectOrder}{2}
@@ -2920,7 +2930,7 @@ a standard upwind first order or 2 for a second order
 Godunov method.
 }
 \begin{display}\begin{verbatim}
-Solver.AdvectOrder 2
+pfset Solver.AdvectOrder 2
 \end{verbatim}\end{display}
 
 \pfkey{double}{Solver.CFL}{0.7}
@@ -2932,7 +2942,7 @@ an approximation, values slightly less than 1 can also produce
 instabilities.
 }
 \begin{display}\begin{verbatim}
-Solver.CFL 0.7
+pfset Solver.CFL 0.7
 \end{verbatim}\end{display}
 
 \pfkey{integer}{Solver.MaxIter}{1000000}
@@ -2942,7 +2952,7 @@ be allowed for time-stepping.  This is to prevent a run-away
 simulation.
 }
 \begin{display}\begin{verbatim}
-Solver.MaxIter 100
+pfset Solver.MaxIter 100
 \end{verbatim}\end{display}
 
 \pfkey{double}{Solver.RelTol}{1.0}
@@ -2951,7 +2961,7 @@ This value gives the relative tolerance for the linear
 solve algorithm.
 }
 \begin{display}\begin{verbatim}
-Solver.RelTol 1.0
+pfset Solver.RelTol 1.0
 \end{verbatim}\end{display}
 
 \pfkey{double}{Solver.AbsTol}{1E-9}
@@ -2960,7 +2970,7 @@ This value gives the absolute tolerance for the linear
 solve algorithm.
 }
 \begin{display}\begin{verbatim}
-Solver.AbsTol 1E-8
+pfset Solver.AbsTol 1E-8
 \end{verbatim}\end{display}
 
 \pfkey{double}{Solver.Drop}{1E-8}
@@ -2971,7 +2981,7 @@ value and less than the value itself are treated as zero
 and not written to PFSB files.
 }
 \begin{display}\begin{verbatim}
-Solver.Drop 1E-6
+pfset Solver.Drop 1E-6
 \end{verbatim}\end{display}
 
 \pfkey{string}{Solver.PrintSubsurf}{True}
@@ -2982,7 +2992,7 @@ generated and before the main time stepping loop - only once
 during the run.  The data is written as a PFB file.
 }
 \begin{display}\begin{verbatim}
-Solver.PrintSubsurf False
+pfset Solver.PrintSubsurf False
 \end{verbatim}\end{display}
 
 \pfkey{string}{Solver.PrintPressure}{True}
@@ -2993,7 +3003,7 @@ timing information section.  The data is written as a PFB
 file.
 }
 \begin{display}\begin{verbatim}
-Solver.PrintPressure False
+pfset Solver.PrintPressure False
 \end{verbatim}\end{display}
 
 \pfkey{string}{Solver.PrintVelocities}{False}
@@ -3004,7 +3014,7 @@ values in the timing information section.  The data is
 written as a PFB file.
 }
 \begin{display}\begin{verbatim}
-Solver.PrintVelocities True
+pfset Solver.PrintVelocities True
 \end{verbatim}\end{display}
 
 \pfkey{string}{Solver.PrintSaturation}{True}
@@ -3014,7 +3024,7 @@ The printing of the data is controlled by values in the
 timing information section.  The data is written as a PFB file.
 }
 \begin{display}\begin{verbatim}
-Solver.PrintSaturation False
+pfset Solver.PrintSaturation False
 \end{verbatim}\end{display}
 
 \pfkey{string}{Solver.PrintConcentration}{True}
@@ -3024,7 +3034,7 @@ The printing of the data is controlled by values in the
 timing information section.  The data is written as a PFSB file.
 }
 \begin{display}\begin{verbatim}
-Solver.PrintConcentration False
+pfset Solver.PrintConcentration False
 \end{verbatim}\end{display}
 
 \pfkey{string}{Solver.PrintWells}{True}
@@ -3035,9 +3045,68 @@ in the timing information section.  Printing occurs at the
 end of the run when all collected data is written. 
 }
 \begin{display}\begin{verbatim}
-Solver.PrintWells False
+pfset Solver.PrintWells False
 \end{verbatim}\end{display}
 
+\pfkey{string}{Solver.PrintLSMSink}{False}
+{
+This key is used to turn on printing of the
+flux array passed from \code{CLM} to \parflow{}.   Printing occurs at each {\bf DumpInterval} time. 
+}
+\begin{display}\begin{verbatim}
+pfset Solver.PrintLSMSink True
+\end{verbatim}\end{display}
+
+\pfkey{string}{Solver.WriteSiloSubsurfData}{False}
+{
+This key is used to specify printing of the subsurface data,
+Permeability and Porosity in silo binary file format.  The data is printed after it is
+generated and before the main time stepping loop - only once
+during the run.  This data may be read in by VisIT and other visualization packages.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.WriteSiloSubsurfData True
+\end{verbatim}\end{display}
+
+\pfkey{string}{Solver.WriteSiloPressure}{False}
+{
+This key is used to specify printing of the saturation data in silo binary format.
+The printing of the data is controlled by values in the
+timing information section. This data may be read in by VisIT and other visualization packages.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.WriteSiloPressure True
+\end{verbatim}\end{display}
+
+\pfkey{string}{Solver.WriteSiloSaturation}{False}
+{
+This key is used to specify printing of the saturation data using silo binary format.
+The printing of the data is controlled by values in the
+timing information section.  
+}
+\begin{display}\begin{verbatim}
+pfset Solver.WriteSiloSaturation True
+\end{verbatim}\end{display}
+
+\pfkey{string}{Solver.WriteSiloConcentration}{False}
+{
+This key is used to specify printing of the concentration data in silo binary format.
+The printing of the data is controlled by values in the
+timing information section.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.WriteSiloConcentration True
+\end{verbatim}\end{display}
+
+\pfkey{string}{Solver.WriteSiloVelocities}{False}
+{
+This key is used to specify printing of the x, y and z
+velocity data in silo binary format.  The printing of the data is controlled by
+values in the timing information section.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.WriteSiloVelocities True
+\end{verbatim}\end{display}
 %=============================================================================
 %=============================================================================
 
@@ -3251,6 +3320,50 @@ Choices for this key include {\bf none} and {\bf CLM}. Note that \code{CLM} must
 pfset Solver.LSM CLM
 \end{verbatim}\end{display}
 
+\pfkey{string}{Solver.CLM.Print1dOut}{False}
+{This key specifies whether the \code{CLM} one dimensional (averaged over each processor) output file is written or not.
+Choices for this key include {\bf True} and {\bf False}. Note that \code{CLM} must be compiled and linked at runtime for this option to be active.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.CLM.Print1dOut   False
+\end{verbatim}\end{display}
+
+\pfkey{string}{Solver.BinaryOutDir}{True}
+{This key specifies whether the \code{CLM} writes each set of two dimensional binary output files to a corresponding directory.  
+These directories my be created before \parflow{} is run (using the tcl script, for example).  Choices for this key include {\bf True} and {\bf False}. Note that \code{CLM} must be compiled and linked at runtime for this option to be active.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.CLM.BinaryOutDir True
+\end{verbatim}\end{display}
+These directories are: 
+\file{/qflx_top_soil} for soil flux;
+\file{/qflx_infl} for infiltration; 
+\file{/qflx_evap_grnd} for ground evaporation;
+\file{/eflx_soil_grnd} for ground heat flux;
+\file{/qflx_evap_veg} for vegetation evaporation;
+\file{/eflx_sh_tot} for sensible heat flux;
+\file{/eflx_lh_tot} for latent heat flux; 
+\file{/qflx_evap_tot} for total evaporation; 
+\file{/t_grnd} for ground surface temperature; 
+\file{/qflx_evap_soi} for soil evaporation; 
+\file{/qflx_tran_veg} for vegetation transpiration; 
+\file{/eflx_lwrad_out} for outgoing long-wave radiation;
+\file{/swe_out} for snow water equivalent; and
+\file{/diag_out} for diagnostics. 
+
+\pfkey{string}{Solver.CLM.CLMFileDir}{no default}
+{This key specifies what directory all output from the \code{CLM} is written to.  This key may be set to \file{"./"} or \file{""} to write output to the \parflow{} run directory.  This directory must be created before \parflow{} is run. Note that \code{CLM} must be compiled and linked at runtime for this option to be active.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.CLM.CLMFileDir "CLM_Output/"
+\end{verbatim}\end{display}
+
+\pfkey{integer}{Solver.CLM.CLMDumpInterval}{1}
+{This key specifies how often output from the \code{CLM} is written.  This key is in integer multipliers of the \code{CLM} timestep. Note that \code{CLM} must be compiled and linked at runtime for this option to be active.
+}
+\begin{display}\begin{verbatim}
+pfset Solver.CLM.CLMDumpInterval 2
+\end{verbatim}\end{display}
 %=============================================================================
 %=============================================================================
 
