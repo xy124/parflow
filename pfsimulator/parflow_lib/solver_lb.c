@@ -885,7 +885,7 @@ void      SolverDiffusion()
          {
 	    if ( is_multiphase )
 	    {
-	       dt = min(total_dt, min_phase_dt);
+	       dt = pfmin(total_dt, min_phase_dt);
 	    }
             else
 	    {
@@ -1554,30 +1554,30 @@ PFModule *SolverDiffusionInitInstanceXtra()
 
    /* compute size for pressure solve */
    sz = 0;
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> discretize_pressure));
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> linear_solver));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> discretize_pressure));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> linear_solver));
    pressure_sz = sz;
 
    /* compute size for velocity computation */
    sz = 0;
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> phase_velocity_face));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> phase_velocity_face));
    if ( is_multiphase )
    {
-      sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> total_velocity_face));
+      sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> total_velocity_face));
    }
    velocity_sz = sz;
 
    /* compute size for concentration advection */
    sz = 0;
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> retardation));
-   sz += max(sz, PFModuleSizeOfTempData(instance_xtra -> advect_concen));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> retardation));
+   sz += pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> advect_concen));
    concen_sz = sz;
 
    /* set temp_data size to max of pressure_sz, satur_sz, and concen_sz*/
-   temp_data_size = max(max(pressure_sz, velocity_sz), concen_sz);
+   temp_data_size = pfmax(pfmax(pressure_sz, velocity_sz), concen_sz);
    if ( is_multiphase )
    {
-      temp_data_size = max(temp_data_size,max(total_mobility_sz, satur_sz));
+      temp_data_size = pfmax(temp_data_size,pfmax(total_mobility_sz, satur_sz));
    }
 /*     temp_data_size = total_mobility_sz + pressure_sz + velocity_sz 
  *                      + satur_sz + concen_sz;  */
@@ -1630,7 +1630,7 @@ PFModule *SolverDiffusionInitInstanceXtra()
    PFModuleReNewInstanceType(AdvectionConcentrationInitInstanceXtraType,
 			     (instance_xtra -> advect_concen),
 			     (NULL, NULL, temp_data_placeholder));
-   temp_data_placeholder += max(PFModuleSizeOfTempData(instance_xtra -> retardation),
+   temp_data_placeholder += pfmax(PFModuleSizeOfTempData(instance_xtra -> retardation),
                                 PFModuleSizeOfTempData(instance_xtra -> advect_concen));
 
    temp_data += temp_data_size;

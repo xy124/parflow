@@ -500,7 +500,7 @@ int  PCGSizeOfTempData()
 
 
    /* set `sz' to max of each of the called modules */
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> precond));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> precond));
 
 
    return sz;

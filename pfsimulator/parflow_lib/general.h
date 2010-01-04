@@ -86,15 +86,15 @@
  * Define various functions
  *--------------------------------------------------------------------------*/
 
-#ifndef max
-#define max(a,b)  (((a)<(b)) ? (b) : (a))
+#ifndef pfmax
+#define pfmax(a,b)  (((a)<(b)) ? (b) : (a))
 #endif
-#ifndef min
-#define min(a,b)  (((a)<(b)) ? (a) : (b))
+#ifndef pfmin
+#define pfmin(a,b)  (((a)<(b)) ? (a) : (b))
 #endif
 
-#ifndef round
-#define round(x)  ( ((x) < 0.0) ? ((int)(x - 0.5)) : ((int)(x + 0.5)) )
+#ifndef pfround
+#define pfround(x)  ( ((x) < 0.0) ? ((int)(x - 0.5)) : ((int)(x + 0.5)) )
 #endif
 
 /* return 2^e, where e >= 0 is an integer */

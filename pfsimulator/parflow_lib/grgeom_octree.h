@@ -308,12 +308,12 @@ GrGeomOctreeCellIs(octree, GrGeomOctreeCellLeaf)
 		 },\
 		 {\
 		    /* find octree and region intersection */\
-		    PV_ixl = max(ix, PV_i);\
-		    PV_iyl = max(iy, PV_j);\
-		    PV_izl = max(iz, PV_k);\
-		    PV_ixu = min((ix + nx), (PV_i + (int)PV_inc));\
-		    PV_iyu = min((iy + ny), (PV_j + (int)PV_inc));\
-		    PV_izu = min((iz + nz), (PV_k + (int)PV_inc));\
+		    PV_ixl = pfmax(ix, PV_i);\
+		    PV_iyl = pfmax(iy, PV_j);\
+		    PV_izl = pfmax(iz, PV_k);\
+		    PV_ixu = pfmin((ix + nx), (PV_i + (int)PV_inc));\
+		    PV_iyu = pfmin((iy + ny), (PV_j + (int)PV_inc));\
+		    PV_izu = pfmin((iz + nz), (PV_k + (int)PV_inc));\
 		 \
 		    /* loop over indexes and execute the body */\
 		    for (k = PV_izl; k < PV_izu; k++)\
@@ -360,12 +360,12 @@ GrGeomOctreeCellIs(octree, GrGeomOctreeCellLeaf)
 		 },\
 		 {\
 		    /* find octree and region intersection */\
-		    PV_ixl = max(ix, PV_i);\
-		    PV_iyl = max(iy, PV_j);\
-		    PV_izl = max(iz, PV_k);\
-		    PV_ixu = min((ix + nx), (PV_i + PV_inc));\
-		    PV_iyu = min((iy + ny), (PV_j + PV_inc));\
-		    PV_izu = min((iz + nz), (PV_k + PV_inc));\
+		    PV_ixl = pfmax(ix, PV_i);\
+		    PV_iyl = pfmax(iy, PV_j);\
+		    PV_izl = pfmax(iz, PV_k);\
+		    PV_ixu = pfmin((ix + nx), (PV_i + PV_inc));\
+		    PV_iyu = pfmin((iy + ny), (PV_j + PV_inc));\
+		    PV_izu = pfmin((iz + nz), (PV_k + PV_inc));\
 		 \
 		    /* project intersection onto strided index space */\
 		    PV_ixl = PV_ixl + ix;\
@@ -550,12 +550,12 @@ GrGeomOctreeCellIs(octree, GrGeomOctreeCellLeaf)
 	      level_of_interest, value_test,				\
 		       {						\
 			  /* find octree and region intersection */	\
-			  PV_ixl = max(ix, PV_i);			\
-			  PV_iyl = max(iy, PV_j);			\
-			  PV_izl = max(iz, PV_k);			\
-			  PV_ixu = min((ix + nx), (PV_i + (int)PV_inc)); \
-			  PV_iyu = min((iy + ny), (PV_j + (int)PV_inc)); \
-			  PV_izu = min((iz + nz), (PV_k + (int)PV_inc)); \
+			  PV_ixl = pfmax(ix, PV_i);			\
+			  PV_iyl = pfmax(iy, PV_j);			\
+			  PV_izl = pfmax(iz, PV_k);			\
+			  PV_ixu = pfmin((ix + nx), (PV_i + (int)PV_inc)); \
+			  PV_iyu = pfmin((iy + ny), (PV_j + (int)PV_inc)); \
+			  PV_izu = pfmin((iz + nz), (PV_k + (int)PV_inc)); \
 			  						\
 			  i = PV_ixl;					\
 			  j = PV_iyl;					\
@@ -569,12 +569,12 @@ GrGeomOctreeCellIs(octree, GrGeomOctreeCellLeaf)
 		       },						\
 		       {						\
 			  /* find octree and region intersection */	\
-			  PV_ixl = max(ix, PV_i);			\
-			  PV_iyl = max(iy, PV_j);			\
-			  PV_izl = max(iz, PV_k);			\
-			  PV_ixu = min((ix + nx), (PV_i + (int)PV_inc)); \
-			  PV_iyu = min((iy + ny), (PV_j + (int)PV_inc)); \
-			  PV_izu = min((iz + nz), (PV_k + (int)PV_inc)); \
+			  PV_ixl = pfmax(ix, PV_i);			\
+			  PV_iyl = pfmax(iy, PV_j);			\
+			  PV_izl = pfmax(iz, PV_k);			\
+			  PV_ixu = pfmin((ix + nx), (PV_i + (int)PV_inc)); \
+			  PV_iyu = pfmin((iy + ny), (PV_j + (int)PV_inc)); \
+			  PV_izu = pfmin((iz + nz), (PV_k + (int)PV_inc)); \
 			  						\
 			  i = PV_ixl;					\
 			  j = PV_iyl;					\

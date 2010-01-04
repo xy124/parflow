@@ -1165,8 +1165,8 @@ Vector      *z_velocity;
                    if(x_sl_dat[io] < 0.0) dir_x = 1.0; 
                    if(y_sl_dat[io] < 0.0) dir_y = 1.0; 
 
-   	       qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]),0.5) / mann_dat[io]) * RPowerR(max((pp[ip]),0.0),(5.0/3.0));
-               qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]),0.5) / mann_dat[io]) * RPowerR(max((pp[ip]),0.0),(5.0/3.0));
+   	       qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]),0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]),0.0),(5.0/3.0));
+               qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]),0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]),0.0),(5.0/3.0));
 		   break;
 				}
 			}
@@ -1182,11 +1182,11 @@ Vector      *z_velocity;
 			   case 1:
 			   io   = SubvectorEltIndex(p_sub, i, j, 0);
 
-		           ke_[io] = max(qx_[io],0.0) - max(-qx_[io+1],0.0);
-		           kw_[io] = max(qx_[io-1],0.0) - max(-qx_[io],0.0);
+		           ke_[io] = pfmax(qx_[io],0.0) - pfmax(-qx_[io+1],0.0);
+		           kw_[io] = pfmax(qx_[io-1],0.0) - pfmax(-qx_[io],0.0);
 
-		           kn_[io] = max(qy_[io],0.0) - max(-qy_[io+sy_p],0.0);
-		           ks_[io] = max(qy_[io-sy_p],0.0) - max(-qy_[io],0.0);
+		           kn_[io] = pfmax(qy_[io],0.0) - pfmax(-qy_[io+sy_p],0.0);
+		           ks_[io] = pfmax(qy_[io-sy_p],0.0) - pfmax(-qy_[io],0.0);
 		   
  			   break;
 			   }
@@ -1208,7 +1208,7 @@ Vector      *z_velocity;
 			   io   = SubvectorEltIndex(p_sub, i, j, 0);
 
            q_overlnd = 0.0;
-           q_overlnd = vol * (max(pp[ip],0.0) - max(opp[ip],0.0)) /dz +
+           q_overlnd = vol * (pfmax(pp[ip],0.0) - pfmax(opp[ip],0.0)) /dz +
 			             dt * vol * ((ke_[io]-kw_[io])/dx + (kn_[io] - ks_[io])/dy) / dz;
 		   
                    /*if ( i == 0 && j == 0){ //left-lower corner

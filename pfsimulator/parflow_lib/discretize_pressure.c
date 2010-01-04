@@ -215,7 +215,7 @@ void          DiscretizePressure(
    InitVector(f, 0.0);
 
    /* Compute scaling factor */
-   scale = min(RealSpaceDX(0), min(RealSpaceDY(0), RealSpaceDZ(0)));
+   scale = pfmin(RealSpaceDX(0), pfmin(RealSpaceDY(0), RealSpaceDZ(0)));
    scale = 1 / scale;
 
    gravity  = ProblemGravity(problem);

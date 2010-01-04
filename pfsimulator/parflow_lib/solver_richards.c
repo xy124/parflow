@@ -1908,13 +1908,13 @@ PFModule *SolverRichardsInitInstanceXtra()
 
    /* compute size for velocity computation */
    sz = 0;
-   /*   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> phase_velocity_face)); */
+   /*   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> phase_velocity_face)); */
    velocity_sz = sz;
 
    /* compute size for concentration advection */
    sz = 0;
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> retardation));
-   sz = max(sz, PFModuleSizeOfTempData(instance_xtra -> advect_concen));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> retardation));
+   sz = pfmax(sz, PFModuleSizeOfTempData(instance_xtra -> advect_concen));
    concen_sz = sz;
 
    /* compute size for pressure initial condition */
@@ -1934,7 +1934,7 @@ PFModule *SolverRichardsInitInstanceXtra()
    /* The temp vector space for the nonlinear solver is added in because */
    /* at a later time advection may need to re-solve flow. */
    temp_data_size = parameter_sz 
-      + max(max(max(velocity_sz, concen_sz), nonlin_sz), ic_sz);
+      + pfmax(pfmax(pfmax(velocity_sz, concen_sz), nonlin_sz), ic_sz);
 
    /* allocate temporary data */
    temp_data = NewTempData(temp_data_size);
@@ -1979,7 +1979,7 @@ PFModule *SolverRichardsInitInstanceXtra()
 			     (instance_xtra -> advect_concen),
 			     (NULL, NULL, temp_data_placeholder));
 
-   temp_data_placeholder += max(PFModuleSizeOfTempData(
+   temp_data_placeholder += pfmax(PFModuleSizeOfTempData(
 				   instance_xtra -> retardation),
 				PFModuleSizeOfTempData(
 				   instance_xtra -> advect_concen));

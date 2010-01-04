@@ -249,21 +249,21 @@ Stencil         *ghost)
       {
 	 n = StencilShape(ghost)[j][0];
 	 if (n < 0)
-	    xl = max(xl, -n);
+	    xl = pfmax(xl, -n);
 	 else
-	    xu = max(xu,  n);
+	    xu = pfmax(xu,  n);
 
 	 n = StencilShape(ghost)[j][1];
 	 if (n < 0)
-	    yl = max(yl, -n);
+	    yl = pfmax(yl, -n);
 	 else
-	    yu = max(yu,  n);
+	    yu = pfmax(yu,  n);
 
 	 n = StencilShape(ghost)[j][2];
 	 if (n < 0)
-	    zl = max(zl, -n);
+	    zl = pfmax(zl, -n);
 	 else
-	    zu = max(zu,  n);
+	    zu = pfmax(zu,  n);
       }
    }
 

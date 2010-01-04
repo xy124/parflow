@@ -1075,14 +1075,14 @@ int           symm_part;      /* Specifies whether to compute just the
 
 
    	           qxd_[io] = dir_x * (5.0/3.0) * (RPowerR(fabs(x_sl_dat[io]),0.5) / mann_dat[io]) * 
-			        RPowerR(max((pp[ip]),0.0),(2.0/3.0));
+			        RPowerR(pfmax((pp[ip]),0.0),(2.0/3.0));
                    qyd_[io] = dir_y * (5.0/3.0) * (RPowerR(fabs(y_sl_dat[io]),0.5) / mann_dat[io]) *
-			        RPowerR(max((pp[ip]),0.0),(2.0/3.0));
+			        RPowerR(pfmax((pp[ip]),0.0),(2.0/3.0));
            
 		   /*Statement for critical depth outlet condition
 		   if ( i==40 && j==0) {
-		      qyd_[io] = 9.81 * RPowerR(86400.,2.0) * RPowerR(max((pp[ip]),0.0),3.0);
-                      qyd_[io] = dir_y * 9.81 * RPowerR(86400.,2.0) / 2.0 * RPowerR(qyd_[io],-0.5) * RPowerR(max((pp[ip]),0.0),2.0);
+		      qyd_[io] = 9.81 * RPowerR(86400.,2.0) * RPowerR(pfmax((pp[ip]),0.0),3.0);
+                      qyd_[io] = dir_y * 9.81 * RPowerR(86400.,2.0) / 2.0 * RPowerR(qyd_[io],-0.5) * RPowerR(pfmax((pp[ip]),0.0),2.0);
 		   }*/
 
 		   break;
@@ -1102,28 +1102,28 @@ int           symm_part;      /* Specifies whether to compute just the
                io   = SubvectorEltIndex(p_sub, i, j, 1);
 
 	       if (i == 0) { 
-		       ked_[io] = max(qxd_[io],0.0);
+		       ked_[io] = pfmax(qxd_[io],0.0);
 		       kwd_[io] = 0.0;
 	         } else if (i == 1000) {
 		       ked_[io] = 0.0;
-                       kwd_[io] = - max(-qxd_[io],0.0);
+                       kwd_[io] = - pfmax(-qxd_[io],0.0);
 	         } else {
-		       ked_[io] = max(qxd_[io],0.0);
-		       kwd_[io] = - max(-qxd_[io],0.0);
+		       ked_[io] = pfmax(qxd_[io],0.0);
+		       kwd_[io] = - pfmax(-qxd_[io],0.0);
 	       }
 
 		  if ( i == 0 && j == 0) {
-		       knd_[io] = max(qyd_[io],0.0);
-		       ksd_[io] = - max(-qyd_[io],0.0);
+		       knd_[io] = pfmax(qyd_[io],0.0);
+		       ksd_[io] = - pfmax(-qyd_[io],0.0);
 		   } else if (i > 0  && j == 0) {
-		       knd_[io] = max(qyd_[io],0.0);
+		       knd_[io] = pfmax(qyd_[io],0.0);
 		       ksd_[io] = 0.0;
 	         } else if (j == 1000) {
 		       knd_[io] = 0.0;
-                       ksd_[io] = max(-qyd_[io],0.0);
+                       ksd_[io] = pfmax(-qyd_[io],0.0);
 	         } else {
-		       knd_[io] = max(qyd_[io],0.0);
-		       ksd_[io] = - max(-qyd_[io],0.0);
+		       knd_[io] = pfmax(qyd_[io],0.0);
+		       ksd_[io] = - pfmax(-qyd_[io],0.0);
 		   }
 
  			   break;

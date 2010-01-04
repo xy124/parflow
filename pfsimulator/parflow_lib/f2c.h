@@ -156,15 +156,15 @@ typedef struct Namelist Namelist;
 #define dabs(x) (doublereal)abs(x)
 
 #ifndef min
-#define min(a,b) ((a) <= (b) ? (a) : (b))
+#define pfmin(a,b) ((a) <= (b) ? (a) : (b))
 #endif
 
 #ifndef max
-#define max(a,b) ((a) >= (b) ? (a) : (b))
+#define pfmax(a,b) ((a) >= (b) ? (a) : (b))
 #endif
 
-#define dmin(a,b) (doublereal)min(a,b)
-#define dmax(a,b) (doublereal)max(a,b)
+#define dpfmin(a,b) (doublereal)pfmin(a,b)
+#define dpfmax(a,b) (doublereal)pfmax(a,b)
 
 /* procedure parameter types for -A and -C++ */
 

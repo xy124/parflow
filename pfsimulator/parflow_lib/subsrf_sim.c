@@ -906,7 +906,7 @@ int  SubsrfSimSizeOfTempData()
 
    /* set `sz' to max of each of the called modules */
    for (n = 0; n < (public_xtra -> num_geo_indexes); n++)
-      sz = max(sz,
+      sz = pfmax(sz,
 	       PFModuleSizeOfTempData((instance_xtra -> KFieldSimulators)[n]));
 
    return sz;
