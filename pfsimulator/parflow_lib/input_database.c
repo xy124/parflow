@@ -633,10 +633,12 @@ int NA_Sizeof(NameArray name_array)
    return name_array -> num;
 }
 
-void InputError(char *format, char *s1, char *s2)
+void InputError(const char *format, const char *s1, const char *s2)
 {
-   if(!amps_Rank(amps_CommWorld))
+   if(!amps_Rank(amps_CommWorld)) 
+   {
       amps_Printf(format, s1, s2);
+   }
 
    exit(1);
 }

@@ -305,7 +305,7 @@ void NA_FreeNameArray (NameArray name_array );
 int NA_NameToIndex (NameArray name_array , char *name );
 char *NA_IndexToName (NameArray name_array , int index );
 int NA_Sizeof (NameArray name_array );
-void InputError (char *format , char *s1 , char *s2 );
+void InputError (const char *format , const char *s1 , const char *s2 );
 
 typedef int (*NonlinSolverInvoke) (Vector *pressure , Vector *density , Vector *old_density , Vector *saturation , Vector *old_saturation , double t , double dt , ProblemData *problem_data, Vector *old_pressure, double *outflow, Vector *evap_trans, Vector *ovrl_bc_flx );
 typedef PFModule *(*NonlinSolverInitInstanceXtraInvoke) (Problem *problem , Grid *grid , ProblemData *problem_data , double *temp_data );
