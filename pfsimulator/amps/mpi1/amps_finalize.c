@@ -61,8 +61,6 @@ to an error condition is problematic.
 int amps_Finalize()
 {
 
-   MPI_Finalize();
-
 #ifdef AMPS_MALLOC_DEBUG
   /* check out the heap and shut everything down if we are in debug mode */
 #if 0

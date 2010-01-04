@@ -76,7 +76,7 @@ int amps_create_mpi_cont_send_type (amps_Comm comm , amps_Invoice inv );
 void amps_create_mpi_type (amps_Comm comm , amps_Invoice inv );
 
 /* amps_print.c */
-void amps_Printf (char *fmt , ...);
+void amps_Printf (const char *fmt , ...);
 
 /* amps_recv.c */
 char *amps_recvb (int src , int *size );
@@ -93,7 +93,7 @@ int amps_SFBCast (amps_Comm comm , amps_File file , amps_Invoice invoice );
 int amps_SFclose (amps_File file );
 
 /* amps_sfopen.c */
-amps_File amps_SFopen (char *filename , char *type );
+amps_File amps_SFopen (const char *filename , const char *type );
 
 /* amps_sizeofinvoice.c */
 long amps_sizeof_invoice (amps_Comm comm , amps_Invoice inv );

@@ -31,28 +31,43 @@
  *
  *****************************************************************************/
 
+#include "SAMRAI/SAMRAI_config.h"
+
+#include "SAMRAI/tbox/SAMRAIManager.h"
+#include "SAMRAI/tbox/SAMRAI_MPI.h"
+
 #include "parflow.h"
 
 #ifdef HAVE_CEGDB
 #include <cegdb.h>
 #endif
 
+using namespace SAMRAI;
+
 int main (int argc , char *argv [])
 {
+   tbox::Dimension dim(3);
+
    FILE *file = NULL;
 
    FILE *log_file = NULL;
       
-   char filename[MAXPATHLEN];
-
    amps_Clock_t wall_clock_time;
+
    /*-----------------------------------------------------------------------
-    * Initialize AMPS 
+    * Initialize tbox::MPI and SAMRAI, enable logging, and process
+    * command line.
     *-----------------------------------------------------------------------*/
 
-   if (amps_Init(&argc, &argv))
+   tbox::SAMRAI_MPI::init(&argc, &argv);
+   tbox::SAMRAIManager::startup();
+
+   /*-----------------------------------------------------------------------
+    * Initialize AMPS from existing MPI state initialized by SAMRAI
+    *-----------------------------------------------------------------------*/
+   if (amps_EmbeddedInit())
    {
-      amps_Printf("Error: initalization failed\n");
+      amps_Printf("Error: amps_EmbeddedInit initalization failed\n");
       exit(1);
    }
 
@@ -152,7 +167,10 @@ int main (int argc , char *argv [])
 
    if(!amps_Rank(amps_CommWorld))
    {
+      char filename[4096];
+
       sprintf(filename, "%s.%s", GlobalsOutFileName, "pftcl");
+
       file = fopen(filename, "w" );
       
       IDB_PrintUsage(file, amps_ThreadLocal(input_database));
@@ -162,10 +180,18 @@ int main (int argc , char *argv [])
       
    IDB_FreeDB(amps_ThreadLocal(input_database));
 
-      
    FreeGlobals();
 
+   /*-----------------------------------------------------------------------
+    * Shutdown AMPS
+    *-----------------------------------------------------------------------*/
    amps_Finalize();
+
+   /*-----------------------------------------------------------------------
+    * Shutdown SAMRAI and MPI.
+    *-----------------------------------------------------------------------*/
+   tbox::SAMRAIManager::shutdown();
+   tbox::SAMRAI_MPI::finalize();
 
    return 0;
 }
