@@ -59,7 +59,7 @@
  -----------------------------------------------------------------------------*/
 
 #include "parflow.h"
-#include <math.h>
+#include <cmath>
 
 void NewEndpts ( 
   double *alpha, 

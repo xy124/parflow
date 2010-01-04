@@ -33,7 +33,7 @@
 /* -----------------------------------------------------------------------
  */
 
-#include <math.h>
+#include <cmath>
 
 /* Subroutine */ int gauinv_(
    double *p,

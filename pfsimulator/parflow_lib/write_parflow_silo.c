@@ -33,15 +33,13 @@
 
 #include "parflow.h"
 
-#include <sys/stat.h>
-
 #ifdef HAVE_SILO
 #include "silo.h"
 #endif
 
-#include <math.h>
+#include <cmath>
 
-#include "parflow.h"
+#include <sys/stat.h>
 
 #ifdef HAVE_SILO
 void       WriteSilo_Subvector(DBfile *db_file, Subvector *subvector, Subgrid   *subgrid, 

@@ -31,9 +31,9 @@
  *
  *****************************************************************************/
 
-#include <math.h>
-
 #include "parflow.h"
+
+#include <cmath>
 
 long SizeofPFBinarySubvector(
    Subvector *subvector,

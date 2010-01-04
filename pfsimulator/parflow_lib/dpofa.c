@@ -4,7 +4,7 @@
 */
 
 #include "f2c.h"
-#include "math.h"
+#include <cmath>
 
 /* Table of constant values */
 
