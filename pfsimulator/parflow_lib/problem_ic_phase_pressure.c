@@ -27,7 +27,6 @@
 **********************************************************************EHEADER*/
 
 #include "parflow.h"
-#include "float.h"
 
 /*--------------------------------------------------------------------------
  * Structures
@@ -181,8 +180,9 @@ Problem     *problem)      /* General problem information */
     *-----------------------------------------------------------------------*/
 
    /* SGS Some of this initialization is being done multiple places. Why is that?*/
-   InitVector(ic_pressure, -FLT_MAX);
-//   InitVector(ic_pressure, 0.0);
+   // SGS where is this macro coming from?
+#undef max
+   InitVector(ic_pressure, -std::numeric_limits<float>::max());
    InitVector(temp_new_density, 0.0);
    InitVector(temp_new_density_der, 0.0);
    InitVector(temp_fcn, 0.0);

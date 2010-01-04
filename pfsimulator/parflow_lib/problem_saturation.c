@@ -169,10 +169,13 @@ int          fcn)               /* Flag determining what to calculate
    int            *region_indices, num_regions, ir;
 
    /* Initialize saturations */
-  InitVectorAll(phase_saturation, -FLT_MAX);
 
-   switch((public_xtra -> type))
-   {
+// SGS FIXME why is this needed?
+#undef max		  
+  InitVectorAll(phase_saturation, -std::numeric_limits<float>::max());
+
+  switch((public_xtra -> type))
+  {
 
    case 0:  /* Constant saturation */
    {
