@@ -40,14 +40,6 @@
 #include <sys/param.h>
 #endif
 
-#include <stdio.h>
-#include <math.h>
-
-#include <limits.h>
-#include <float.h>
-
-#include <string.h>
-
 #include <amps.h>
 
 #include "info_header.h"
@@ -94,5 +86,8 @@
 
 #include "parflow_proto.h"
 #include "parflow_proto_f.h"
+
+// SGS FIXME this should not be here, in fact this whole parflow.h file is dumb.
+#include <cmath>
 
 #endif

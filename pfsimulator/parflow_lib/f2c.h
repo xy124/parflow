@@ -155,11 +155,11 @@ typedef struct Namelist Namelist;
 
 #define dabs(x) (doublereal)abs(x)
 
-#ifndef min
+#ifndef pfmin
 #define pfmin(a,b) ((a) <= (b) ? (a) : (b))
 #endif
 
-#ifndef max
+#ifndef pfmax
 #define pfmax(a,b) ((a) >= (b) ? (a) : (b))
 #endif
 
