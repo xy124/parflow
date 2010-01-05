@@ -47,6 +47,8 @@
 
 #include "parflow.h"
 
+// #include "Parflow.hxx"
+
 #ifdef HAVE_CEGDB
 #include <cegdb.h>
 #endif
@@ -191,7 +193,13 @@ int main (int argc , char *argv [])
    }
 
 
+//   Parflow * parflow_simulation = new Parflow("Parflow",
+//					      input_db -> getDatabase("Parflow"));
 
+   double time = 0.0;
+
+
+   
    /*-----------------------------------------------------------------------
     * Set up globals structure
     *-----------------------------------------------------------------------*/
@@ -215,6 +223,11 @@ int main (int argc , char *argv [])
     *-----------------------------------------------------------------------*/
 
    NewTiming();
+
+   /*-----------------------------------------------------------------------
+    * Initialize SAMRAI hierarchy
+    *-----------------------------------------------------------------------*/
+//   parflow_simulation -> initializePatchHierarchy(time);
 
    /*-----------------------------------------------------------------------
     * Solve the problem

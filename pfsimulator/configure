@@ -609,6 +609,7 @@ SUNDIALS_C_FILES
 hdf5_LIBS
 PARFLOW_HAVE_SILO
 PARFLOW_HAVE_CEGDB
+SAMRAI_DIR
 PARFLOW_HAVE_SAMRAI
 AMPS_LIB_DEPEND
 AMPS_LIBS
@@ -9053,12 +9054,9 @@ fi
   LIB_PATH="$samrai_LIB_PATH $LIB_PATH"
   LIB_NAME="$samrai_LIB_NAME $LIB_NAME"
   INC_PATH="$samrai_INCLUDES $INC_PATH"
+  SAMRAI_DIR="$samrai_PREFIX"
 else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: NOTIFICATION: Parflow configured without the SAMRAI library" >&5
-$as_echo "$as_me: NOTIFICATION: Parflow configured without the SAMRAI library" >&6;}
-
-$as_echo "#define LACKS_SAMRAI 1" >>confdefs.h
-
+  as_fn_error "Error: Parflow configured without the SAMRAI library" "$LINENO" 5
 fi
 
 
