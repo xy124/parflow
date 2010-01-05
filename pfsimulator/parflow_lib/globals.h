@@ -32,16 +32,19 @@
 #ifndef _GLOBALS_HEADER
 #define _GLOBALS_HEADER
 
+#include <string>
 
 /*----------------------------------------------------------------
  * Globals structure
  *----------------------------------------------------------------*/
 
-typedef struct
+class Globals
 {
+
+public:
    char     run_name[256];
    char     in_file_name[256];
-   char     out_file_name[256];
+   std::string   out_file_name;
 	    
    int      logging_level;
 
@@ -73,7 +76,7 @@ typedef struct
    int      **intervals;
    int       *repeat_counts;
 
-} Globals;
+};
 
 #ifdef PARFLOW_GLOBALS
 amps_ThreadLocalDcl(Globals  *, globals_ptr);

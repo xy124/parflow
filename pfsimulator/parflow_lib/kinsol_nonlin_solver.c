@@ -394,7 +394,7 @@ double      *temp_data)
       SetPf2KinsolData(grid, 1);
 
       /* Initialize KINSol parameters */
-      sprintf(filename, "%s.%s", GlobalsOutFileName, "kinsol.log");
+      sprintf(filename, "%s.%s", GlobalsOutFileName.c_str(), "kinsol.log");
       if (!amps_Rank(amps_CommWorld))
 	 kinsol_file = fopen( filename, "w" );
       else

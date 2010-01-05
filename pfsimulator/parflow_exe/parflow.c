@@ -42,6 +42,8 @@
 #include <cegdb.h>
 #endif
 
+#include <string>
+
 using namespace SAMRAI;
 
 int main (int argc , char *argv [])
@@ -167,11 +169,9 @@ int main (int argc , char *argv [])
 
    if(!amps_Rank(amps_CommWorld))
    {
-      char filename[4096];
-
-      sprintf(filename, "%s.%s", GlobalsOutFileName, "pftcl");
-
-      file = fopen(filename, "w" );
+      std::string filename = GlobalsOutFileName + ".pftcl";
+      
+      file = fopen(filename.c_str(), "w" );
       
       IDB_PrintUsage(file, amps_ThreadLocal(input_database));
       

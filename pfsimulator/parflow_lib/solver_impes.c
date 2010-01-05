@@ -248,7 +248,7 @@ void      SolverImpes()
       number_logged = 0;
    }
 
-   sprintf(file_prefix, GlobalsOutFileName);
+   sprintf(file_prefix, GlobalsOutFileName.c_str());
 
    /* do turning bands (and other stuff maybe) */
    PFModuleInvokeType(SetProblemDataInvoke, set_problem_data, (problem_data));
@@ -2054,7 +2054,11 @@ PFModule   *SolverImpesNewPublicXtra(char *name)
        public_xtra -> write_silo_satur ||
        public_xtra -> write_silo_concen
       ) {
-      WriteSiloInit(GlobalsOutFileName);
+
+      // SGS fixme remove C stuff
+      char *temp_filename = strdup(GlobalsOutFileName.c_str());
+      WriteSiloInit(temp_filename);
+      free(temp_filename);
    }
 
    NA_FreeNameArray(switch_na);

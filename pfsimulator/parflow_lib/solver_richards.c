@@ -270,7 +270,7 @@ void SetupRichards(PFModule *this_module) {
       instance_xtra -> number_logged = 0;
    }
 
-   sprintf(file_prefix, GlobalsOutFileName);
+   sprintf(file_prefix, GlobalsOutFileName.c_str());
 
    /* Do turning bands (and other stuff maybe) */
    PFModuleInvokeType(SetProblemDataInvoke, set_problem_data, (problem_data));
@@ -802,7 +802,7 @@ void AdvanceRichards(PFModule *this_module,
    char          dt_info;
    char          file_prefix[64], file_postfix[64];
 
-   sprintf(file_prefix, GlobalsOutFileName);
+   sprintf(file_prefix, GlobalsOutFileName.c_str());
 
    /***********************************************************************/
    /*                                                                     */
@@ -2621,7 +2621,9 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
        public_xtra -> write_silo_CLM
      ) {
 
-	   WriteSiloInit(GlobalsOutFileName);
+      char *temp_filename = strdup(GlobalsOutFileName.c_str());
+      WriteSiloInit(temp_filename);
+      free(temp_filename);
    }
 
    NA_FreeNameArray(switch_na);

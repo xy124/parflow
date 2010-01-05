@@ -43,17 +43,17 @@ void   NewLogging()
 {
    FILE  *log_file;
 
-   char   filename[MAXPATHLEN];
+
 
    GlobalsLoggingLevel = 1;
 
    if(!amps_Rank(amps_CommWorld))
    {
-      sprintf(filename, "%s.%s", GlobalsOutFileName, "log");
+      std::string filename(GlobalsOutFileName + ".log");
 
-      if ((log_file = fopen(filename, "w")) == NULL)
+      if ((log_file = fopen(filename.c_str(), "w")) == NULL)
       {
-	 InputError("Error: can't open output file %s%s\n", filename, "");
+	 InputError("Error: can't open output file %s%s\n", filename.c_str(), "");
       }
       
       fprintf(log_file, "*****************************************************************************\n");
@@ -91,14 +91,11 @@ FILE *OpenLogFile(char       *module_name)
 {
    FILE *log_file;
 
-   char       filename[256];
-
-
-   sprintf(filename, "%s.%s", GlobalsOutFileName, "log");
+   std::string filename(GlobalsOutFileName + ".log");
 
    if(!amps_Rank(amps_CommWorld))
    {
-      log_file = amps_SFopen(filename, "a");
+      log_file = amps_SFopen(filename.c_str(), "a");
 
       fprintf(log_file, "==============================================\n");
       fprintf(log_file, "BEGIN Log Info (%s)\n", module_name);
