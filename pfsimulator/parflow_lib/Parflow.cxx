@@ -1,0 +1,285 @@
+/*BHEADER**********************************************************************
+
+  Copyright (c) 1995-2009, Lawrence Livermore National Security,
+  LLC. Produced at the Lawrence Livermore National Laboratory. Written
+  by the Parflow Team (see the CONTRIBUTORS file)
+  <parflow@lists.llnl.gov> CODE-OCEC-08-103. All rights reserved.
+
+  This file is part of Parflow. For details, see
+  http://www.llnl.gov/casc/parflow
+
+  Please read the COPYRIGHT file or Our Notice and the LICENSE file
+  for the GNU Lesser General Public License.
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License (as published
+  by the Free Software Foundation) version 2.1 dated February 1999.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms
+  and conditions of the GNU General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA
+**********************************************************************EHEADER*/
+
+#include "Parflow.hxx"
+
+#include "SAMRAI/hier/VariableDatabase.h"
+#include "SAMRAI/pdat/CellVariable.h"
+#include "SAMRAI/geom/CartesianPatchGeometry.h"
+#include "SAMRAI/hier/Patch.h"
+#include "SAMRAI/hier/PatchLevel.h"
+#include "SAMRAI/hier/PatchHierarchy.h"
+#include "SAMRAI/pdat/CellData.h"
+#include "SAMRAI/pdat/CellIndex.h"
+
+#include "SAMRAI/mesh/StandardTagAndInitialize.h"
+#include "SAMRAI/mesh/BergerRigoutsos.h"
+
+#include "SAMRAI/mesh/TreeLoadBalancer.h"
+
+#include "SAMRAI/mesh/GriddingAlgorithm.h"
+
+#include "parflow.h"
+
+using namespace SAMRAI;
+
+const tbox::Dimension Parflow::d_dim = tbox::Dimension(3);
+
+// SGS FIXME rename this
+const std::string Parflow::CELL_STATE = "CellState";
+
+const std::string Parflow::CURRENT_STATE = "Current";
+const std::string Parflow::SCRATCH_STATE = "Scratch";
+
+Parflow::Parflow(
+      const std::string& object_name,
+      tbox::Pointer<tbox::Database> input_db) 
+{
+   tbox::Pointer<geom::CartesianGridGeometry > grid_geometry(
+      new geom::CartesianGridGeometry(
+	 d_dim,
+	 "CartesianGeometry",
+	 input_db->getDatabase("CartesianGeometry")));
+
+   d_patch_hierarchy = new hier::PatchHierarchy("PatchHierarchy",
+						   grid_geometry);
+
+   d_object_name = object_name;
+
+   hier::VariableDatabase *variable_database(
+      hier::VariableDatabase::getDatabase());
+
+   tbox::Pointer< pdat::CellVariable<int> > cell_state(
+      new pdat::CellVariable<int>(d_dim, CELL_STATE, 1));
+
+   tbox::Pointer< hier::VariableContext > current_context(
+      variable_database -> getContext(CURRENT_STATE));
+   
+   tbox::Pointer< hier::VariableContext > scratch_context(
+      variable_database -> getContext(SCRATCH_STATE));
+
+   hier::IntVector ghosts(d_dim, 1);
+
+   d_current_cell_state_handle = 
+      variable_database -> registerVariableAndContext(cell_state,
+						      current_context,
+						      ghosts);
+   d_scratch_cell_state_handle = 
+      variable_database -> registerVariableAndContext(cell_state,
+						      scratch_context,
+						      ghosts);
+
+   d_boundary_fill_refine_algorithm = new xfer::RefineAlgorithm(d_dim);
+   d_fill_after_regrid              = new xfer::RefineAlgorithm(d_dim);
+   d_coarsen_algorithm              = new xfer::CoarsenAlgorithm(d_dim);
+
+   /*
+    * Refine with no refine method (copy).
+    */
+   d_boundary_fill_refine_algorithm -> registerRefine(
+      d_current_cell_state_handle,
+      d_current_cell_state_handle,
+      d_current_cell_state_handle,
+      SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator>(NULL));
+   
+   //  After regrid, use "current" context to communicate information
+   //  to updated patches.  Use "scratch" as the temporary storage.
+   d_fill_after_regrid->registerRefine(
+      d_current_cell_state_handle,  // destination
+      d_current_cell_state_handle,  // source
+      d_scratch_cell_state_handle,  // temporary 
+      SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator>(NULL));
+
+   getFromInput(input_db, false);
+
+
+   tbox::Pointer< mesh::StandardTagAndInitialize > standard_tag_and_initialize(
+      new mesh::StandardTagAndInitialize(
+	 d_dim,
+	 "StandardTagAndInitialize", 
+	 this,
+	 input_db -> getDatabase("StandardTagAndInitialize")));
+   
+   tbox::Pointer< mesh::BergerRigoutsos > box_generator( 
+      new mesh::BergerRigoutsos(d_dim));
+
+   tbox::Pointer< mesh::LoadBalanceStrategy > load_balancer(
+      new mesh::TreeLoadBalancer(d_dim,
+				 "LoadBalancer",
+				 input_db -> getDatabase("LoadBalancer")));
+
+   
+   d_gridding_algorithm = 
+      new mesh::GriddingAlgorithm(
+	 d_dim,
+	 "GriddingAlgorithm",
+	 input_db -> getDatabase("GriddingAlgorithm"),
+	 standard_tag_and_initialize,
+	 box_generator,
+	 load_balancer);
+
+   d_tag_buffer_array.resizeArray(d_gridding_algorithm->getMaxLevels());
+   for (int il = 0; il < d_gridding_algorithm->getMaxLevels(); il++) {
+      d_tag_buffer_array[il] = 1;
+   }
+
+}
+
+Parflow:: ~Parflow() 
+{
+}
+
+void Parflow::initializeLevelData(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const int level_number,
+   const double init_data_time,
+   const bool can_be_refined,
+   const bool initial_time,
+   const tbox::Pointer< hier::BasePatchLevel > old_level,
+   const bool allocate_data)
+{
+}
+
+void Parflow::resetHierarchyConfiguration(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const int coarsest_level,
+   const int finest_level)
+{
+}
+
+void Parflow::advanceHierarchy(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const double loop_time, 
+   const double dt) 
+{
+}
+
+
+void Parflow::applyGradientDetector(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const int level_number,
+   const double error_data_time,
+   const int tag_index,
+   const bool initial_time,
+   const bool uses_richardson_extrapolation_too)
+{
+}
+
+tbox::Pointer<hier::PatchHierarchy > Parflow::getPatchHierarchy(void) const
+{
+}
+
+tbox::Pointer<mesh::GriddingAlgorithm > Parflow::getGriddingAlgorithm(void) const
+{
+}
+
+tbox::Array<int> Parflow::getTagBufferArray(void) const
+{
+}
+
+void Parflow::initializePatchHierarchy(double time)
+{
+
+   createMappedBoxLevelFromParflowGrid();
+
+   const hier::IntVector one_vector(d_dim, 1);
+   const hier::IntVector ratio(d_gridding_algorithm -> getMaxLevels() > 1 ? 
+				d_gridding_algorithm->getRatioToCoarserLevel(1) : one_vector);
+
+   std::vector<hier::IntVector > fine_connector_gcw;
+   std::vector<hier::IntVector > peer_connector_gcw;
+   d_gridding_algorithm -> computeAllConnectorWidths(fine_connector_gcw,
+						     peer_connector_gcw,
+						     *d_patch_hierarchy );
+
+   d_patch_hierarchy->getMappedBoxHierarchy().setMappedBoxLevelParameters(
+      0,
+      ratio,
+      fine_connector_gcw[0],
+      peer_connector_gcw[0]);
+
+   tbox::Pointer< hier::MappedBoxLevel > mapped_box_level(createMappedBoxLevelFromParflowGrid());
+   
+   d_patch_hierarchy -> makeNewPatchLevel(0, *mapped_box_level);
+
+   d_gridding_algorithm -> makeCoarsestLevel(d_patch_hierarchy, time);
+   
+   bool initial_time = true;
+
+   for(int level_num = 0; 
+       d_gridding_algorithm -> levelCanBeRefined(level_num); 
+       level_num++) {	 		
+
+      d_gridding_algorithm -> makeFinerLevel(d_patch_hierarchy,
+					   time,
+					   initial_time,
+					   d_tag_buffer_array[level_num]);
+   }
+}
+
+void Parflow::getFromInput(
+   tbox::Pointer<tbox::Database> db,
+   bool is_from_restart) {
+   
+   if (!is_from_restart) {
+
+   }
+}
+
+tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGrid(void)
+{
+   // Build a box based off of Parflow grid
+   const hier::Index lower( SubgridIX(GridSubgrid(GlobalsUserGrid, 0)),
+			    SubgridIY(GridSubgrid(GlobalsUserGrid, 0)),
+			    SubgridIZ(GridSubgrid(GlobalsUserGrid, 0)));
+
+   const hier::Index upper ( lower[0] + SubgridNX(GridSubgrid(GlobalsUserGrid, 0)),
+			     lower[1] + SubgridNY(GridSubgrid(GlobalsUserGrid, 0)),
+			     lower[2] + SubgridNZ(GridSubgrid(GlobalsUserGrid, 0)));
+   
+   hier::Box box(lower, upper);
+
+   // Build a mapped box and insert into layer.  
+   const int local_index = 0;
+   const int my_rank = tbox::SAMRAI_MPI::getRank();
+
+   hier::MappedBox mapped_box( box, local_index, my_rank );
+
+   hier::MappedBoxSet mapped_box_set;
+   mapped_box_set.insert(mapped_box_set.begin(), mapped_box);
+
+   const hier::IntVector ratio(d_dim, 1);
+
+   tbox::Pointer<hier::MappedBoxLevel> mapped_box_level(new hier::MappedBoxLevel(mapped_box_set,
+							   ratio));
+
+   return mapped_box_level;
+}
+
+
+

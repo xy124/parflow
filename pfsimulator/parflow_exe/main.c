@@ -194,17 +194,14 @@ int main (int argc , char *argv [])
    }
 
 
-   Parflow * parflow_simulation = new Parflow("Parflow",
-					      input_db -> getDatabase("Parflow"));
-
-   double time = 0.0;
-
-   
    /*-----------------------------------------------------------------------
     * Set up globals structure
     *-----------------------------------------------------------------------*/
 
    NewGlobals(argv[1]);
+
+   GlobalsParflowSimulation = new Parflow("Parflow",
+					   input_db -> getDatabase("Parflow"));
 
    /*-----------------------------------------------------------------------
     * Read the Users Input Deck
@@ -223,11 +220,6 @@ int main (int argc , char *argv [])
     *-----------------------------------------------------------------------*/
 
    NewTiming();
-
-   /*-----------------------------------------------------------------------
-    * Initialize SAMRAI hierarchy
-    *-----------------------------------------------------------------------*/
-   parflow_simulation -> initializePatchHierarchy(time);
 
    /*-----------------------------------------------------------------------
     * Solve the problem
@@ -306,8 +298,6 @@ int main (int argc , char *argv [])
     * Shutdown AMPS
     *-----------------------------------------------------------------------*/
    amps_Finalize();
-
-   delete parflow_simulation;
 
    /*-----------------------------------------------------------------------
     * Shutdown SAMRAI and MPI.

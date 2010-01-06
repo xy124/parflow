@@ -17,22 +17,13 @@ Main {
 
 
 Parflow {
-     regrid_timestep = 1
-     starting_lower_corner = 10, 50
-     starting_size = 3, 3
-     // Boat (still life)
-     // starting_config = 1, 1, 0, 1, 0, 1, 0, 1, 0 
-     // Blinker
-     // starting_config = 0, 0, 0, 1, 1, 1, 0, 0, 0 
-     // Glider
-     starting_config = 0, 1, 0, 1, 0, 0, 1, 1, 1
-
      CartesianGeometry {
-        domain_boxes  = [ (0,0) , (99,99) ]
-	   x_lo          = 0, 0       // lower end of computational domain.
-           x_up          = 100, 100   // upper end of computational domain.
-           periodic_dimension = 1,1 // Periodic in both dimensions
+        domain_boxes  = [ (0,0,0) , (99,99,99) ]
+	   x_lo          = 0, 0, 0         // lower end of computational domain.
+           x_up          = 100, 100, 100   // upper end of computational domain.
      }
+
+     regrid_timestep = 1
 
      StandardTagAndInitialize {
           tagging_method = "GRADIENT_DETECTOR"
@@ -53,19 +44,16 @@ Parflow {
 // Specify coarsening ratios for each level 1 through max_levels-1
 
    	   ratio_to_coarser {      // vector ratio to next coarser level
-	   level_1 = 2 , 2
-           level_2 = 2 , 2
-           level_3 = 2 , 2
-           level_4 = 2 , 2
+	   level_1 = 2 , 2, 2
      }
 
      largest_patch_size {
-        level_0 = 40 , 40
+        level_0 = 40 , 40, 40
         // all finer levels will use same values as level_0...
      }
 
       smallest_patch_size {
-      level_0 = 16 , 16 
+      level_0 = 16 , 16, 16
       // all finer levels will use same values as level_0...
    }
 
@@ -73,7 +61,6 @@ Parflow {
    combine_efficiency      = 0.95e0   // chop box if sum of volumes of smaller
                                       // boxes < efficiency * vol of large box
 }
-
 
 }
 

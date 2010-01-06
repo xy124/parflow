@@ -32,6 +32,8 @@
 #ifndef _GLOBALS_HEADER
 #define _GLOBALS_HEADER
 
+#include "Parflow.hxx"
+
 #include <string>
 
 /*----------------------------------------------------------------
@@ -76,6 +78,7 @@ public:
    int      **intervals;
    int       *repeat_counts;
 
+   tbox::Pointer<Parflow> parflow_simulation;
 };
 
 #ifdef PARFLOW_GLOBALS
@@ -119,6 +122,8 @@ amps_ThreadLocalDcl(extern IDB *, input_database);
 #define GlobalsRepeatCounts       (globals -> repeat_counts)
 
 #define GlobalsContaminatNames    (globals -> contaminant_names)
-#define GlobalsGeometries    (globals -> geometries)
+#define GlobalsGeometries         (globals -> geometries)
+
+#define GlobalsParflowSimulation   (globals -> parflow_simulation)
 
 #endif

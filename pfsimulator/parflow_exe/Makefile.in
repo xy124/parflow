@@ -21,13 +21,9 @@ SRCS = \
 
 OBJS = $(SRCS:.c=.o)
 
-CXX_SRCS = \
-	Parflow.cxx
-
-CXXOBJS = $(CXX_SRCS:.cxx=.o)
 
 $(PARFLOW_BIN_DIR)/parflow: $(CXXOBJS) $(OBJS) $(AMPS_LIB_DEPEND) $(CLM_LIB_DEPEND) $(PARFLOW_LIB_DEPEND)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(CXXOBJS) \
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) \
 			$(PARFLOW_LIBS) $(LDLIBS) -o $@
 
 all: $(PARFLOW_BIN_DIR)/parflow 

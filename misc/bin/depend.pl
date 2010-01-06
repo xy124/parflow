@@ -232,11 +232,9 @@ sub printDependencies {
    $SRC_FILE = fixName($SRC_FILE);
    
    my $LIBLINE = $SRC_FILE;
+   $LIBLINE =~ s/^(.*)\.cxx/$1.o/o;
    $LIBLINE =~ s/^(.*)\.[Cfc]/$1.o/o;
    print OUTFILE "FILE_$FILENUMBER=$LIBLINE\n";
-
-
-
 
    # Look for C files that are directly included by the 
    # src file.  Always include a dependency on these files.
@@ -247,6 +245,9 @@ sub printDependencies {
    @src_include_files= getMoreDeps( &getFullPath($SRC_FILE) );
    for(@src_include_files) {
        if(/.*\.C/) {
+	   push(@src_C_files, "$_");
+       }
+       if(/.*\.cxx/) {
 	   push(@src_C_files, "$_");
        }
    }
@@ -262,6 +263,9 @@ sub printDependencies {
 	   push(@OTHER_DEPS, $_);
        }
        elsif (/.*\.[C]/) {
+	   push(@C_SOURCE_DEPS, $_);
+       }
+       elsif (/.*\.cxx/) {
 	   push(@C_SOURCE_DEPS, $_);
        } else {
 	   push(@OTHER_DEPS, $_);
