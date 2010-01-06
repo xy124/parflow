@@ -16,7 +16,7 @@ Main {
 }
 
 
-Life {
+Parflow {
      regrid_timestep = 1
      starting_lower_corner = 10, 50
      starting_size = 3, 3

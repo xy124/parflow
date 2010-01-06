@@ -46,8 +46,9 @@
 #include "SAMRAI/tbox/RestartManager.h"
 
 #include "parflow.h"
+#include "amps.h"
 
-// #include "Parflow.hxx"
+#include "Parflow.hxx"
 
 #ifdef HAVE_CEGDB
 #include <cegdb.h>
@@ -193,11 +194,10 @@ int main (int argc , char *argv [])
    }
 
 
-//   Parflow * parflow_simulation = new Parflow("Parflow",
-//					      input_db -> getDatabase("Parflow"));
+   Parflow * parflow_simulation = new Parflow("Parflow",
+					      input_db -> getDatabase("Parflow"));
 
    double time = 0.0;
-
 
    
    /*-----------------------------------------------------------------------
@@ -227,7 +227,7 @@ int main (int argc , char *argv [])
    /*-----------------------------------------------------------------------
     * Initialize SAMRAI hierarchy
     *-----------------------------------------------------------------------*/
-//   parflow_simulation -> initializePatchHierarchy(time);
+   parflow_simulation -> initializePatchHierarchy(time);
 
    /*-----------------------------------------------------------------------
     * Solve the problem
@@ -306,6 +306,8 @@ int main (int argc , char *argv [])
     * Shutdown AMPS
     *-----------------------------------------------------------------------*/
    amps_Finalize();
+
+   delete parflow_simulation;
 
    /*-----------------------------------------------------------------------
     * Shutdown SAMRAI and MPI.

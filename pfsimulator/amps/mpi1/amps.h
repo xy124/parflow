@@ -30,6 +30,8 @@
 
 #include "parflow_config.h"
 
+#include <mpi.h>
+
 #ifdef AMPS_MALLOC_DEBUG
 #include <dmalloc.h>
 #else
@@ -39,15 +41,14 @@
 #ifdef AMPS_VMALLOC
 #include <vmalloc.h>
 #else
-#include <stdlib.h>
+#include <cstdlib>
 #endif
 #endif
 #endif
 
-#include <strings.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 #include <sys/times.h>
-#include <mpi.h>
 
 #ifndef FALSE
 #define FALSE 0
@@ -55,13 +56,6 @@
 
 #ifndef TRUE
 #define TRUE  1
-#endif
-
-#ifndef max
-#define max(a,b)  (((a)<(b)) ? (b) : (a))
-#endif
-#ifndef min
-#define min(a,b)  (((a)<(b)) ? (a) : (b))
 #endif
 
 /*===========================================================================*/

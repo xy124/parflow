@@ -38,10 +38,10 @@
 #include <cmath>
 
 #ifdef HAVE_MALLOC_H
-#include <malloc.h>
+#include <cmalloc>
 #endif
 
-#include <unistd.h>
+// SGS fixme for C++
 #include <sys/stat.h>
 
 amps_ThreadLocalDcl(int, s_max_memory);

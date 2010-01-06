@@ -39,6 +39,7 @@
 
 #include <cmath>
 
+// SGS FIXME for C++
 #include <sys/stat.h>
 
 #ifdef HAVE_SILO

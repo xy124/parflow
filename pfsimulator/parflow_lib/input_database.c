@@ -28,7 +28,7 @@
 
 #include "parflow.h"
 
-#include <string.h>
+#include <cstring>
 
 /**
 Prints out a database entry.  If it was not used during the

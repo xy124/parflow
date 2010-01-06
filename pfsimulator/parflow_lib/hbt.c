@@ -76,10 +76,12 @@
  *
  *
  *****************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <memory.h>
+
 #include "hbt.h"
+
+#include <cstdlib>
+#include <cstring>
+
 
 /*===========================================================================*/
 /* The stack size for the deletion algorithm.                                */
