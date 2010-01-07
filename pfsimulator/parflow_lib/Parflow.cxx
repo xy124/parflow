@@ -58,18 +58,139 @@ const std::string Parflow::SCRATCH_STATE = "Scratch";
 
 Parflow::Parflow(
       const std::string& object_name,
-      tbox::Pointer<tbox::Database> input_db) 
+      tbox::Pointer<tbox::Database> input_db) :
+   d_object_name(object_name),
+   d_input_db(input_db)
 {
+
+}
+
+Parflow:: ~Parflow() 
+{
+}
+
+void Parflow::initializeLevelData(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const int level_number,
+   const double init_data_time,
+   const bool can_be_refined,
+   const bool initial_time,
+   const tbox::Pointer< hier::BasePatchLevel > old_level,
+   const bool allocate_data)
+{
+   NULL_USE(hierarchy);
+   NULL_USE(level_number);
+   NULL_USE(init_data_time);
+   NULL_USE(can_be_refined);
+   NULL_USE(initial_time);
+   NULL_USE(old_level);
+   NULL_USE(allocate_data);
+}
+
+void Parflow::resetHierarchyConfiguration(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const int coarsest_level,
+   const int finest_level)
+{
+   NULL_USE(hierarchy);
+   NULL_USE(coarsest_level);
+   NULL_USE(finest_level);
+
+}
+
+void Parflow::advanceHierarchy(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const double loop_time, 
+   const double dt) 
+{
+   NULL_USE(hierarchy);
+   NULL_USE(loop_time);
+   NULL_USE(dt);
+}
+
+
+void Parflow::applyGradientDetector(
+   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+   const int level_number,
+   const double error_data_time,
+   const int tag_index,
+   const bool initial_time,
+   const bool uses_richardson_extrapolation_too)
+{
+   NULL_USE(hierarchy);
+   NULL_USE(level_number);
+   NULL_USE(error_data_time);
+   NULL_USE(tag_index);
+   NULL_USE(initial_time);
+   NULL_USE(uses_richardson_extrapolation_too);
+
+}
+
+tbox::Pointer<hier::PatchHierarchy > Parflow::getPatchHierarchy(void) const
+{
+   return tbox::Pointer<hier::PatchHierarchy >(NULL);
+}
+
+tbox::Pointer<mesh::GriddingAlgorithm > Parflow::getGriddingAlgorithm(void) const
+{
+   return tbox::Pointer<mesh::GriddingAlgorithm >(NULL);
+}
+
+tbox::Array<int> Parflow::getTagBufferArray(void) const
+{
+   tbox::Array<int> temp;
+   return temp;
+}
+
+void Parflow::setupInputDatabase() {
+   tbox::Pointer<tbox::Database> input_db(d_input_db->getDatabase("CartesianGeometry"));
+
+// sgs
+
+   Background  *bg = GlobalsBackground;
+
+   int lower[3];
+   lower[0] = BackgroundIX(bg);
+   lower[1] = BackgroundIY(bg);
+   lower[2] = BackgroundIZ(bg);
+
+   int upper[3];
+   upper[0] = lower[0] +  BackgroundNX(bg);
+   upper[1] = lower[1] +  BackgroundNY(bg);
+   upper[2] = upper[2] +  BackgroundNZ(bg);
+
+   tbox::DatabaseBox box(d_dim, lower, upper);
+
+   tbox::Array<tbox::DatabaseBox> domain(1);
+   domain[0] = box;
+
+   input_db -> putDatabaseBoxArray("domain_boxes", domain);
+
+   double x_lo[3];
+   x_lo[0] = BackgroundXLower(bg);
+   x_lo[1] = BackgroundYLower(bg);
+   x_lo[2] = BackgroundZLower(bg);
+
+   double x_up[3];
+   x_up[0] = BackgroundXLower(bg) + BackgroundNX(bg) * BackgroundDX(bg);
+   x_up[1] = BackgroundYLower(bg) + BackgroundNY(bg) * BackgroundDY(bg);
+   x_up[2] = BackgroundZLower(bg) + BackgroundNZ(bg) * BackgroundDZ(bg);
+
+   input_db -> putDoubleArray("x_lo", x_lo, d_dim);
+   input_db -> putDoubleArray("x_up", x_up, d_dim);
+}
+
+void Parflow::initializePatchHierarchy(double time)
+{
+
    tbox::Pointer<geom::CartesianGridGeometry > grid_geometry(
       new geom::CartesianGridGeometry(
 	 d_dim,
 	 "CartesianGeometry",
-	 input_db->getDatabase("CartesianGeometry")));
+	 d_input_db->getDatabase("CartesianGeometry")));
 
    d_patch_hierarchy = new hier::PatchHierarchy("PatchHierarchy",
 						   grid_geometry);
-
-   d_object_name = object_name;
 
    hier::VariableDatabase *variable_database(
       hier::VariableDatabase::getDatabase());
@@ -115,7 +236,7 @@ Parflow::Parflow(
       d_scratch_cell_state_handle,  // temporary 
       SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator>(NULL));
 
-   getFromInput(input_db, false);
+   getFromInput(d_input_db, false);
 
 
    tbox::Pointer< mesh::StandardTagAndInitialize > standard_tag_and_initialize(
@@ -123,7 +244,7 @@ Parflow::Parflow(
 	 d_dim,
 	 "StandardTagAndInitialize", 
 	 this,
-	 input_db -> getDatabase("StandardTagAndInitialize")));
+	 d_input_db -> getDatabase("StandardTagAndInitialize")));
    
    tbox::Pointer< mesh::BergerRigoutsos > box_generator( 
       new mesh::BergerRigoutsos(d_dim));
@@ -131,14 +252,14 @@ Parflow::Parflow(
    tbox::Pointer< mesh::LoadBalanceStrategy > load_balancer(
       new mesh::TreeLoadBalancer(d_dim,
 				 "LoadBalancer",
-				 input_db -> getDatabase("LoadBalancer")));
+				 d_input_db -> getDatabase("LoadBalancer")));
 
    
    d_gridding_algorithm = 
       new mesh::GriddingAlgorithm(
 	 d_dim,
 	 "GriddingAlgorithm",
-	 input_db -> getDatabase("GriddingAlgorithm"),
+	 d_input_db -> getDatabase("GriddingAlgorithm"),
 	 standard_tag_and_initialize,
 	 box_generator,
 	 load_balancer);
@@ -147,63 +268,6 @@ Parflow::Parflow(
    for (int il = 0; il < d_gridding_algorithm->getMaxLevels(); il++) {
       d_tag_buffer_array[il] = 1;
    }
-
-}
-
-Parflow:: ~Parflow() 
-{
-}
-
-void Parflow::initializeLevelData(
-   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
-   const int level_number,
-   const double init_data_time,
-   const bool can_be_refined,
-   const bool initial_time,
-   const tbox::Pointer< hier::BasePatchLevel > old_level,
-   const bool allocate_data)
-{
-}
-
-void Parflow::resetHierarchyConfiguration(
-   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
-   const int coarsest_level,
-   const int finest_level)
-{
-}
-
-void Parflow::advanceHierarchy(
-   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
-   const double loop_time, 
-   const double dt) 
-{
-}
-
-
-void Parflow::applyGradientDetector(
-   const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
-   const int level_number,
-   const double error_data_time,
-   const int tag_index,
-   const bool initial_time,
-   const bool uses_richardson_extrapolation_too)
-{
-}
-
-tbox::Pointer<hier::PatchHierarchy > Parflow::getPatchHierarchy(void) const
-{
-}
-
-tbox::Pointer<mesh::GriddingAlgorithm > Parflow::getGriddingAlgorithm(void) const
-{
-}
-
-tbox::Array<int> Parflow::getTagBufferArray(void) const
-{
-}
-
-void Parflow::initializePatchHierarchy(double time)
-{
 
    createMappedBoxLevelFromParflowGrid();
 
@@ -244,7 +308,9 @@ void Parflow::initializePatchHierarchy(double time)
 
 void Parflow::getFromInput(
    tbox::Pointer<tbox::Database> db,
-   bool is_from_restart) {
+   bool is_from_restart) 
+{
+   NULL_USE(db);
    
    if (!is_from_restart) {
 

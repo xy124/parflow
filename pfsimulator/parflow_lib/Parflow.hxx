@@ -96,6 +96,8 @@ public:
 
    tbox::Pointer<hier::MappedBoxLevel> createMappedBoxLevelFromParflowGrid(void);
 
+   void setupInputDatabase(void);
+
    void getFromInput(
       tbox::Pointer<tbox::Database> db,
       bool is_from_restart);
@@ -130,6 +132,10 @@ public:
    int d_scratch_cell_state_handle;
 
    std::string d_object_name;
+
+   tbox::Pointer<tbox::Database> d_input_db;
+
+
 };
 
 #endif
