@@ -18,9 +18,6 @@ Main {
 
 Parflow {
      CartesianGeometry {
-        domain_boxes  = [ (0,0,0) , (99,99,99) ]
-	x_lo          = 0, 0, 0         // lower end of computational domain.
-        x_up          = 100, 100, 100   // upper end of computational domain.
      }
 
      regrid_timestep = 1

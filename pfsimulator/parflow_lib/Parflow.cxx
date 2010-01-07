@@ -183,6 +183,8 @@ void Parflow::setupInputDatabase() {
 void Parflow::initializePatchHierarchy(double time)
 {
 
+   setupInputDatabase();
+
    tbox::Pointer<geom::CartesianGridGeometry > grid_geometry(
       new geom::CartesianGridGeometry(
 	 d_dim,
