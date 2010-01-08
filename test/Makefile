@@ -34,13 +34,17 @@ endif
 ifeq (${PARFLOW_HAVE_SILO},yes)
 TESTS += \
 	default_richards_with_silo.tcl \
-	indicator_field.tcl
-
-ifeq (${PARFLOW_HAVE_SILO},yes)
-TESTS += \
+	indicator_field.tcl \
 	water_balance_y.tcl \
 	water_balance_x.tcl 
 endif
+
+PARALLEL_TESTS =
+
+ifeq (${AMPS},mpi1)
+
+PARALLEL_TESTS += \
+	default_single_parallel.tcl
 endif
 
 check:
@@ -55,6 +59,18 @@ check:
 	do \
 	        (cd $$i; make); \
 	done 
+
+check_parallel:
+	@-for i in $(PARALLEL_TESTS); \
+	do \
+		for processor_topology in "1 1 2" "1 2 1" "2 1 1" "2 2 2" "3 3 3"; \
+		do \
+		        make --no-print-directory testclean; \
+			echo "*****************************************************************************"; \
+			echo "Running $$i on $$processor_topology"; \
+			tclsh $$i $$processor_topology; \
+		done \
+	done
 
 clean: testclean
 	@-for i in $(SUBDIRS); \

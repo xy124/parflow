@@ -76,6 +76,9 @@ int main (int argc , char *argv [])
    tbox::SAMRAI_MPI::init(&argc, &argv);
    tbox::SAMRAIManager::startup();
 
+   // SGS FIXME remove this
+   // tbox::SAMRAIManager::setMaxNumberPatchDataEntries(2048);
+
    /*-----------------------------------------------------------------------
     * Initialize AMPS from existing MPI state initialized by SAMRAI
     *-----------------------------------------------------------------------*/
@@ -150,15 +153,12 @@ int main (int argc , char *argv [])
    
    tbox::Array<std::string> viz_writer(1);
    std::string viz_dump_dirname;
-   int visit_number_procs_per_file = 1;
    if ( viz_dump_interval > 0 ) {
       if (main_db->keyExists("viz_dump_dirname")) {
 	 viz_dump_dirname = main_db->getStringWithDefault(
 	    "viz_dump_dirname", "./visit");
       }
    }
-   
-   const bool viz_dump_data = (viz_dump_interval > 0);
    
    int restart_interval = 0;
    if (main_db->keyExists("restart_interval")) {
