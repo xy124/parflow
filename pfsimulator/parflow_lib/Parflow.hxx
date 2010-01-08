@@ -92,6 +92,11 @@ public:
 
    void initializePatchHierarchy(double time);
 
+   const tbox::Dimension& getDim() const
+   {
+      return d_dim;
+   }
+
   private:
 
    tbox::Pointer<hier::MappedBoxLevel> createMappedBoxLevelFromParflowGrid(void);
@@ -105,10 +110,10 @@ public:
    static const tbox::Dimension d_dim;
 
    // FIXME rename this
-   static const std::string CELL_STATE;
+   static const std::string VARIABLE_NAME;
 
-   static const std::string CURRENT_STATE;
-   static const std::string SCRATCH_STATE;
+   static const std::string CURRENT_CONTEXT;
+   static const std::string SCRATCH_CONTEXT;
 
 
    // Not implemeted; standard C++'ism to avoid bad things

@@ -35,8 +35,11 @@
 #include "parflow.h"
 #include "vector.h"
 
+#include "SAMRAI/hier/PatchDescriptor.h"
+
 #include <stdlib.h>
 
+static int samrai_vector_ids[2048];
 
 /*--------------------------------------------------------------------------
  * NewVectorCommPkg:
@@ -158,6 +161,10 @@ static Vector  *NewTempVector(
 
    VectorSize(new_vector) = GridSize(grid); /* VectorSize(vector) is vector->size, which is the total number of coefficients */
 
+
+   new_vector -> samrai_id = -1;
+   new_vector -> table_index = -1;
+
    return new_vector;
 }
 
@@ -203,9 +210,12 @@ Vector  *NewVector(
    int      num_ghost)
 {
     Vector  *new_vector;
-    double  *data;
+
 
     new_vector = NewTempVector(grid, nc, num_ghost);
+
+#if 0
+    double  *data;
 
 #ifdef SHMEM_OBJECTS
     /* Node 0 allocates */
@@ -216,6 +226,61 @@ Vector  *NewVector(
 #endif
 
     SetTempVectorData(new_vector, data);
+#else
+
+    tbox::Dimension dim(GlobalsParflowSimulation -> getDim());
+
+    tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy());
+    tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
+
+    hier::IntVector ghosts(dim, num_ghost);
+
+    int index = 0;
+    for(int i = 0; i < 2048; i++)
+    {
+       if(samrai_vector_ids[i] == 0) {
+	  index = i;
+	  break;
+       }
+    }
+
+    std::string variable_name("Variable" + SAMRAI::tbox::Utilities::intToString(index, 4));
+
+    tbox::Pointer< pdat::CellVariable<double> > cell_variable(
+       new pdat::CellVariable<double>(dim, variable_name, 1));
+
+    tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
+    
+    new_vector -> samrai_id = patch_descriptor -> definePatchDataComponent(
+       variable_name, 
+       cell_variable->getPatchDataFactory()->cloneFactory(ghosts));
+
+    
+    samrai_vector_ids[index] = new_vector -> samrai_id;
+    new_vector -> table_index = index;
+
+    std::cout << "samrai_id " << new_vector -> samrai_id << std::endl;
+    
+    level -> allocatePatchData(new_vector -> samrai_id );
+
+    for(hier::PatchLevel::Iterator patch_iterator(level); 
+	patch_iterator; 
+	patch_iterator++) {
+       
+       const tbox::Pointer<hier::Patch > patch = 
+	  level -> getPatch(patch_iterator());
+       
+       const hier::Box patch_box = patch -> getBox();
+       
+       tbox::Pointer< pdat::CellData<double> > patch_data(
+	  patch -> getPatchData(new_vector -> samrai_id));
+	  
+       SetTempVectorData(new_vector, patch_data -> getPointer(0));
+
+       patch_data -> fillAll(0);
+    }
+    
+#endif
 
     return new_vector;
 }
@@ -252,8 +317,22 @@ void FreeTempVector(Vector *vector)
 void     FreeVector(
    Vector  *vector)
 {
+    std::cout << "freeing samrai_id " << vector -> samrai_id << std::endl;
+
+#if 0
 #ifndef SHMEM_OBJECTS
     amps_TFree(VectorData(vector));
+#endif
+#else
+    tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy());
+    tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
+
+    level -> deallocatePatchData(vector -> samrai_id);
+
+    tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
+    patch_descriptor -> removePatchDataComponent(vector -> samrai_id);
+
+    samrai_vector_ids[vector -> table_index] = 0;
 #endif
 
    FreeTempVector(vector);

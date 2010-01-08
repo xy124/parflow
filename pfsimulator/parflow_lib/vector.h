@@ -74,11 +74,13 @@ typedef struct _Vector
                                 /* Information on how to update boundary */
    CommPkg *comm_pkg[NumUpdateModes]; 
 
+   int samrai_id;               /* SAMRAI ID for this vector */
+   // SGS FIXME This is very hacky and should be removed 
+   int table_index;               /* index into table of variables */
 } Vector;
 
 
 typedef Vector *N_Vector;
-
 
 /*--------------------------------------------------------------------------
  * Accessor functions for the Subvector structure

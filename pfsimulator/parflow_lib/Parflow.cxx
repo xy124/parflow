@@ -50,11 +50,10 @@ using namespace SAMRAI;
 
 const tbox::Dimension Parflow::d_dim = tbox::Dimension(3);
 
-// SGS FIXME rename this
-const std::string Parflow::CELL_STATE = "CellState";
+const std::string Parflow::VARIABLE_NAME = "variable";
 
-const std::string Parflow::CURRENT_STATE = "Current";
-const std::string Parflow::SCRATCH_STATE = "Scratch";
+const std::string Parflow::CURRENT_CONTEXT = "Current";
+const std::string Parflow::SCRATCH_CONTEXT = "Scratch";
 
 Parflow::Parflow(
       const std::string& object_name,
@@ -128,18 +127,17 @@ void Parflow::applyGradientDetector(
 
 tbox::Pointer<hier::PatchHierarchy > Parflow::getPatchHierarchy(void) const
 {
-   return tbox::Pointer<hier::PatchHierarchy >(NULL);
+   return d_patch_hierarchy;
 }
 
 tbox::Pointer<mesh::GriddingAlgorithm > Parflow::getGriddingAlgorithm(void) const
 {
-   return tbox::Pointer<mesh::GriddingAlgorithm >(NULL);
+   return d_patch_hierarchy;
 }
 
 tbox::Array<int> Parflow::getTagBufferArray(void) const
 {
-   tbox::Array<int> temp;
-   return temp;
+   return d_tag_buffer_array;
 }
 
 void Parflow::setupInputDatabase() {
@@ -197,14 +195,16 @@ void Parflow::initializePatchHierarchy(double time)
    hier::VariableDatabase *variable_database(
       hier::VariableDatabase::getDatabase());
 
-   tbox::Pointer< pdat::CellVariable<int> > cell_state(
-      new pdat::CellVariable<int>(d_dim, CELL_STATE, 1));
+   int depth = 1;
+
+   tbox::Pointer< pdat::CellVariable<double> > cell_state(
+      new pdat::CellVariable<double>(d_dim, VARIABLE_NAME, depth));
 
    tbox::Pointer< hier::VariableContext > current_context(
-      variable_database -> getContext(CURRENT_STATE));
+      variable_database -> getContext(CURRENT_CONTEXT));
    
    tbox::Pointer< hier::VariableContext > scratch_context(
-      variable_database -> getContext(SCRATCH_STATE));
+      variable_database -> getContext(SCRATCH_CONTEXT));
 
    hier::IntVector ghosts(d_dim, 1);
 
@@ -348,6 +348,8 @@ tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGr
 
    return mapped_box_level;
 }
+
+
 
 
 
