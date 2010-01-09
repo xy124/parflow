@@ -155,7 +155,7 @@ void Parflow::setupInputDatabase() {
    int upper[3];
    upper[0] = lower[0] +  BackgroundNX(bg);
    upper[1] = lower[1] +  BackgroundNY(bg);
-   upper[2] = upper[2] +  BackgroundNZ(bg);
+   upper[2] = lower[2] +  BackgroundNZ(bg);
 
    tbox::DatabaseBox box(d_dim, lower, upper);
 
