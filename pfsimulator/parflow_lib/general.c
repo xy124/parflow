@@ -38,7 +38,7 @@
 #include <cmath>
 
 #ifdef HAVE_MALLOC_H
-#include <cmalloc>
+#include <malloc.h>
 #endif
 
 // SGS fixme for C++
