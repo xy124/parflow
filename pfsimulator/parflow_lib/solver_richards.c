@@ -1715,7 +1715,9 @@ PFModule *SolverRichardsInitInstanceXtra()
    /*sk: Create a two-dimensional grid for later use*/
  
    all_subgrids = GridAllSubgrids(grid);
- 
+
+   // SGS FIXME this is incorrect, can't loop over both at same time
+   // assumes same grids in both arrays which is not correct?
    new_all_subgrids = NewSubgridArray();
    ForSubgridI(i, all_subgrids)
    {
