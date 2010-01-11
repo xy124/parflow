@@ -456,14 +456,14 @@ void SetupRichards(PFModule *this_module) {
       instance_xtra -> t_grnd = NewVector( grid2d, 1, 1 );
       InitVectorAll(instance_xtra -> t_grnd, 0.0);
 
-      instance_xtra -> tsoil = NewVector( gridTs, 1, 1);
+      instance_xtra -> tsoil = NewVectorType( gridTs, 1, 1, non_samrai_centered);
       InitVectorAll(instance_xtra -> tsoil, 0.0);
 
       /*IMF Initialize variables for CLM irrigation output */
       instance_xtra -> qflx_qirr = NewVector( grid2d, 1, 1 );
       InitVectorAll(instance_xtra -> qflx_qirr, 0.0);
 
-      instance_xtra -> qflx_qirr_inst = NewVector( gridTs, 1, 1);
+      instance_xtra -> qflx_qirr_inst = NewVectorType( gridTs, 1, 1, non_samrai_centered);
       InitVectorAll(instance_xtra -> qflx_qirr_inst, 0.0);
 
       /*IMF Initialize variables for CLM forcing fields

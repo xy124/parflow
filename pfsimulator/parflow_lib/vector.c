@@ -37,6 +37,11 @@
 
 #include "SAMRAI/hier/PatchDescriptor.h"
 
+#include "SAMRAI/pdat/CellVariable.h"
+#include "SAMRAI/pdat/SideVariable.h"
+
+using namespace SAMRAI;
+
 #include <stdlib.h>
 
 static int samrai_vector_ids[2048];
@@ -204,29 +209,16 @@ static void     SetTempVectorData(
  * NewVector
  *--------------------------------------------------------------------------*/
 
-Vector  *NewVector(
+Vector  *NewVectorType(
    Grid    *grid,
    int      nc,
-   int      num_ghost)
+   int      num_ghost,
+   vector_type type)
 {
     Vector  *new_vector;
 
 
     new_vector = NewTempVector(grid, nc, num_ghost);
-
-#if 0
-    double  *data;
-
-#ifdef SHMEM_OBJECTS
-    /* Node 0 allocates */
-    if(!amps_Rank(amps_CommWorld))
-       data = amps_CTAlloc(double, SizeOfVector(new_vector));
-#else
-    data = amps_CTAlloc(double, SizeOfVector(new_vector));
-#endif
-
-    SetTempVectorData(new_vector, data);
-#else
 
     tbox::Dimension dim(GlobalsParflowSimulation -> getDim());
 
@@ -246,45 +238,141 @@ Vector  *NewVector(
 
     std::string variable_name("Variable" + SAMRAI::tbox::Utilities::intToString(index, 4));
 
-    tbox::Pointer< pdat::CellVariable<double> > cell_variable(
-       new pdat::CellVariable<double>(dim, variable_name, 1));
+    tbox::Pointer< hier::Variable > variable;
 
-    tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
-    
-    new_vector -> samrai_id = patch_descriptor -> definePatchDataComponent(
-       variable_name, 
-       cell_variable->getPatchDataFactory()->cloneFactory(ghosts));
+    new_vector -> type = type;
+    switch(type)
+    {
+       case cell_centered : 
+	  variable = new pdat::CellVariable<double>(dim, variable_name, 1);	 
+	  break;
+       case side_centered_x :
+	  variable = new pdat::SideVariable<double>(dim, variable_name, 1, true, 0);
+	  break;
+       case side_centered_y :
+	  variable = new pdat::SideVariable<double>(dim, variable_name, 1, true, 1);
+	  break;
+       case side_centered_z :
+	  variable = new pdat::SideVariable<double>(dim, variable_name, 1, true, 2);
+	  break;
+       case non_samrai_centered :
+	  double  *data;
 
-    
-    samrai_vector_ids[index] = new_vector -> samrai_id;
-    new_vector -> table_index = index;
-
-    std::cout << "samrai_id " << new_vector -> samrai_id << std::endl;
-    
-    level -> allocatePatchData(new_vector -> samrai_id );
-
-    for(hier::PatchLevel::Iterator patch_iterator(level); 
-	patch_iterator; 
-	patch_iterator++) {
-       
-       const tbox::Pointer<hier::Patch > patch = 
-	  level -> getPatch(patch_iterator());
-       
-       const hier::Box patch_box = patch -> getBox();
-       
-       tbox::Pointer< pdat::CellData<double> > patch_data(
-	  patch -> getPatchData(new_vector -> samrai_id));
-	  
-       SetTempVectorData(new_vector, patch_data -> getPointer(0));
-
-       patch_data -> fillAll(0);
-    }
-    
+#ifdef SHMEM_OBJECTS
+	  /* Node 0 allocates */
+	  if(!amps_Rank(amps_CommWorld))
+	     data = amps_CTAlloc(double, SizeOfVector(new_vector));
+#else
+	  data = amps_CTAlloc(double, SizeOfVector(new_vector));
 #endif
+	  
+	  SetTempVectorData(new_vector, data);
 
+	  break;
+       default :
+	  TBOX_ERROR("Invalid variable type");
+    }
+
+
+    /* For SAMRAI vectors set the data pointer */
+    switch(type)
+    {
+       case cell_centered : 
+       case side_centered_x :
+       case side_centered_y :
+       case side_centered_z :
+       {
+
+	  tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
+	  
+	  new_vector -> samrai_id = patch_descriptor -> definePatchDataComponent(
+	     variable_name, 
+	     variable->getPatchDataFactory()->cloneFactory(ghosts));
+	  
+	  
+	  samrai_vector_ids[index] = new_vector -> samrai_id;
+	  new_vector -> table_index = index;
+	  
+	  std::cout << "samrai_id " << new_vector -> samrai_id << std::endl;
+	  
+	  level -> allocatePatchData(new_vector -> samrai_id );
+	  
+	  for(hier::PatchLevel::Iterator patch_iterator(level); 
+	      patch_iterator; 
+	      patch_iterator++) {
+	     
+	     const tbox::Pointer<hier::Patch > patch = 
+		level -> getPatch(patch_iterator());
+	     
+	     const hier::Box patch_box = patch -> getBox();
+	     
+	     
+	     switch(type)
+	     {
+		case cell_centered : 
+		{
+		   tbox::Pointer< pdat::CellData<double> > patch_data(
+		      patch -> getPatchData(new_vector -> samrai_id));
+		   SetTempVectorData(new_vector, patch_data -> getPointer(0));
+		   patch_data -> fillAll(0);
+		   break;
+		}
+		case side_centered_x :
+		{
+		   const int side = 0;
+		   tbox::Pointer< pdat::SideData<double> > patch_data(
+		      patch -> getPatchData(new_vector -> samrai_id));
+		   SetTempVectorData(new_vector, patch_data -> getPointer(side, 0));
+		   patch_data -> fillAll(0);
+		   break;
+		}
+		case side_centered_y :
+		{
+		   const int side = 1;
+		   tbox::Pointer< pdat::SideData<double> > patch_data(
+		      patch -> getPatchData(new_vector -> samrai_id));
+		   SetTempVectorData(new_vector, patch_data -> getPointer(side, 0));
+		   patch_data -> fillAll(0);
+		   break;
+		}
+		case side_centered_z :
+		{
+		   const int side = 2;
+		   tbox::Pointer< pdat::SideData<double> > patch_data(
+		      patch -> getPatchData(new_vector -> samrai_id));
+		   SetTempVectorData(new_vector, patch_data -> getPointer(side, 0));
+		   patch_data -> fillAll(0);
+		   break;
+		}
+		default :
+		   TBOX_ERROR("Invalid variable type");
+	     }
+	  }
+	  break;
+       }
+       case non_samrai_centered :
+	  // This case was already handled above
+	  break;
+    }    
     return new_vector;
 }
 
+Vector  *NewVector(
+   Grid    *grid,
+   int      nc,
+   int      num_ghost)
+{
+   return NewVectorType(grid, nc, num_ghost, cell_centered);
+}
+
+
+Vector  *NewNoCommunicationVector(
+   Grid    *grid,
+   int      nc,
+   int      num_ghost)
+{
+   return NewVectorType(grid, nc, num_ghost, non_samrai_centered);
+}
 
 /*--------------------------------------------------------------------------
  * FreeTempVector
@@ -319,21 +407,35 @@ void     FreeVector(
 {
     std::cout << "freeing samrai_id " << vector -> samrai_id << std::endl;
 
-#if 0
+
+    switch(vector -> type)
+    {
+       case cell_centered : 
+       case side_centered_x :
+       case side_centered_y :
+       case side_centered_z :
+       {
+	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy());
+	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
+	  
+	  level -> deallocatePatchData(vector -> samrai_id);
+	  
+	  tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
+	  patch_descriptor -> removePatchDataComponent(vector -> samrai_id);
+	  
+	  samrai_vector_ids[vector -> table_index] = 0;
+	  break;
+       }
+       case non_samrai_centered :
+       {
 #ifndef SHMEM_OBJECTS
-    amps_TFree(VectorData(vector));
+	  amps_TFree(VectorData(vector));
 #endif
-#else
-    tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy());
-    tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
-
-    level -> deallocatePatchData(vector -> samrai_id);
-
-    tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
-    patch_descriptor -> removePatchDataComponent(vector -> samrai_id);
-
-    samrai_vector_ids[vector -> table_index] = 0;
-#endif
+	  break;
+       }
+       default :
+	  TBOX_ERROR("Invalid variable type");
+    }
 
    FreeTempVector(vector);
 }

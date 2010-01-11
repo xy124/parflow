@@ -53,7 +53,7 @@
 		    __FILE__, __LINE__)
 
 /* note: the `else' is required to guarantee termination of the `if' */
-#define tfree(ptr) if (ptr) free(ptr); else
+#define tfree(ptr) if (ptr) free(ptr); else {}
 
 /*--------------------------------------
  * Do not check memory allocation
@@ -68,7 +68,7 @@
    ((count) ? (type *) calloc((unsigned int)(count), (unsigned int)sizeof(type)) : NULL)
 
 /* note: the `else' is required to guarantee termination of the `if' */
-#define tfree(ptr) if (ptr) free(ptr); else
+#define tfree(ptr) if (ptr) free(ptr); else {}
 
 #endif
 

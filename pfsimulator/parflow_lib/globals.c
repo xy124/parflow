@@ -90,7 +90,7 @@ void   NewGlobals(char  *run_name)
 
 void  FreeGlobals()
 {
-   tfree(globals);
+   delete globals;
 }
 
 /*--------------------------------------------------------------------------

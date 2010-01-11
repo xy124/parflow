@@ -42,72 +42,70 @@
 
 #include <string>
 
-using namespace SAMRAI;
-
 class Parflow:
-   public mesh::StandardTagAndInitStrategy
+   public SAMRAI::mesh::StandardTagAndInitStrategy
 {
 
 public:
 
    Parflow(
       const std::string& object_name,
-      tbox::Pointer<tbox::Database> input_db);
+      SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db);
    
    virtual ~Parflow();
 
    virtual void initializeLevelData(
-      const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+      const SAMRAI::tbox::Pointer< SAMRAI::hier::BasePatchHierarchy > hierarchy,
       const int level_number,
       const double init_data_time,
       const bool can_be_refined,
       const bool initial_time,
-      const tbox::Pointer< hier::BasePatchLevel > old_level = 
-      tbox::Pointer< hier::BasePatchLevel >(NULL),
+      const SAMRAI::tbox::Pointer< SAMRAI::hier::BasePatchLevel > old_level = 
+      SAMRAI::tbox::Pointer< SAMRAI::hier::BasePatchLevel >(NULL),
       const bool allocate_data = true);
 
    virtual void resetHierarchyConfiguration(
-      const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+      const SAMRAI::tbox::Pointer< SAMRAI::hier::BasePatchHierarchy > hierarchy,
       const int coarsest_level,
       const int finest_level);
 
    void advanceHierarchy(
-      const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+      const SAMRAI::tbox::Pointer< SAMRAI::hier::BasePatchHierarchy > hierarchy,
       const double loop_time, 
       const double dt);
 
    virtual void applyGradientDetector(
-      const tbox::Pointer< hier::BasePatchHierarchy > hierarchy,
+      const SAMRAI::tbox::Pointer< SAMRAI::hier::BasePatchHierarchy > hierarchy,
       const int level_number,
       const double error_data_time,
       const int tag_index,
       const bool initial_time,
       const bool uses_richardson_extrapolation_too);
 
-   tbox::Pointer<hier::PatchHierarchy > getPatchHierarchy(void) const;
+   SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy > getPatchHierarchy(void) const;
 
-   tbox::Pointer<mesh::GriddingAlgorithm > getGriddingAlgorithm(void) const;
+   SAMRAI::tbox::Pointer<SAMRAI::mesh::GriddingAlgorithm > getGriddingAlgorithm(void) const;
 
-   tbox::Array<int> getTagBufferArray(void) const;
+   SAMRAI::tbox::Array<int> getTagBufferArray(void) const;
 
    void initializePatchHierarchy(double time);
 
-   const tbox::Dimension& getDim() const
+   const SAMRAI::tbox::Dimension& getDim() const
    {
       return d_dim;
    }
 
   private:
 
-   tbox::Pointer<hier::MappedBoxLevel> createMappedBoxLevelFromParflowGrid(void);
+   SAMRAI::tbox::Pointer<SAMRAI::hier::MappedBoxLevel> createMappedBoxLevelFromParflowGrid(void);
 
    void setupInputDatabase(void);
 
    void getFromInput(
-      tbox::Pointer<tbox::Database> db,
+      SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> db,
       bool is_from_restart);
 
-   static const tbox::Dimension d_dim;
+   static const SAMRAI::tbox::Dimension d_dim;
 
    // FIXME rename this
    static const std::string VARIABLE_NAME;
@@ -120,25 +118,25 @@ public:
    Parflow(const Parflow&);
    void operator=(const Parflow&);
    
-   tbox::Pointer<hier::PatchHierarchy > d_patch_hierarchy;
+   SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy > d_patch_hierarchy;
 
-   tbox::Pointer< mesh::GriddingAlgorithm > d_gridding_algorithm;
+   SAMRAI::tbox::Pointer< SAMRAI::mesh::GriddingAlgorithm > d_gridding_algorithm;
 
-   tbox::Pointer< xfer::RefineAlgorithm > d_boundary_fill_refine_algorithm;
-   tbox::Pointer< xfer::RefineAlgorithm > d_fill_after_regrid;
-   tbox::Pointer< xfer::CoarsenAlgorithm > d_coarsen_algorithm;
+   SAMRAI::tbox::Pointer< SAMRAI::xfer::RefineAlgorithm > d_boundary_fill_refine_algorithm;
+   SAMRAI::tbox::Pointer< SAMRAI::xfer::RefineAlgorithm > d_fill_after_regrid;
+   SAMRAI::tbox::Pointer< SAMRAI::xfer::CoarsenAlgorithm > d_coarsen_algorithm;
    
-   tbox::Array< tbox::Pointer< xfer::RefineSchedule > > d_boundary_schedule_advance;
-   tbox::Array< tbox::Pointer< xfer::CoarsenSchedule > > d_coarsen_schedule;
+   SAMRAI::tbox::Array< SAMRAI::tbox::Pointer< SAMRAI::xfer::RefineSchedule > > d_boundary_schedule_advance;
+   SAMRAI::tbox::Array< SAMRAI::tbox::Pointer< SAMRAI::xfer::CoarsenSchedule > > d_coarsen_schedule;
 
-   tbox::Array<int> d_tag_buffer_array;
+   SAMRAI::tbox::Array<int> d_tag_buffer_array;
 
    int d_current_cell_state_handle;
    int d_scratch_cell_state_handle;
 
    std::string d_object_name;
 
-   tbox::Pointer<tbox::Database> d_input_db;
+   SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> d_input_db;
 
 
 };

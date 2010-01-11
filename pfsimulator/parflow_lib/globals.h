@@ -78,7 +78,7 @@ public:
    int      **intervals;
    int       *repeat_counts;
 
-   tbox::Pointer<Parflow> parflow_simulation;
+   SAMRAI::tbox::Pointer<Parflow> parflow_simulation;
 };
 
 #ifdef PARFLOW_GLOBALS

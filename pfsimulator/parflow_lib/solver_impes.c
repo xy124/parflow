@@ -442,21 +442,21 @@ void      SolverImpes()
          phase_x_velocity = ctalloc(Vector *, ProblemNumPhases(problem) );
          for(phase = 0; phase < ProblemNumPhases(problem); phase++)
          {
-            phase_x_velocity[phase] = NewVector( x_grid, 1, 1 );
+            phase_x_velocity[phase] = NewVectorType( x_grid, 1, 1, side_centered_x);
             InitVectorAll(phase_x_velocity[phase], 0.0);
          }
 
          phase_y_velocity = ctalloc(Vector *, ProblemNumPhases(problem) );
          for(phase = 0; phase < ProblemNumPhases(problem); phase++)
          {
-            phase_y_velocity[phase] = NewVector( y_grid, 1, 1 );
+            phase_y_velocity[phase] = NewVectorType( y_grid, 1, 1, side_centered_y);
             InitVectorAll(phase_y_velocity[phase], 0.0);
          }
 
          phase_z_velocity = ctalloc(Vector *, ProblemNumPhases(problem) );
          for(phase = 0; phase < ProblemNumPhases(problem); phase++)
          {
-            phase_z_velocity[phase] = NewVector( z_grid, 1, 2 );
+            phase_z_velocity[phase] = NewVectorType( z_grid, 1, 2, side_centered_z);
             InitVectorAll(phase_z_velocity[phase], 0.0);
          }
 

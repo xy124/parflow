@@ -1035,10 +1035,12 @@ allocated by \Ref{amps_TAlloc} or \Ref{amps_CTAlloc}.
 @return Error code
 */
 
-#define amps_TFree(ptr) if (ptr) free(ptr); else
+#define amps_TFree(ptr) if (ptr) free(ptr); else {}
 /* note: the `else' is required to guarantee termination of the `if' */
  
-#define amps_Error(name, type, comment, operation) 
+// SGS FIXME this should do something more than this
+#define amps_Error(name, type, comment, operation)	\
+   printf("%s : %s\n", name, comment)
 
 #include "amps_proto.h"
 

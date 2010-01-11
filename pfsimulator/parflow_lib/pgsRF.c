@@ -175,6 +175,8 @@ RFCondData   *cdata)
    double    a1, a2, a3;
    double    cx, cy, cz;
    double    sum;
+
+   // FIXME Shouldn't we get this from numeric_limits?
    double    Tiny = 1.0e-12;
 
    (void) geounit;
@@ -347,9 +349,17 @@ RFCondData   *cdata)
    /* Convert the cutoff values to a gaussian if they're lognormal on input */
    if ((dist_type == 1) || (dist_type == 3))
    {
-      if (low_cutoff <= 0.0) low_cutoff = Tiny;
-      else low_cutoff = (log(low_cutoff/mean))/sigma;
-      high_cutoff = (log(high_cutoff/mean))/sigma;
+      if (low_cutoff <= 0.0) {
+	 low_cutoff = Tiny;
+      } else {
+	 low_cutoff = (log(low_cutoff/mean))/sigma;
+      }
+
+      if(high_cutoff <= 0.0) {
+	 high_cutoff = std::numeric_limits<double>::max();
+      } else {
+	 high_cutoff = (log(high_cutoff/mean))/sigma;
+      }
    }
 
    /*--------------------------------------------------------------------

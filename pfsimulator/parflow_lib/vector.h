@@ -37,6 +37,14 @@
 #include "grid.h"
 #include "n_vector.h"
 
+enum vector_type { 
+   cell_centered,
+   side_centered_x,
+   side_centered_y,
+   side_centered_z,
+   non_samrai_centered
+};
+
 /*--------------------------------------------------------------------------
  * Subvector
  *--------------------------------------------------------------------------*/
@@ -77,6 +85,9 @@ typedef struct _Vector
    int samrai_id;               /* SAMRAI ID for this vector */
    // SGS FIXME This is very hacky and should be removed 
    int table_index;               /* index into table of variables */
+   
+   vector_type type;
+
 } Vector;
 
 

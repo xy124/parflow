@@ -994,8 +994,15 @@ void FreeUserGrid (Grid *user_grid );
 CommPkg *NewVectorCommPkg (Vector *vector , ComputePkg *compute_pkg );
 CommHandle *InitVectorUpdate (Vector *vector , int update_mode );
 void FinalizeVectorUpdate (CommHandle *handle );
-//Vector *NewVector (std::string name, Grid *grid , int nc , int num_ghost );
-Vector *NewVector (Grid *grid , int nc , int num_ghost );
+Vector  *NewVector(
+   Grid    *grid,
+   int      nc,
+   int      num_ghost);
+Vector  *NewVectorType(
+   Grid    *grid,
+   int      nc,
+   int      num_ghost,
+   vector_type type);
 void FreeVector (Vector *vector );
 void InitVector (Vector *v , double value );
 void InitVectorAll (Vector *v , double value );
