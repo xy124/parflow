@@ -32,6 +32,7 @@
 #ifndef _GLOBALS_HEADER
 #define _GLOBALS_HEADER
 
+#include "SAMRAI/tbox/Pointer.h"
 #include "Parflow.hxx"
 
 #include <string>

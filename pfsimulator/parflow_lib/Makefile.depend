@@ -40,6 +40,7 @@ DEPENDS_1:=\
 	$(SAMRAI_DIR)/include/SAMRAI/pdat/CellIndex.h			\
 	$(SAMRAI_DIR)/include/SAMRAI/pdat/CellVariable.h		\
 	$(SAMRAI_DIR)/include/SAMRAI/tbox/Database.h			\
+	$(SAMRAI_DIR)/include/SAMRAI/tbox/MemoryDatabase.h		\
 	$(SAMRAI_DIR)/include/SAMRAI/tbox/Pointer.h			\
 	$(SAMRAI_DIR)/include/SAMRAI/xfer/CoarsenAlgorithm.h		\
 	$(SAMRAI_DIR)/include/SAMRAI/xfer/RefineAlgorithm.h Parflow.cxx	\

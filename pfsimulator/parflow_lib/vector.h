@@ -39,6 +39,7 @@
 
 enum vector_type { 
    cell_centered,
+   cell_centered_2D,
    side_centered_x,
    side_centered_y,
    side_centered_z,

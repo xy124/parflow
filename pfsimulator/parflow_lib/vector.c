@@ -222,8 +222,6 @@ Vector  *NewVectorType(
 
     tbox::Dimension dim(GlobalsParflowSimulation -> getDim());
 
-    tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy());
-    tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 
     hier::IntVector ghosts(dim, num_ghost);
 
@@ -240,10 +238,38 @@ Vector  *NewVectorType(
 
     tbox::Pointer< hier::Variable > variable;
 
+    int dim_type = -1;
+    switch(type)
+    {
+       case cell_centered : 
+       case side_centered_x :
+       case side_centered_y :
+       case side_centered_z :
+       {
+	  dim_type = 3;
+	  break;
+       }
+       case cell_centered_2D : 
+       {
+	  dim_type = 2;
+	  break;
+       }
+       case non_samrai_centered :
+       {
+	  dim_type = -1;
+	  break;
+       }
+    }
+
     new_vector -> type = type;
     switch(type)
     {
        case cell_centered : 
+       {
+	  variable = new pdat::CellVariable<double>(dim, variable_name, 1);	 
+	  break;
+       }
+       case cell_centered_2D : 
        {
 	  variable = new pdat::CellVariable<double>(dim, variable_name, 1);	 
 	  break;
@@ -290,10 +316,14 @@ Vector  *NewVectorType(
     switch(type)
     {
        case cell_centered : 
+       case cell_centered_2D : 
        case side_centered_x :
        case side_centered_y :
        case side_centered_z :
        {
+
+	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(dim_type));
+	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 
 	  tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
 	  
@@ -323,6 +353,7 @@ Vector  *NewVectorType(
 	     switch(type)
 	     {
 		case cell_centered : 
+		case cell_centered_2D : 
 		{
 		   tbox::Pointer< pdat::CellData<double> > patch_data(
 		      patch -> getPatchData(new_vector -> samrai_id));
@@ -424,11 +455,12 @@ void     FreeVector(
     switch(vector -> type)
     {
        case cell_centered : 
+       case cell_centered_2D : 
        case side_centered_x :
        case side_centered_y :
        case side_centered_z :
        {
-	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy());
+	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(3));
 	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 	  
 	  level -> deallocatePatchData(vector -> samrai_id);

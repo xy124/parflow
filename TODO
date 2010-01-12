@@ -25,6 +25,10 @@ Possible fix would be to keep stencil width of communication mode around
 and only build valid ones.   Would also be good to prevent uses that
 would not work.
 
+SGS
+
+SAMRAI vector for mg_semi are too big, use PF mechansims instead.
+
 RMM
 Manual: all new test cases (e.g. CLM) not in manual
 Manual: all new keys for pftools (top bddy, conversions, silo) not in manual

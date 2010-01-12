@@ -397,7 +397,7 @@ void SetupRichards(PFModule *this_module) {
       InitVectorAll(instance_xtra -> old_density, 0.0);
 
       /*sk Initialize Overland flow boundary fluxes*/
-      instance_xtra -> ovrl_bc_flx = NewVector( grid2d, 1, 1 );
+      instance_xtra -> ovrl_bc_flx = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> ovrl_bc_flx, 0.0);
 
       if(public_xtra -> write_silo_overland_sum) 
