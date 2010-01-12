@@ -349,6 +349,8 @@ tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGr
    tbox::Pointer<hier::MappedBoxLevel> mapped_box_level(new hier::MappedBoxLevel(mapped_box_set,
 							   ratio));
 
+   FreeGrid(grid);
+
    return mapped_box_level;
 }
 
