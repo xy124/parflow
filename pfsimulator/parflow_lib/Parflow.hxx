@@ -90,9 +90,9 @@ public:
 
    void initializePatchHierarchy(double time);
 
-   const SAMRAI::tbox::Dimension& getDim() const
+   const SAMRAI::tbox::Dimension& getDim(int dim) const
    {
-      return d_dim[3];
+      return d_dim[dim];
    }
 
   private:

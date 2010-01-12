@@ -92,4 +92,5 @@ testclean:
 	@rm -fr indicator_field.out
 	@rm -fr water_balance.out
 	@rm -fr default_overland.out
+	@rm -fr test.log.*
 

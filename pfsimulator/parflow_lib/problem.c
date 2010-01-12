@@ -377,11 +377,11 @@ ProblemData   *NewProblemData(
    ProblemDataPermeabilityZ(problem_data) = NewVector(grid, 1, 1);
 
    ProblemDataSpecificStorage(problem_data) = NewVector(grid, 1, 1); //sk
-   ProblemDataTSlopeX(problem_data) = NewVector(grid2d, 1, 1); //sk
-   ProblemDataTSlopeY(problem_data) = NewVector(grid2d, 1, 1); //sk
-   ProblemDataMannings(problem_data) = NewVector(grid2d, 1, 1); //sk
+   ProblemDataTSlopeX(problem_data)  = NewVectorType(grid2d, 1, 1, cell_centered_2D); //sk
+   ProblemDataTSlopeY(problem_data)  = NewVectorType(grid2d, 1, 1, cell_centered_2D); //sk
+   ProblemDataMannings(problem_data) = NewVectorType(grid2d, 1, 1, cell_centered_2D); //sk
 
-   ProblemDataIndexOfDomainTop(problem_data) = NewVector(grid2d, 1, 1); 
+   ProblemDataIndexOfDomainTop(problem_data) = NewVectorType(grid2d, 1, 1, cell_centered_2D); 
 
    ProblemDataPorosity(problem_data) = NewVector(grid, 1, 1);
 

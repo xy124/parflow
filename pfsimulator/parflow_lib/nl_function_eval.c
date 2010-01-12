@@ -199,12 +199,12 @@ void NlFunctionEval (Vector *pressure,  /* Current pressure values */
    handle = InitVectorUpdate(pressure, VectorUpdateAll);
    FinalizeVectorUpdate(handle);
  
-   KW = NewVector( grid2d, 1, 1);
-   KE = NewVector( grid2d, 1, 1);
-   KN = NewVector( grid2d, 1, 1);
-   KS = NewVector( grid2d, 1, 1);
-   qx = NewVector( grid2d, 1, 1);
-   qy = NewVector( grid2d, 1, 1);
+   KW = NewVectorType( grid2d, 1, 1, cell_centered_2D);
+   KE = NewVectorType( grid2d, 1, 1, cell_centered_2D);
+   KN = NewVectorType( grid2d, 1, 1, cell_centered_2D);
+   KS = NewVectorType( grid2d, 1, 1, cell_centered_2D);
+   qx = NewVectorType( grid2d, 1, 1, cell_centered_2D);
+   qy = NewVectorType( grid2d, 1, 1, cell_centered_2D);
 
    /* Pass permeability values */
    /*

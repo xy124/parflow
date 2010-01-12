@@ -420,47 +420,47 @@ void SetupRichards(PFModule *this_module) {
 
 
       /*IMF Initialize variables for printing CLM output*/
-      instance_xtra -> eflx_lh_tot = NewVector( grid2d, 1, 1 );
+      instance_xtra -> eflx_lh_tot = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> eflx_lh_tot, 0.0);
 	   
-      instance_xtra -> eflx_lwrad_out = NewVector( grid2d, 1, 1 );
+      instance_xtra -> eflx_lwrad_out = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> eflx_lwrad_out, 0.0);		
 	
-      instance_xtra -> eflx_sh_tot = NewVector( grid2d, 1, 1 );
+      instance_xtra -> eflx_sh_tot = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> eflx_sh_tot, 0.0);
 	
-      instance_xtra -> eflx_soil_grnd = NewVector( grid2d, 1, 1 );
+      instance_xtra -> eflx_soil_grnd = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> eflx_soil_grnd, 0.0);
 		
-      instance_xtra -> qflx_evap_tot = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_evap_tot = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_evap_tot, 0.0);
 	
-      instance_xtra -> qflx_evap_grnd = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_evap_grnd = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_evap_grnd, 0.0);
 
-      instance_xtra -> qflx_evap_soi = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_evap_soi = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_evap_soi, 0.0);
 		
-      instance_xtra -> qflx_evap_veg = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_evap_veg = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_evap_veg, 0.0);		
 		
-      instance_xtra -> qflx_tran_veg = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_tran_veg = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_tran_veg, 0.0);
 		
-      instance_xtra -> qflx_infl = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_infl = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_infl, 0.0);
 		
-      instance_xtra -> swe_out = NewVector( grid2d, 1, 1 );
+      instance_xtra -> swe_out = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> swe_out, 0.0);
 		
-      instance_xtra -> t_grnd = NewVector( grid2d, 1, 1 );
+      instance_xtra -> t_grnd = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> t_grnd, 0.0);
 
       instance_xtra -> tsoil = NewVectorType( gridTs, 1, 1, non_samrai_centered);
       InitVectorAll(instance_xtra -> tsoil, 0.0);
 
       /*IMF Initialize variables for CLM irrigation output */
-      instance_xtra -> qflx_qirr = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qflx_qirr = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_qirr, 0.0);
 
       instance_xtra -> qflx_qirr_inst = NewVectorType( gridTs, 1, 1, non_samrai_centered);
@@ -468,28 +468,28 @@ void SetupRichards(PFModule *this_module) {
 
       /*IMF Initialize variables for CLM forcing fields
             SW rad, LW rad, precip, T(air), U, V, P(air), q(air) */
-      instance_xtra -> sw_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> sw_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> sw_forc, 100.0);
 
-      instance_xtra -> lw_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> lw_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> lw_forc, 100.0);
 
-      instance_xtra -> prcp_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> prcp_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> prcp_forc, 100.0);
 
-      instance_xtra -> tas_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> tas_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> tas_forc, 100.0);
 
-      instance_xtra -> u_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> u_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> u_forc, 100.0);
 
-      instance_xtra -> v_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> v_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> v_forc, 100.0);
 
-      instance_xtra -> patm_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> patm_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> patm_forc, 100.0);
 
-      instance_xtra -> qatm_forc = NewVector( grid2d, 1, 1 );
+      instance_xtra -> qatm_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qatm_forc, 100.0); 
 
       /*IMF If 1D met forcing, read forcing vars to arrays */

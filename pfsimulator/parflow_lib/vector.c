@@ -44,7 +44,7 @@ using namespace SAMRAI;
 
 #include <stdlib.h>
 
-static int samrai_vector_ids[2048];
+static int samrai_vector_ids[4][2048];
 
 /*--------------------------------------------------------------------------
  * NewVectorCommPkg:
@@ -217,26 +217,7 @@ Vector  *NewVectorType(
 {
     Vector  *new_vector;
 
-
     new_vector = NewTempVector(grid, nc, num_ghost);
-
-    tbox::Dimension dim(GlobalsParflowSimulation -> getDim());
-
-
-    hier::IntVector ghosts(dim, num_ghost);
-
-    int index = 0;
-    for(int i = 0; i < 2048; i++)
-    {
-       if(samrai_vector_ids[i] == 0) {
-	  index = i;
-	  break;
-       }
-    }
-
-    std::string variable_name("Variable" + SAMRAI::tbox::Utilities::intToString(index, 4));
-
-    tbox::Pointer< hier::Variable > variable;
 
     int dim_type = -1;
     switch(type)
@@ -260,6 +241,24 @@ Vector  *NewVectorType(
 	  break;
        }
     }
+
+    tbox::Dimension dim(GlobalsParflowSimulation -> getDim(dim_type));
+
+    hier::IntVector ghosts(dim, num_ghost);
+
+    int index = 0;
+    for(int i = 0; i < 2048; i++)
+    {
+       if(samrai_vector_ids[dim_type][i] == 0) {
+	  index = i;
+	  break;
+       }
+    }
+
+    std::string variable_name("Variable_" + SAMRAI::tbox::Utilities::intToString(dim_type, 1) + "_" +
+			      SAMRAI::tbox::Utilities::intToString(index, 4) );
+
+    tbox::Pointer< hier::Variable > variable;
 
     new_vector -> type = type;
     switch(type)
@@ -332,7 +331,7 @@ Vector  *NewVectorType(
 	     variable->getPatchDataFactory()->cloneFactory(ghosts));
 	  
 	  
-	  samrai_vector_ids[index] = new_vector -> samrai_id;
+	  samrai_vector_ids[dim_type][index] = new_vector -> samrai_id;
 	  new_vector -> table_index = index;
 	  
 	  std::cout << "samrai_id " << new_vector -> samrai_id << std::endl;
@@ -460,15 +459,21 @@ void     FreeVector(
        case side_centered_y :
        case side_centered_z :
        {
-	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(3));
+	  int dim_type = 3;
+	  if(vector -> type == cell_centered_2D) {
+	     dim_type = 2;
+	  }
+
+	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(dim_type));
 	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 	  
 	  level -> deallocatePatchData(vector -> samrai_id);
 	  
 	  tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
 	  patch_descriptor -> removePatchDataComponent(vector -> samrai_id);
+
 	  
-	  samrai_vector_ids[vector -> table_index] = 0;
+	  samrai_vector_ids[dim_type][vector -> table_index] = 0;
 	  break;
        }
        case non_samrai_centered :
