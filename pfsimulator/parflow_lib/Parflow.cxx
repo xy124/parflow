@@ -143,8 +143,6 @@ tbox::Array<int> Parflow::getTagBufferArray(void) const
 void Parflow::setupInputDatabase() {
    tbox::Pointer<tbox::Database> input_db(d_input_db->getDatabase("CartesianGeometry"));
 
-// sgs
-
    Background  *bg = GlobalsBackground;
 
    int lower[3];
@@ -271,8 +269,6 @@ void Parflow::initializePatchHierarchy(double time)
       d_tag_buffer_array[il] = 1;
    }
 
-   createMappedBoxLevelFromParflowGrid();
-
    const hier::IntVector one_vector(d_dim, 1);
    const hier::IntVector ratio(d_gridding_algorithm -> getMaxLevels() > 1 ? 
 				d_gridding_algorithm->getRatioToCoarserLevel(1) : one_vector);
@@ -293,7 +289,8 @@ void Parflow::initializePatchHierarchy(double time)
    
    d_patch_hierarchy -> makeNewPatchLevel(0, *mapped_box_level);
 
-   d_gridding_algorithm -> makeCoarsestLevel(d_patch_hierarchy, time);
+#if 0
+   d_gridding_algorithm -> makeCoarsestLevel(d_patch_hierarchy, time, *mapped_box_level);
    
    bool initial_time = true;
 
@@ -306,6 +303,7 @@ void Parflow::initializePatchHierarchy(double time)
 					   initial_time,
 					   d_tag_buffer_array[level_num]);
    }
+#endif
 }
 
 void Parflow::getFromInput(
@@ -321,16 +319,21 @@ void Parflow::getFromInput(
 
 tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGrid(void)
 {
-   // Build a box based off of Parflow grid
-   const hier::Index lower( SubgridIX(GridSubgrid(GlobalsUserGrid, 0)),
-			    SubgridIY(GridSubgrid(GlobalsUserGrid, 0)),
-			    SubgridIZ(GridSubgrid(GlobalsUserGrid, 0)));
 
-   const hier::Index upper ( lower[0] + SubgridNX(GridSubgrid(GlobalsUserGrid, 0)),
-			     lower[1] + SubgridNY(GridSubgrid(GlobalsUserGrid, 0)),
-			     lower[2] + SubgridNZ(GridSubgrid(GlobalsUserGrid, 0)));
-   
+   Grid *grid = CreateGrid(GlobalsUserGrid);
+
+   // Build a box based off of Parflow grid
+   const hier::Index lower( SubgridIX(GridSubgrid(grid, 0)),
+			    SubgridIY(GridSubgrid(grid, 0)),
+			    SubgridIZ(GridSubgrid(grid, 0)));
+
+   const hier::Index upper ( lower[0] + SubgridNX(GridSubgrid(grid, 0)),
+			     lower[1] + SubgridNY(GridSubgrid(grid, 0)),
+			     lower[2] + SubgridNZ(GridSubgrid(grid, 0)));
+
    hier::Box box(lower, upper);
+
+   std::cout << "In Parflow Grid create box " << box << std::endl;
 
    // Build a mapped box and insert into layer.  
    const int local_index = 0;

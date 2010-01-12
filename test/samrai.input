@@ -20,7 +20,7 @@ Parflow {
      CartesianGeometry {
      }
 
-     regrid_timestep = 1
+     regrid_timestep = 10
 
      StandardTagAndInitialize {
           tagging_method = "GRADIENT_DETECTOR"
@@ -41,7 +41,7 @@ Parflow {
 // Specify coarsening ratios for each level 1 through max_levels-1
 
    	   ratio_to_coarser {      // vector ratio to next coarser level
-	   level_1 = 2 , 2, 2
+	   level_1 = 1 , 1, 1
      }
 
      largest_patch_size {

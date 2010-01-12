@@ -244,18 +244,27 @@ Vector  *NewVectorType(
     switch(type)
     {
        case cell_centered : 
+       {
 	  variable = new pdat::CellVariable<double>(dim, variable_name, 1);	 
 	  break;
-       case side_centered_x :
+       }
+       case side_centered_x : 
+       {
 	  variable = new pdat::SideVariable<double>(dim, variable_name, 1, true, 0);
 	  break;
+       }
        case side_centered_y :
+       {
 	  variable = new pdat::SideVariable<double>(dim, variable_name, 1, true, 1);
 	  break;
+       }
        case side_centered_z :
+       {
 	  variable = new pdat::SideVariable<double>(dim, variable_name, 1, true, 2);
 	  break;
+       }
        case non_samrai_centered :
+       {
 	  double  *data;
 
 #ifdef SHMEM_OBJECTS
@@ -269,8 +278,11 @@ Vector  *NewVectorType(
 	  SetTempVectorData(new_vector, data);
 
 	  break;
+       }
        default :
+       {
 	  TBOX_ERROR("Invalid variable type");
+       }
     }
 
 
@@ -306,6 +318,7 @@ Vector  *NewVectorType(
 	     
 	     const hier::Box patch_box = patch -> getBox();
 	     
+	     std::cout << "In vector box " << patch_box << std::endl;
 	     
 	     switch(type)
 	     {
