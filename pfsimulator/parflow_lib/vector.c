@@ -247,11 +247,13 @@ Vector  *NewVectorType(
     hier::IntVector ghosts(dim, num_ghost);
 
     int index = 0;
-    for(int i = 0; i < 2048; i++)
-    {
-       if(samrai_vector_ids[dim_type][i] == 0) {
-	  index = i;
-	  break;
+    if(dim_type > 0) {
+       for(int i = 0; i < 2048; i++)
+       {
+	  if(samrai_vector_ids[dim_type][i] == 0) {
+	     index = i;
+	     break;
+	  }
        }
     }
 

@@ -374,15 +374,13 @@ void SetupRichards(PFModule *this_module) {
        * Allocate and set up initial values
        *-------------------------------------------------------------------*/
 
+      /* SGS FIXME why are these here and not created in instance_xtra ? */
+
       instance_xtra -> pressure = NewVector( grid, 1, 1 );
-// SGS FIXME why is this needed?
-#undef max		  
       InitVectorAll(instance_xtra -> pressure, -std::numeric_limits<float>::max());
-      // InitVectorAll(instance_xtra -> pressure, 0.0);      
 
       instance_xtra -> saturation = NewVector( grid, 1, 1 );
       InitVectorAll(instance_xtra -> saturation, -std::numeric_limits<float>::max());
-      // InitVectorAll(instance_xtra -> saturation, 0.0);
 
       instance_xtra -> density = NewVector( grid, 1, 1 );
       InitVectorAll(instance_xtra -> density, 0.0);
@@ -495,6 +493,8 @@ void SetupRichards(PFModule *this_module) {
       /*IMF If 1D met forcing, read forcing vars to arrays */
       if (public_xtra -> clm_metforce == 1)
       {
+	 // SGS Fixme This should not be here should be in init xtra.
+
          // Set filename for 1D forcing file
          sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile);
 
@@ -524,6 +524,7 @@ void SetupRichards(PFModule *this_module) {
             amps_Printf( "Error: can't open file %s \n", filename);
             exit(1);
          }
+	 // SGS this should be done as an array not individual elements
          invoice = amps_NewInvoice( "%d%d%d%d%d%d%d%d", &sw,&lw,&prcp,&tas,&u,&v,&patm,&qatm );
          for (n=0; n<nc; n++)
          {
@@ -1601,6 +1602,17 @@ void TeardownRichards(PFModule *this_module) {
       FreeVector(instance_xtra -> v_forc);
       FreeVector(instance_xtra -> patm_forc);
       FreeVector(instance_xtra -> qatm_forc);
+   }
+
+   if(public_xtra -> sw1d) {
+      tfree(public_xtra -> sw1d);
+      tfree(public_xtra -> lw1d);
+      tfree(public_xtra -> prcp1d);
+      tfree(public_xtra -> tas1d);
+      tfree(public_xtra -> u1d); 
+      tfree(public_xtra -> v1d);   
+      tfree(public_xtra -> patm1d);
+      tfree(public_xtra -> qatm1d);
    }
 
    if(!amps_Rank(amps_CommWorld))
