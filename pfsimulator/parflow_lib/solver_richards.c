@@ -237,7 +237,7 @@ void SetupRichards(PFModule *this_module) {
 
    double        dtmp;
 
-   CommHandle   *handle;
+   VectorUpdateCommHandle   *handle;
 
    int           any_file_dumped;
 
@@ -798,7 +798,7 @@ void AdvanceRichards(PFModule *this_module,
 
    double        outflow = 0.0;      //sk Outflow due to overland flow
 
-   CommHandle   *handle;
+   VectorUpdateCommHandle   *handle;
 
    char          dt_info;
    char          file_prefix[64], file_postfix[64];

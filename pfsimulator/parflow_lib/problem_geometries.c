@@ -95,7 +95,7 @@ void           Geometries(
 
    IndicatorData      *current_indicator_data;
 
-   CommHandle         *handle;
+   VectorUpdateCommHandle         *handle;
 
    int                 i, k;
 

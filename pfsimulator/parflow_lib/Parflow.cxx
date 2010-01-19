@@ -153,13 +153,13 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(int dim, std::s
    lower[2] = BackgroundIZ(bg);
 
    int upper[3];
-   upper[0] = lower[0] +  BackgroundNX(bg);
-   upper[1] = lower[1] +  BackgroundNY(bg);
+   upper[0] = lower[0] +  BackgroundNX(bg) - 1;
+   upper[1] = lower[1] +  BackgroundNY(bg) - 1;
 
    if(dim == 2) {
-      upper[2] = lower[2] +  1;
+      upper[2] = lower[2];
    } else {
-      upper[2] = lower[2] +  BackgroundNZ(bg);
+      upper[2] = lower[2] +  BackgroundNZ(bg) - 1;
    }
 
    tbox::DatabaseBox box(d_dim[3], lower, upper);
@@ -256,7 +256,7 @@ void Parflow::initializePatchHierarchy(double time)
       const hier::IntVector one_vector(d_dim[d], 1);
       const hier::IntVector ratio(d_gridding_algorithm[d] -> getMaxLevels() > 1 ? 
 				  d_gridding_algorithm[d] -> getRatioToCoarserLevel(1) : one_vector);
-      
+
       std::vector<hier::IntVector > fine_connector_gcw;
       std::vector<hier::IntVector > peer_connector_gcw;
       d_gridding_algorithm[d] -> computeAllConnectorWidths(fine_connector_gcw,
@@ -270,8 +270,18 @@ void Parflow::initializePatchHierarchy(double time)
 	 peer_connector_gcw[0]);
       
       tbox::Pointer< hier::MappedBoxLevel > mapped_box_level(createMappedBoxLevelFromParflowGrid());
+
       
       d_patch_hierarchy[d] -> makeNewPatchLevel(0, *mapped_box_level);
+
+      tbox::Pointer<hier::PatchLevel> level(d_patch_hierarchy[d] -> getPatchLevel(0));
+
+      for(int i = 4; i > 0; --i) {
+	 level -> getMappedBoxLevel() -> getPersistentOverlapConnectors().
+	    findOrCreateConnector(
+	       *level -> getMappedBoxLevel(),
+	       hier::IntVector(d_dim[d], i));
+      }
    }
 }
 
@@ -296,9 +306,9 @@ tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGr
 			    SubgridIY(GridSubgrid(grid, 0)),
 			    SubgridIZ(GridSubgrid(grid, 0)));
 
-   const hier::Index upper ( lower[0] + SubgridNX(GridSubgrid(grid, 0)),
-			     lower[1] + SubgridNY(GridSubgrid(grid, 0)),
-			     lower[2] + SubgridNZ(GridSubgrid(grid, 0)));
+   const hier::Index upper ( lower[0] + SubgridNX(GridSubgrid(grid, 0)) - 1,
+			     lower[1] + SubgridNY(GridSubgrid(grid, 0)) - 1,
+			     lower[2] + SubgridNZ(GridSubgrid(grid, 0)) - 1);
 
    hier::Box box(lower, upper);
 

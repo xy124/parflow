@@ -992,8 +992,11 @@ void FreeUserGrid (Grid *user_grid );
 
 /* vector.c */
 CommPkg *NewVectorCommPkg (Vector *vector , ComputePkg *compute_pkg );
-CommHandle *InitVectorUpdate (Vector *vector , int update_mode );
-void FinalizeVectorUpdate (CommHandle *handle );
+VectorUpdateCommHandle  *InitVectorUpdate(
+   Vector      *vector,
+   int          update_mode);
+void         FinalizeVectorUpdate(
+   VectorUpdateCommHandle  *handle);
 Vector  *NewVector(
    Grid    *grid,
    int      nc,

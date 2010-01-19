@@ -125,7 +125,7 @@ GrGeomSolid  **gr_geounits)
    WellData         *well_data = ProblemDataWellData(problem_data);
    WellDataPhysical *well_data_physical;
 
-   CommHandle       *handle;
+   VectorUpdateCommHandle       *handle;
 
    GrGeomSolid      *gr_solid,*gr_domain;
 

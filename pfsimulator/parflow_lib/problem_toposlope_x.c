@@ -89,7 +89,7 @@ void         XSlope(
    Type1            *dummy1;
    Type2            *dummy2;
 
-   CommHandle       *handle;
+   VectorUpdateCommHandle       *handle;
 
    SubgridArray     *subgrids = GridSubgrids(grid);
 

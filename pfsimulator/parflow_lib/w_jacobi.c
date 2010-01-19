@@ -108,7 +108,7 @@ int    	 zero)
 
    int             iter = 0;
 
-   CommHandle     *handle = NULL;
+   VectorUpdateCommHandle     *handle = NULL;
 
    (void) tol;
 

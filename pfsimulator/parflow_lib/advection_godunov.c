@@ -131,7 +131,7 @@ void     Godunov(
     Vector           *perm_y    = ProblemDataPermeabilityY(problem_data); 
     Vector           *perm_z    = ProblemDataPermeabilityZ(problem_data); 
 
-    CommHandle       *handle = NULL;
+    VectorUpdateCommHandle       *handle = NULL;
 
     SubgridArray     *subgrids;
     SubregionArray   *subregion_array;

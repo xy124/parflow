@@ -176,9 +176,10 @@ int      zero)
       /*-----------------------------------------------------------------
        * Set up temporary vectors: x_l, b_l, temp_vec_l
        *-----------------------------------------------------------------*/
-      x_l[l+1]        = NewVector(instance_xtra -> grid_l[l+1], 1, 1);
-      b_l[l+1]        = NewVector(instance_xtra -> grid_l[l+1], 1, 1);
-      temp_vec_l[l+1] = NewVector(instance_xtra -> grid_l[l+1], 1, 1);
+      // Non SAMRAI grids
+      x_l[l+1]        = NewVectorType(instance_xtra -> grid_l[l+1], 1, 1, non_samrai_centered);
+      b_l[l+1]        = NewVectorType(instance_xtra -> grid_l[l+1], 1, 1, non_samrai_centered);
+      temp_vec_l[l+1] = NewVectorType(instance_xtra -> grid_l[l+1], 1, 1, non_samrai_centered);
 
       /* Set up comm_pkg's */
 

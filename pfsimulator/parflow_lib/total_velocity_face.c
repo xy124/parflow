@@ -129,7 +129,7 @@ Vector      **saturations)
    double         *pl, *pu, *tl, *tu, *ml, *mu, *vel;
    double          dtmp, temp_density;
 
-   CommHandle     *handle;
+   VectorUpdateCommHandle     *handle;
 
    Vector         *vel_vec[3];
    Subvector      *subvector_v0,

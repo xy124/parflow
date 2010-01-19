@@ -211,7 +211,7 @@ void      SolverImpes()
    double        phase_maximum, total_maximum;
    double        dtmp, *phase_densities;
 
-   CommHandle   *handle;
+   VectorUpdateCommHandle   *handle;
 
    char          dt_info;
    char          file_prefix[64], file_postfix[64];
@@ -229,12 +229,12 @@ void      SolverImpes()
     *-------------------------------------------------------------------*/
    if ( is_multiphase )
    {
-      temp_mobility_x = NewVector(instance_xtra -> grid, 1, 1);
-      temp_mobility_y = NewVector(instance_xtra -> grid, 1, 1);
-      temp_mobility_z = NewVector(instance_xtra -> grid, 1, 1);
-      stemp           = NewVector(instance_xtra -> grid, 1, 3);
+      temp_mobility_x = NewVectorType(instance_xtra -> grid, 1, 1, cell_centered );
+      temp_mobility_y = NewVectorType(instance_xtra -> grid, 1, 1, cell_centered );
+      temp_mobility_z = NewVectorType(instance_xtra -> grid, 1, 1, cell_centered );
+      stemp           = NewVectorType(instance_xtra -> grid, 1, 3, cell_centered );
    }
-   ctemp              = NewVector(instance_xtra -> grid, 1, 3);
+   ctemp              = NewVectorType(instance_xtra -> grid, 1, 3,  cell_centered );
 
 
    IfLogging(1)
@@ -327,16 +327,16 @@ void      SolverImpes()
       evolve_concentrations = 1;
    }
 
-   pressure = NewVector( grid, 1, 1 );
+   pressure = NewVectorType( grid, 1, 1, cell_centered );
    InitVectorAll(pressure, 0.0);
 
-   total_mobility_x = NewVector( grid, 1, 1 );
+   total_mobility_x = NewVectorType( grid, 1, 1, cell_centered );
    InitVectorAll(total_mobility_x, 0.0);
 
-   total_mobility_y = NewVector( grid, 1, 1 );
+   total_mobility_y = NewVectorType( grid, 1, 1, cell_centered );
    InitVectorAll(total_mobility_y, 0.0);
 
-   total_mobility_z = NewVector( grid, 1, 1 );
+   total_mobility_z = NewVectorType( grid, 1, 1, cell_centered );
    InitVectorAll(total_mobility_z, 0.0);
 
    /*-------------------------------------------------------------------
@@ -349,7 +349,7 @@ void      SolverImpes()
    {
       for(phase = 0; phase < ProblemNumPhases(problem)-1; phase++)
       {
-         saturations[phase] = NewVector( grid, 1, 3 );
+         saturations[phase] = NewVectorType( grid, 1, 3, cell_centered );
          InitVectorAll(saturations[phase], 0.0);
 
          PFModuleInvokeType(ICPhaseSaturInvoke, ic_phase_satur,
@@ -361,7 +361,7 @@ void      SolverImpes()
          FinalizeVectorUpdate(handle);
       }
 
-      saturations[ProblemNumPhases(problem)-1] = NewVector( grid, 1, 3 );
+      saturations[ProblemNumPhases(problem)-1] = NewVectorType( grid, 1, 3, cell_centered );
       InitVectorAll(saturations[ProblemNumPhases(problem)-1], 0.0);
 
       PFModuleInvokeType(SaturationConstitutiveInvoke, constitutive, (saturations));
@@ -408,7 +408,7 @@ void      SolverImpes()
 
          if ( ProblemNumContaminants(problem) > 0 )
          {
-            solidmassfactor = NewVector( grid, 1, 2);
+            solidmassfactor = NewVectorType( grid, 1, 2, cell_centered);
 
             /*----------------------------------------------------------------
              * Allocate and set up initial concentrations
@@ -422,7 +422,7 @@ void      SolverImpes()
             {
                for(concen = 0; concen < ProblemNumContaminants(problem); concen++)
                {
-                  concentrations[indx] = NewVector( grid, 1, 3 );
+                  concentrations[indx] = NewVectorType( grid, 1, 3, cell_centered );
                   InitVectorAll(concentrations[indx], 0.0);
 
                   PFModuleInvokeType(ICPhaseConcenInvoke, ic_phase_concen,
@@ -464,19 +464,19 @@ void      SolverImpes()
 
 	 if ( is_multiphase )
 	 {
-	    total_x_velocity = NewVector( x_grid, 1, 1 );
+	    total_x_velocity = NewVectorType( x_grid, 1, 1, side_centered_x );
             InitVectorAll(total_x_velocity, 0.0);
 
-            total_y_velocity = NewVector( y_grid, 1, 1 );
+            total_y_velocity = NewVectorType( y_grid, 1, 1, side_centered_y );
             InitVectorAll(total_y_velocity, 0.0);
 
-            total_z_velocity = NewVector( z_grid, 1, 2 );
+            total_z_velocity = NewVectorType( z_grid, 1, 2, side_centered_z );
             InitVectorAll(total_z_velocity, 0.0);
 
          /*----------------------------------------------------------------
           * Allocate and set up edge permeabilities
           *----------------------------------------------------------------*/
-            z_permeability = NewVector( z_grid, 1, 2 );
+            z_permeability = NewVectorType( z_grid, 1, 2, side_centered_z );
             InitVectorAll(z_permeability, 0.0);
 
             PFModuleInvokeType(PermeabilityFaceInvoke, permeability_face,
@@ -1466,6 +1466,9 @@ PFModule *SolverImpesInitInstanceXtra()
    new_subgrids  = GetGridSubgrids(new_all_subgrids);
    grid2d        = NewGrid(new_subgrids, new_all_subgrids);
    CreateComputePkgs(grid2d);
+
+   // SGS Debug
+   globals -> grid2d = grid2d;
  
    /* Create the x velocity grid */
 

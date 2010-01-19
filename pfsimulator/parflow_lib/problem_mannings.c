@@ -80,7 +80,7 @@ void Mannings (ProblemData *problem_data, Vector *mann, Vector *dummy)
 
    GrGeomSolid      *gr_solid, *gr_domain;
 
-   CommHandle       *handle;
+   VectorUpdateCommHandle       *handle;
 
    Type0            *dummy0;
    Type1            *dummy1;

@@ -190,7 +190,7 @@ void      SolverDiffusion()
    double        phase_maximum, total_maximum;
    double	 dtmp, *phase_densities;
 
-   CommHandle   *handle;
+   VectorUpdateCommHandle   *handle;
 
    char          dt_info;
    char          file_prefix[64], file_postfix[64];

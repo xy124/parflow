@@ -129,7 +129,7 @@ void wrfparflowadvance_(double *current_time,
    Vector       *porosity_out;
    Vector       *saturation_out;
 
-   CommHandle   *handle;
+   VectorUpdateCommHandle   *handle;
 
    // AdvanceRichards should not use select_time_step module to compute dt.
    // Use the provided dt with possible subcycling if it does not converge.

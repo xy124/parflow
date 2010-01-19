@@ -131,7 +131,7 @@ int          order)
 
     TimeCycleData    *time_cycle_data;
 
-    CommHandle       *handle = NULL;
+    VectorUpdateCommHandle       *handle = NULL;
 
     SubgridArray     *subgrids;
     SubregionArray   *subregion_array;

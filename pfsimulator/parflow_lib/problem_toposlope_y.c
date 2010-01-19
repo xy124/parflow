@@ -90,7 +90,7 @@ void         YSlope(
 
    SubgridArray     *subgrids = GridSubgrids(grid);
 
-   CommHandle       *handle;
+   VectorUpdateCommHandle       *handle;
 
    Subgrid          *subgrid;
    Subvector        *ps_sub;

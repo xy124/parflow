@@ -165,7 +165,7 @@ RFCondData   *cdata)
    double    *cval;             /* Values for cond data for single node */
 
    /* Communications */
-   CommHandle *handle;
+   VectorUpdateCommHandle *handle;
    int        update_mode;
 
    /* Miscellaneous variables */

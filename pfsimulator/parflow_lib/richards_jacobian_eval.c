@@ -189,7 +189,7 @@ int           symm_part)      /* Specifies whether to compute just the
    int         *fdir;
    int          ipatch, ival;
    
-   CommHandle  *handle;
+   VectorUpdateCommHandle  *handle;
 
 
    /*-----------------------------------------------------------------------
@@ -1038,8 +1038,8 @@ int           symm_part)      /* Specifies whether to compute just the
 
    if (MatrixCommPkg(J))
    {
-      handle = InitMatrixUpdate(J);
-      FinalizeMatrixUpdate(handle);
+      CommHandle *matrix_handle = InitMatrixUpdate(J);
+      FinalizeMatrixUpdate(matrix_handle);
    }
 
    *ptr_to_J = J;

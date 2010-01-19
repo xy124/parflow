@@ -119,7 +119,7 @@ int           phase)
 
    double         *pl, *pu, *ml, *mu, *vel, *dl, *du;
 
-   CommHandle     *handle;
+   VectorUpdateCommHandle     *handle;
 
    Vector         *pressure_vector, *vel_vec[3];
    Subvector      *subvector_v0,

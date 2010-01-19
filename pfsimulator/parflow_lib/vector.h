@@ -37,6 +37,9 @@
 #include "grid.h"
 #include "n_vector.h"
 
+#include "SAMRAI/xfer/RefineAlgorithm.h"
+#include "SAMRAI/xfer/RefineSchedule.h"
+
 enum vector_type { 
    cell_centered,
    cell_centered_2D,
@@ -89,10 +92,26 @@ typedef struct _Vector
    
    vector_type type;
 
+   SAMRAI::tbox::Pointer< SAMRAI::xfer::RefineAlgorithm > boundary_fill_refine_algorithm;
+   SAMRAI::tbox::Pointer< SAMRAI::xfer::RefineSchedule >  boundary_fill_schedule;
+
 } Vector;
 
 
 typedef Vector *N_Vector;
+
+class VectorUpdateCommHandle {
+public :
+
+   VectorUpdateCommHandle(Vector *vector, CommHandle *comm_handle) :
+      vector(vector),
+      comm_handle(comm_handle)
+   {
+   }
+   
+   Vector *vector;
+   CommHandle *comm_handle;
+};
 
 /*--------------------------------------------------------------------------
  * Accessor functions for the Subvector structure

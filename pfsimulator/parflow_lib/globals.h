@@ -80,6 +80,10 @@ public:
    int       *repeat_counts;
 
    SAMRAI::tbox::Pointer<Parflow> parflow_simulation;
+
+   // SGS For debugging remove
+   Grid     *grid3d;
+   Grid     *grid2d;
 };
 
 #ifdef PARFLOW_GLOBALS

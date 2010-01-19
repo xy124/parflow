@@ -188,7 +188,7 @@ void NlFunctionEval (Vector *pressure,  /* Current pressure values */
    int          ipatch, ival;
    int          dir = 0;
    
-   CommHandle  *handle;
+   VectorUpdateCommHandle  *handle;
 
    BeginTiming(public_xtra -> time_index);
 

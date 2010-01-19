@@ -68,21 +68,81 @@ CommPkg  *NewVectorCommPkg(
  * InitVectorUpdate
  *--------------------------------------------------------------------------*/
 
-CommHandle  *InitVectorUpdate(
+VectorUpdateCommHandle  *InitVectorUpdate(
    Vector      *vector,
    int          update_mode)
 {
+
+   int dim_type = -1;
+   switch(vector -> type)
+   {
+      case cell_centered : 
+      case side_centered_x :
+      case side_centered_y :
+      case side_centered_z :
+      {
+	 dim_type = 3;
+	 break;
+      }
+      case cell_centered_2D : 
+      {
+	 dim_type = 2;
+	 break;
+      }
+      case non_samrai_centered : 
+      {
+	 dim_type = -1;
+	 break;
+      }
+   }
+
+   CommHandle *amps_com_handle;
+   if(dim_type == -1)
+   {
+      
 #ifdef SHMEM_OBJECTS
-   return (void *)1;
+      amps_com_handle = NULL;
 #else
-
+      
 #ifdef NO_VECTOR_UPDATE
-   return (void*)1;
+      amps_com_handle = NULL;
 #else
-   return  InitCommunication(VectorCommPkg(vector, update_mode));
+      amps_com_handle = InitCommunication(VectorCommPkg(vector, update_mode));
 #endif
+      
+#endif
+   } else {
+      tbox::Dimension dim(GlobalsParflowSimulation -> getDim(dim_type));
+      if(vector -> boundary_fill_refine_algorithm.isNull()) {
+	 tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(dim_type));
+	 const int level_number = 0;
+	 
+	 vector -> boundary_fill_refine_algorithm = new xfer::RefineAlgorithm(dim);
+	 
+	 vector -> boundary_fill_refine_algorithm -> registerRefine(
+	    vector -> samrai_id,
+	    vector -> samrai_id,
+	    vector -> samrai_id,
+	    tbox::Pointer<xfer::RefineOperator>(NULL));
+	 
+	 tbox::Pointer< hier::PatchLevel > level = 
+	    hierarchy->getPatchLevel(level_number);
+	 
+	 vector -> boundary_fill_schedule = vector -> boundary_fill_refine_algorithm
+	    -> createSchedule(level,
+			      level_number-1,
+			      hierarchy,
+			      NULL);
+	 
+      }
+      const double time = 1.0;
+      vector -> boundary_fill_schedule -> fillData(time);
+      
+      amps_com_handle = NULL;
 
-#endif
+   }
+
+   return new VectorUpdateCommHandle(vector, amps_com_handle);
 }
 
 
@@ -91,17 +151,37 @@ CommHandle  *InitVectorUpdate(
  *--------------------------------------------------------------------------*/
 
 void         FinalizeVectorUpdate(
-   CommHandle  *handle)
+   VectorUpdateCommHandle  *handle)
 {
-#ifdef SHMEM_OBJECTS
-   amps_Sync(amps_CommWorld);
-#else
 
+   switch(handle -> vector -> type)
+   {
+      case cell_centered : 
+      case side_centered_x :
+      case side_centered_y :
+      case side_centered_z :
+      case cell_centered_2D : 
+      {
+	 break;
+      }
+      case non_samrai_centered : 
+      {
+#ifdef SHMEM_OBJECTS
+	 amps_Sync(amps_CommWorld);
+#else
+	 
 #ifdef NO_VECTOR_UPDATE
 #else
-   FinalizeCommunication(handle);
+	 FinalizeCommunication(handle -> comm_handle);
 #endif
 #endif
+	 
+	 break;
+      }
+   };
+
+   delete handle;
+
 }
 
 
@@ -257,8 +337,8 @@ Vector  *NewVectorType(
        }
     }
 
-    std::string variable_name("Variable_" + SAMRAI::tbox::Utilities::intToString(dim_type, 1) + "_" +
-			      SAMRAI::tbox::Utilities::intToString(index, 4) );
+    std::string variable_name("Variable_" + tbox::Utilities::intToString(dim_type, 1) + "_" +
+			      tbox::Utilities::intToString(index, 4) );
 
     tbox::Pointer< hier::Variable > variable;
 
@@ -407,7 +487,11 @@ Vector  *NewVector(
    int      nc,
    int      num_ghost)
 {
+   if(!(grid == globals -> grid3d || grid == globals -> grid2d) ) {
+      std::cout << "Error: NewVector on grid not supported by SAMRAI" << std::endl;
+   }
    return NewVectorType(grid, nc, num_ghost, cell_centered);
+//   return NewVectorType(grid, nc, num_ghost, non_samrai_centered);
 }
 
 
