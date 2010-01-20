@@ -454,18 +454,18 @@ void SetupRichards(PFModule *this_module) {
       instance_xtra -> t_grnd = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> t_grnd, 0.0);
 
-      instance_xtra -> tsoil = NewVectorType( gridTs, 1, 1, non_samrai_centered);
+      instance_xtra -> tsoil = NewVectorType( gridTs, 1, 1, clm_topsoil);
       InitVectorAll(instance_xtra -> tsoil, 0.0);
 
       /*IMF Initialize variables for CLM irrigation output */
       instance_xtra -> qflx_qirr = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> qflx_qirr, 0.0);
 
-      instance_xtra -> qflx_qirr_inst = NewVectorType( gridTs, 1, 1, non_samrai_centered);
+      instance_xtra -> qflx_qirr_inst = NewVectorType( gridTs, 1, 1, clm_topsoil);
       InitVectorAll(instance_xtra -> qflx_qirr_inst, 0.0);
 
       /*IMF Initialize variables for CLM forcing fields
-            SW rad, LW rad, precip, T(air), U, V, P(air), q(air) */
+	SW rad, LW rad, precip, T(air), U, V, P(air), q(air) */
       instance_xtra -> sw_forc = NewVectorType( grid2d, 1, 1, cell_centered_2D );
       InitVectorAll(instance_xtra -> sw_forc, 100.0);
 

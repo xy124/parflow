@@ -48,12 +48,13 @@ class Parflow:
 
 public:
 
-   static const int number_of_grid_types = 3;
+   static const int number_of_grid_types = 4;
 
    enum GridType { 
       invalid_grid_type,
       flow_3D_grid_type,
       surface_2D_grid_type,
+      clm_topsoil_grid_type
    };
 
    static const GridType grid_types[number_of_grid_types];

@@ -46,6 +46,7 @@ enum vector_type {
    side_centered_x,
    side_centered_y,
    side_centered_z,
+   clm_topsoil,
    non_samrai_centered
 };
 

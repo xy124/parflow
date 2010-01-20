@@ -89,6 +89,11 @@ VectorUpdateCommHandle  *InitVectorUpdate(
 	 grid_type = Parflow::surface_2D_grid_type;
 	 break;
       }
+      case clm_topsoil : 
+      {
+	 grid_type = Parflow::clm_topsoil_grid_type;
+	 break;
+      }
       case non_samrai_centered : 
       {
 	 grid_type = Parflow::invalid_grid_type;
@@ -161,6 +166,7 @@ void         FinalizeVectorUpdate(
       case side_centered_y :
       case side_centered_z :
       case cell_centered_2D : 
+      case clm_topsoil : 
       {
 	 break;
       }
@@ -315,6 +321,11 @@ Vector  *NewVectorType(
 	  grid_type = Parflow::surface_2D_grid_type;
 	  break;
        }
+      case clm_topsoil : 
+      {
+	  grid_type = Parflow::clm_topsoil_grid_type;
+	  break;
+      }
        case non_samrai_centered :
        {
 	  grid_type = Parflow::invalid_grid_type;
@@ -351,6 +362,11 @@ Vector  *NewVectorType(
 	  break;
        }
        case cell_centered_2D : 
+       {
+	  variable = new pdat::CellVariable<double>(dim, variable_name, 1);	 
+	  break;
+       }
+       case clm_topsoil : 
        {
 	  variable = new pdat::CellVariable<double>(dim, variable_name, 1);	 
 	  break;
@@ -401,6 +417,7 @@ Vector  *NewVectorType(
        case side_centered_x :
        case side_centered_y :
        case side_centered_z :
+       case clm_topsoil : 
        {
 
 	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(grid_type));
@@ -435,6 +452,7 @@ Vector  *NewVectorType(
 	     {
 		case cell_centered : 
 		case cell_centered_2D : 
+		case clm_topsoil : 
 		{
 		   tbox::Pointer< pdat::CellData<double> > patch_data(
 		      patch -> getPatchData(new_vector -> samrai_id));
@@ -544,6 +562,7 @@ void     FreeVector(
        case side_centered_x :
        case side_centered_y :
        case side_centered_z :
+       case clm_topsoil :
        {
 	  Parflow::GridType grid_type = Parflow::flow_3D_grid_type;
 	  if(vector -> type == cell_centered_2D) {

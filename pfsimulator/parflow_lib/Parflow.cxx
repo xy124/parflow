@@ -50,18 +50,23 @@ using namespace SAMRAI;
 const tbox::Dimension Parflow::d_dim[Parflow::number_of_grid_types] = { 
    tbox::Dimension::INVALID_DIMENSION, 
    tbox::Dimension(3), 
+   tbox::Dimension(3),
    tbox::Dimension(3)};
 
 const Parflow::GridType Parflow::grid_types[number_of_grid_types] = {
    Parflow::invalid_grid_type,
    Parflow::flow_3D_grid_type,
-   Parflow::surface_2D_grid_type};
+   Parflow::surface_2D_grid_type,
+   Parflow::clm_topsoil_grid_type,
+};
 
 
 const std::string Parflow::grid_type_names[number_of_grid_types] = {
    "Invalid",
    "Flow3D",
-   "Surface2D"};
+   "Surface2D",
+   "CLMTopSoil"
+};
 
 
 const std::string Parflow::VARIABLE_NAME = "variable";
@@ -170,10 +175,19 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(GridType grid_t
    upper[0] = lower[0] +  BackgroundNX(bg) - 1;
    upper[1] = lower[1] +  BackgroundNY(bg) - 1;
 
-   if(grid_type == surface_2D_grid_type) {
-      upper[2] = lower[2];
-   } else {
-      upper[2] = lower[2] +  BackgroundNZ(bg) - 1;
+   switch(grid_type) 
+   {
+      case invalid_grid_type :
+	 // SGS FIXME Should error here
+      case flow_3D_grid_type :
+	 upper[2] = lower[2] +  BackgroundNZ(bg) - 1;
+	 break;
+      case surface_2D_grid_type :
+	 upper[2] = lower[2];
+	 break;
+      case clm_topsoil_grid_type :
+	 upper[2] = lower[2] + 10 - 1;
+	 break;
    }
 
    tbox::DatabaseBox box(d_dim[grid_type], lower, upper);
@@ -203,7 +217,7 @@ void Parflow::initializePatchHierarchy(double time)
 {
    NULL_USE(time);
 
-   for(int grid_type_index = 1; grid_type_index < 3; ++grid_type_index) {
+   for(int grid_type_index = 1; grid_type_index < number_of_grid_types; ++grid_type_index) {
       GridType grid_type = grid_types[grid_type_index];
 
       std::string grid_geometry_name("CartesianGeometry" + grid_type_names[grid_type]);
