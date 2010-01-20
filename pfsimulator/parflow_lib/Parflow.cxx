@@ -47,8 +47,22 @@
 
 using namespace SAMRAI;
 
-const tbox::Dimension Parflow::d_dim[4] = { tbox::Dimension::INVALID_DIMENSION, tbox::Dimension::INVALID_DIMENSION, 
-					    tbox::Dimension(3), tbox::Dimension(3)};
+const tbox::Dimension Parflow::d_dim[Parflow::number_of_grid_types] = { 
+   tbox::Dimension::INVALID_DIMENSION, 
+   tbox::Dimension(3), 
+   tbox::Dimension(3)};
+
+const Parflow::GridType Parflow::grid_types[number_of_grid_types] = {
+   Parflow::invalid_grid_type,
+   Parflow::flow_3D_grid_type,
+   Parflow::surface_2D_grid_type};
+
+
+const std::string Parflow::grid_type_names[number_of_grid_types] = {
+   "Invalid",
+   "Flow3D",
+   "Surface2D"};
+
 
 const std::string Parflow::VARIABLE_NAME = "variable";
 
@@ -125,22 +139,22 @@ void Parflow::applyGradientDetector(
 
 }
 
-tbox::Pointer<hier::PatchHierarchy > Parflow::getPatchHierarchy(int dim) const
+tbox::Pointer<hier::PatchHierarchy > Parflow::getPatchHierarchy(GridType grid_type) const
 {
-   return d_patch_hierarchy[dim];
+   return d_patch_hierarchy[grid_type];
 }
 
-tbox::Pointer<mesh::GriddingAlgorithm > Parflow::getGriddingAlgorithm(int dim) const
+tbox::Pointer<mesh::GriddingAlgorithm > Parflow::getGriddingAlgorithm(GridType grid_type) const
 {
-   return d_patch_hierarchy[dim];
+   return d_patch_hierarchy[grid_type];
 }
 
-tbox::Array<int> Parflow::getTagBufferArray(int dim) const
+tbox::Array<int> Parflow::getTagBufferArray(GridType grid_type) const
 {
-   return d_tag_buffer_array[dim];
+   return d_tag_buffer_array[grid_type];
 }
 
-tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(int dim, std::string name) 
+tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(GridType grid_type, std::string name) 
 {
    
    tbox::Pointer<tbox::Database> input_db(new tbox::MemoryDatabase(name));
@@ -156,13 +170,13 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(int dim, std::s
    upper[0] = lower[0] +  BackgroundNX(bg) - 1;
    upper[1] = lower[1] +  BackgroundNY(bg) - 1;
 
-   if(dim == 2) {
+   if(grid_type == surface_2D_grid_type) {
       upper[2] = lower[2];
    } else {
       upper[2] = lower[2] +  BackgroundNZ(bg) - 1;
    }
 
-   tbox::DatabaseBox box(d_dim[3], lower, upper);
+   tbox::DatabaseBox box(d_dim[grid_type], lower, upper);
 
    tbox::Array<tbox::DatabaseBox> domain(1);
    domain[0] = box;
@@ -179,8 +193,8 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(int dim, std::s
    x_up[1] = BackgroundYLower(bg) + BackgroundNY(bg) * BackgroundDY(bg);
    x_up[2] = BackgroundZLower(bg) + BackgroundNZ(bg) * BackgroundDZ(bg);
 
-   input_db -> putDoubleArray("x_lo", x_lo, d_dim[3]);
-   input_db -> putDoubleArray("x_up", x_up, d_dim[3]);
+   input_db -> putDoubleArray("x_lo", x_lo, d_dim[grid_type]);
+   input_db -> putDoubleArray("x_up", x_up, d_dim[grid_type]);
 
    return input_db;
 }
@@ -189,18 +203,19 @@ void Parflow::initializePatchHierarchy(double time)
 {
    NULL_USE(time);
 
-   for(int d = 2; d < 4; ++d) {
+   for(int grid_type_index = 1; grid_type_index < 3; ++grid_type_index) {
+      GridType grid_type = grid_types[grid_type_index];
 
-      std::string grid_geometry_name("CartesianGeometry" + tbox::Utilities::intToString(d,1) + "D");
+      std::string grid_geometry_name("CartesianGeometry" + grid_type_names[grid_type]);
       
       tbox::Pointer<geom::CartesianGridGeometry > grid_geometry(
 	 new geom::CartesianGridGeometry(
-	    d_dim[d],
+	    d_dim[grid_type],
 	    grid_geometry_name,
-	    setupGridGeometryDatabase(d, grid_geometry_name)));
+	    setupGridGeometryDatabase(grid_type, grid_geometry_name)));
       
-      std::string patch_hierarchy_name("PatchHierarchy" + tbox::Utilities::intToString(d,1) + "D");
-      d_patch_hierarchy[d] = new hier::PatchHierarchy(patch_hierarchy_name,
+      std::string patch_hierarchy_name("PatchHierarchy" + grid_type_names[grid_type]);
+      d_patch_hierarchy[grid_type] = new hier::PatchHierarchy(patch_hierarchy_name,
 						      grid_geometry);
       
       hier::VariableDatabase *variable_database(
@@ -209,7 +224,7 @@ void Parflow::initializePatchHierarchy(double time)
       int depth = 1;
       
       tbox::Pointer< pdat::CellVariable<double> > cell_state(
-	 new pdat::CellVariable<double>(d_dim[d], VARIABLE_NAME, depth));
+	 new pdat::CellVariable<double>(d_dim[grid_type], VARIABLE_NAME, depth));
       
       tbox::Pointer< hier::VariableContext > current_context(
 	 variable_database -> getContext(CURRENT_CONTEXT));
@@ -217,53 +232,53 @@ void Parflow::initializePatchHierarchy(double time)
       tbox::Pointer< hier::VariableContext > scratch_context(
 	 variable_database -> getContext(SCRATCH_CONTEXT));
       
-      hier::IntVector ghosts(d_dim[d], 1);
+      hier::IntVector ghosts(d_dim[grid_type], 1);
       
       getFromInput(d_input_db, false);
       
-      std::string standard_tag_and_initialize_name("StandardTagAndInitialize" + tbox::Utilities::intToString(d,1) + "D");
+      std::string standard_tag_and_initialize_name("StandardTagAndInitialize" + grid_type_names[grid_type]);
       tbox::Pointer< mesh::StandardTagAndInitialize > standard_tag_and_initialize(
 	 new mesh::StandardTagAndInitialize(
-	    d_dim[d],
+	    d_dim[grid_type],
 	    standard_tag_and_initialize_name, 
 	    this,
 	    d_input_db -> getDatabase(standard_tag_and_initialize_name)));
       
       tbox::Pointer< mesh::BergerRigoutsos > box_generator( 
-	 new mesh::BergerRigoutsos(d_dim[d]));
+	 new mesh::BergerRigoutsos(d_dim[grid_type]));
       
-      std::string load_balancer_name("LoadBalancer" + tbox::Utilities::intToString(d,1) + "D");
+      std::string load_balancer_name("LoadBalancer" + grid_type_names[grid_type]);
       tbox::Pointer< mesh::LoadBalanceStrategy > load_balancer(
-	 new mesh::TreeLoadBalancer(d_dim[d],
+	 new mesh::TreeLoadBalancer(d_dim[grid_type],
 				    load_balancer_name,
 				    d_input_db -> getDatabase(load_balancer_name)));
       
-      std::string gridding_algorithm_name("GriddingAlgorithm" + tbox::Utilities::intToString(d,1) + "D");      
-      d_gridding_algorithm[d] = 
+      std::string gridding_algorithm_name("GriddingAlgorithm" + grid_type_names[grid_type]);
+      d_gridding_algorithm[grid_type] = 
 	 new mesh::GriddingAlgorithm(
-	    d_dim[d],
+	    d_dim[grid_type],
 	    gridding_algorithm_name,
 	    d_input_db -> getDatabase(gridding_algorithm_name),
 	    standard_tag_and_initialize,
 	    box_generator,
 	    load_balancer);
       
-      d_tag_buffer_array[d].resizeArray(d_gridding_algorithm[d]->getMaxLevels());
-      for (int il = 0; il < d_gridding_algorithm[d]->getMaxLevels(); il++) {
-	 d_tag_buffer_array[d][il] = 1;
+      d_tag_buffer_array[grid_type].resizeArray(d_gridding_algorithm[grid_type]->getMaxLevels());
+      for (int il = 0; il < d_gridding_algorithm[grid_type]->getMaxLevels(); il++) {
+	 d_tag_buffer_array[grid_type][il] = 1;
       }
       
-      const hier::IntVector one_vector(d_dim[d], 1);
-      const hier::IntVector ratio(d_gridding_algorithm[d] -> getMaxLevels() > 1 ? 
-				  d_gridding_algorithm[d] -> getRatioToCoarserLevel(1) : one_vector);
+      const hier::IntVector one_vector(d_dim[grid_type], 1);
+      const hier::IntVector ratio(d_gridding_algorithm[grid_type] -> getMaxLevels() > 1 ? 
+				  d_gridding_algorithm[grid_type] -> getRatioToCoarserLevel(1) : one_vector);
 
       std::vector<hier::IntVector > fine_connector_gcw;
       std::vector<hier::IntVector > peer_connector_gcw;
-      d_gridding_algorithm[d] -> computeAllConnectorWidths(fine_connector_gcw,
+      d_gridding_algorithm[grid_type] -> computeAllConnectorWidths(fine_connector_gcw,
 							   peer_connector_gcw,
-							   *d_patch_hierarchy[d] );
+							   *d_patch_hierarchy[grid_type] );
       
-      d_patch_hierarchy[d]->getMappedBoxHierarchy().setMappedBoxLevelParameters(
+      d_patch_hierarchy[grid_type]->getMappedBoxHierarchy().setMappedBoxLevelParameters(
 	 0,
 	 ratio,
 	 fine_connector_gcw[0],
@@ -272,15 +287,15 @@ void Parflow::initializePatchHierarchy(double time)
       tbox::Pointer< hier::MappedBoxLevel > mapped_box_level(createMappedBoxLevelFromParflowGrid());
 
       
-      d_patch_hierarchy[d] -> makeNewPatchLevel(0, *mapped_box_level);
+      d_patch_hierarchy[grid_type] -> makeNewPatchLevel(0, *mapped_box_level);
 
-      tbox::Pointer<hier::PatchLevel> level(d_patch_hierarchy[d] -> getPatchLevel(0));
+      tbox::Pointer<hier::PatchLevel> level(d_patch_hierarchy[grid_type] -> getPatchLevel(0));
 
       for(int i = 4; i > 0; --i) {
 	 level -> getMappedBoxLevel() -> getPersistentOverlapConnectors().
 	    findOrCreateConnector(
 	       *level -> getMappedBoxLevel(),
-	       hier::IntVector(d_dim[d], i));
+	       hier::IntVector(d_dim[grid_type], i));
       }
    }
 }
@@ -323,7 +338,7 @@ tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGr
    hier::MappedBoxSet mapped_box_set;
    mapped_box_set.insert(mapped_box_set.begin(), mapped_box);
 
-   const hier::IntVector ratio(d_dim[3], 1);
+   const hier::IntVector ratio(d_dim[flow_3D_grid_type], 1);
 
    tbox::Pointer<hier::MappedBoxLevel> mapped_box_level(new hier::MappedBoxLevel(mapped_box_set,
 							   ratio));

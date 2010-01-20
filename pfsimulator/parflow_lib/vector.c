@@ -73,7 +73,7 @@ VectorUpdateCommHandle  *InitVectorUpdate(
    int          update_mode)
 {
 
-   int dim_type = -1;
+   Parflow::GridType grid_type = Parflow::invalid_grid_type;
    switch(vector -> type)
    {
       case cell_centered : 
@@ -81,23 +81,23 @@ VectorUpdateCommHandle  *InitVectorUpdate(
       case side_centered_y :
       case side_centered_z :
       {
-	 dim_type = 3;
+	 grid_type = Parflow::flow_3D_grid_type;
 	 break;
       }
       case cell_centered_2D : 
       {
-	 dim_type = 2;
+	 grid_type = Parflow::surface_2D_grid_type;
 	 break;
       }
       case non_samrai_centered : 
       {
-	 dim_type = -1;
+	 grid_type = Parflow::invalid_grid_type;
 	 break;
       }
    }
 
    CommHandle *amps_com_handle;
-   if(dim_type == -1)
+   if(grid_type == Parflow::invalid_grid_type)
    {
       
 #ifdef SHMEM_OBJECTS
@@ -112,9 +112,9 @@ VectorUpdateCommHandle  *InitVectorUpdate(
       
 #endif
    } else {
-      tbox::Dimension dim(GlobalsParflowSimulation -> getDim(dim_type));
+      tbox::Dimension dim(GlobalsParflowSimulation -> getDim(grid_type));
       if(vector -> boundary_fill_refine_algorithm.isNull()) {
-	 tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(dim_type));
+	 tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(grid_type));
 	 const int level_number = 0;
 	 
 	 vector -> boundary_fill_refine_algorithm = new xfer::RefineAlgorithm(dim);
@@ -299,7 +299,7 @@ Vector  *NewVectorType(
 
     new_vector = NewTempVector(grid, nc, num_ghost);
 
-    int dim_type = -1;
+    Parflow::GridType grid_type = Parflow::invalid_grid_type;
     switch(type)
     {
        case cell_centered : 
@@ -307,37 +307,37 @@ Vector  *NewVectorType(
        case side_centered_y :
        case side_centered_z :
        {
-	  dim_type = 3;
+	  grid_type = Parflow::flow_3D_grid_type;
 	  break;
        }
        case cell_centered_2D : 
        {
-	  dim_type = 2;
+	  grid_type = Parflow::surface_2D_grid_type;
 	  break;
        }
        case non_samrai_centered :
        {
-	  dim_type = -1;
+	  grid_type = Parflow::invalid_grid_type;
 	  break;
        }
     }
 
-    tbox::Dimension dim(GlobalsParflowSimulation -> getDim(dim_type));
+    tbox::Dimension dim(GlobalsParflowSimulation -> getDim(grid_type));
 
     hier::IntVector ghosts(dim, num_ghost);
 
     int index = 0;
-    if(dim_type > 0) {
+    if(grid_type > 0) {
        for(int i = 0; i < 2048; i++)
        {
-	  if(samrai_vector_ids[dim_type][i] == 0) {
+	  if(samrai_vector_ids[grid_type][i] == 0) {
 	     index = i;
 	     break;
 	  }
        }
     }
 
-    std::string variable_name("Variable_" + tbox::Utilities::intToString(dim_type, 1) + "_" +
+    std::string variable_name("Variable_" + tbox::Utilities::intToString(grid_type, 1) + "_" +
 			      tbox::Utilities::intToString(index, 4) );
 
     tbox::Pointer< hier::Variable > variable;
@@ -403,7 +403,7 @@ Vector  *NewVectorType(
        case side_centered_z :
        {
 
-	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(dim_type));
+	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(grid_type));
 	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 
 	  tbox::Pointer<hier::PatchDescriptor> patch_descriptor(hierarchy -> getPatchDescriptor());
@@ -413,7 +413,7 @@ Vector  *NewVectorType(
 	     variable->getPatchDataFactory()->cloneFactory(ghosts));
 	  
 	  
-	  samrai_vector_ids[dim_type][index] = new_vector -> samrai_id;
+	  samrai_vector_ids[grid_type][index] = new_vector -> samrai_id;
 	  new_vector -> table_index = index;
 	  
 	  std::cout << "samrai_id " << new_vector -> samrai_id << std::endl;
@@ -545,12 +545,12 @@ void     FreeVector(
        case side_centered_y :
        case side_centered_z :
        {
-	  int dim_type = 3;
+	  Parflow::GridType grid_type = Parflow::flow_3D_grid_type;
 	  if(vector -> type == cell_centered_2D) {
-	     dim_type = 2;
+	     grid_type = Parflow::surface_2D_grid_type;
 	  }
 
-	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(dim_type));
+	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(grid_type));
 	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 	  
 	  level -> deallocatePatchData(vector -> samrai_id);
@@ -559,7 +559,7 @@ void     FreeVector(
 	  patch_descriptor -> removePatchDataComponent(vector -> samrai_id);
 
 	  
-	  samrai_vector_ids[dim_type][vector -> table_index] = 0;
+	  samrai_vector_ids[grid_type][vector -> table_index] = 0;
 	  break;
        }
        case non_samrai_centered :

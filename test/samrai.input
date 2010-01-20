@@ -20,15 +20,15 @@ Parflow {
 
      regrid_timestep = 10
 
-     StandardTagAndInitialize3D {
+     StandardTagAndInitializeFlow3D {
           tagging_method = "GRADIENT_DETECTOR"
      }
 
-     LoadBalancer3D {
+     LoadBalancerFlow3D {
          // using default uniform load balance configuration
      }
 
-     GriddingAlgorithm3D {
+     GriddingAlgorithmFlow3D {
         max_levels = 1         // Maximum number of levels in hierarchy.
 
 // Note: For the following regridding information, data is required for each
@@ -57,15 +57,15 @@ Parflow {
                                       // boxes < efficiency * vol of large box
      }
 
-     StandardTagAndInitialize2D {
+     StandardTagAndInitializeSurface2D {
           tagging_method = "GRADIENT_DETECTOR"
      }
 
-     LoadBalancer2D {
+     LoadBalancerSurface2D {
          // using default uniform load balance configuration
      }
 
-     GriddingAlgorithm2D {
+     GriddingAlgorithmSurface2D {
         max_levels = 1         // Maximum number of levels in hierarchy.
 
 // Note: For the following regridding information, data is required for each
