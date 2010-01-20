@@ -44,16 +44,19 @@ PARALLEL_TESTS =
 ifeq (${AMPS},mpi1)
 
 PARALLEL_TESTS += \
-	default_single_parallel.tcl
+	default_single.tcl \
+	default_richards.tcl
 endif
 
-check:
+check: check_sequential check_parallel
+
+check_sequential:
 	@-for i in $(TESTS); \
 	do \
 	        make --no-print-directory testclean; \
 		echo "*****************************************************************************"; \
 		echo "Running $$i"; \
-		tclsh $$i; \
+		tclsh $$i 1 1 1; \
 	done
 	@-for i in $(SUBDIRS); \
 	do \
@@ -63,7 +66,7 @@ check:
 check_parallel:
 	@-for i in $(PARALLEL_TESTS); \
 	do \
-		for processor_topology in "1 1 2" "1 2 1" "2 1 1" "2 2 2" "3 3 3"; \
+		for processor_topology in "1 1 2" "1 2 1" "2 1 1" "2 2 2" "3 3 3" "1 1 4" "1 4 1" "4 1 1"; \
 		do \
 		        make --no-print-directory testclean; \
 			echo "*****************************************************************************"; \
@@ -71,6 +74,10 @@ check_parallel:
 			tclsh $$i $$processor_topology; \
 		done \
 	done
+	@-for i in $(SUBDIRS); \
+	do \
+	        (cd $$i; make); \
+	done 
 
 clean: testclean
 	@-for i in $(SUBDIRS); \

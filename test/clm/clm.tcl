@@ -17,9 +17,9 @@ pfset FileVersion 4
 # Process Topology
 #-----------------------------------------------------------------------------
 
-pfset Process.Topology.P        1
-pfset Process.Topology.Q        1
-pfset Process.Topology.R        1
+pfset Process.Topology.P        [lindex $argv 0]
+pfset Process.Topology.Q        [lindex $argv 1]
+pfset Process.Topology.R        [lindex $argv 2]
 
 #-----------------------------------------------------------------------------
 # Computational Grid
@@ -289,9 +289,21 @@ pfset Geom.domain.ICPressure.Value                      -2.0
 pfset Geom.domain.ICPressure.RefGeom                    domain
 pfset Geom.domain.ICPressure.RefPatch                   z-upper
 
+
+
+set num_processors [expr [pfget Process.Topology.P] * [pfget Process.Topology.Q] * [pfget Process.Topology.R]]
+for {set i 0} { $i <= $num_processors } {incr i} {
+    file delete drv_vegm.dat.$i
+    file copy  drv_vegm.dat drv_vegm.dat.$i
+    file delete drv_clmin.dat.$i
+    file copy drv_clmin.dat drv_clmin.dat.$i
+}
+
 #-----------------------------------------------------------------------------
 # Run and Unload the ParFlow output files
 #-----------------------------------------------------------------------------
+
+
 pfrun clm 
 pfundist clm 
 

@@ -16,38 +16,60 @@ ifeq (${PARFLOW_HAVE_CLM},yes)
 TESTS += clm.tcl
 endif
 
+PARALLEL_TESTS =
 
-check:
+ifeq (${AMPS},mpi1)
+
+PARALLEL_TESTS += \
+	clm.tcl
+endif
+
+check: check_sequential check_parallel
+
+check_sequential:
 	@-for i in $(TESTS); \
 	do \
 	        make --no-print-directory testclean; \
-		tclsh $$i; \
+		tclsh $$i 1 1 1; \
 	done
+
+check_parallel:
+	@-for i in $(PARALLEL_TESTS); \
+	do \
+		for processor_topology in "1 2 1" "2 1 1" "2 2 1" "3 3 1" "1 4 1" "4 1 1"; \
+		do \
+		        make --no-print-directory testclean; \
+			echo "*****************************************************************************"; \
+			echo "Running $$i on $$processor_topology"; \
+			tclsh $$i $$processor_topology; \
+		done \
+	done
+
 
 clean: testclean
 
 testclean:
 	@rm -f global_nt.scr
-	@rm -f clm_elog.txt.0
-	@rm -f washita.para.out.dat.0
-	@rm -f balance.txt.0
-	@rm -f alma_washita.output.txt.0
-	@rm -f washita.output.txt.0
-	@rm -f qflx_infl/*.bin.0
+	@rm -f clm_elog.txt.*
+	@rm -f washita.para.out.dat.*
+	@rm -f balance.txt.*
+	@rm -f alma_washita.output.txt.*
+	@rm -f washita.output.txt.*
+	@rm -f qflx_infl/*.bin.*
 	@rm -f clm.out.pftcl
-	@rm -f qflx_top_soil/*.bin.0
-	@rm -f swe_out/*.bin.0
-	@rm -f qflx_evap_veg/*.bin.0
-	@rm -f diag_out/*.dat.0
-	@rm -f eflx_soil_grnd/*.bin.0
-	@rm -f qflx_evap_soi/*.bin.0
-	@rm -f qflx_tran_veg/*.bin.0
-	@rm -f qflx_evap_tot/*.bin.0
-	@rm -f t_grnd/*.bin.0
-	@rm -f eflx_lwrad_out/*.bin.0
-	@rm -f eflx_sh_tot/*.bin.0
-	@rm -f eflx_lh_tot/*.bin.0
-	@rm -f qflx_evap_grnd/*.bin.0
+	@rm -f qflx_top_soil/*.bin.*
+	@rm -f swe_out/*.bin.*
+	@rm -f qflx_evap_veg/*.bin.*
+	@rm -f diag_out/*.dat.*
+	@rm -f eflx_soil_grnd/*.bin.*
+	@rm -f qflx_evap_soi/*.bin.*
+	@rm -f qflx_tran_veg/*.bin.*
+	@rm -f qflx_evap_tot/*.bin.*
+	@rm -f t_grnd/*.bin.*
+	@rm -f eflx_lwrad_out/*.bin.*
+	@rm -f eflx_sh_tot/*.bin.*
+	@rm -f eflx_lh_tot/*.bin.*
+	@rm -f qflx_evap_grnd/*.bin.*
 	@rm -f *.pfb*
 	@rm -f *.silo*
 	@rm -f *.pfsb*
@@ -60,3 +82,6 @@ testclean:
 	@rm -fr default_richards.out
 	@rm -fr clm.out
 	@rm -fr test.log.*
+	@rm -fr drv_clmin.dat.*
+	@rm -fr drv_vegm.dat.*
+
