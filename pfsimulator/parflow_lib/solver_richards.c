@@ -1735,6 +1735,10 @@ PFModule *SolverRichardsInitInstanceXtra()
    {
       subgrid = SubgridArraySubgrid(all_subgrids, i);
       new_subgrid = DuplicateSubgrid(subgrid);
+// SSS
+//      SubgridIZ(new_subgrid) = 0;
+      Background  *bg = GlobalsBackground;
+      SubgridIZ(new_subgrid) = BackgroundIZ(bg) + GlobalsR;
       SubgridNZ(new_subgrid) = 1;
       AppendSubgrid(new_subgrid, new_all_subgrids);
    }

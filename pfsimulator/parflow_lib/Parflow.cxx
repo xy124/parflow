@@ -171,22 +171,39 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(GridType grid_t
    lower[1] = BackgroundIY(bg);
    lower[2] = BackgroundIZ(bg);
 
+   double x_lo[3];
+   x_lo[0] = BackgroundXLower(bg);
+   x_lo[1] = BackgroundYLower(bg);
+   x_lo[2] = BackgroundZLower(bg);
+
    int upper[3];
    upper[0] = lower[0] +  BackgroundNX(bg) - 1;
    upper[1] = lower[1] +  BackgroundNY(bg) - 1;
+
+   double x_up[3];
+   x_up[0] = BackgroundXLower(bg) + BackgroundNX(bg) * BackgroundDX(bg);
+   x_up[1] = BackgroundYLower(bg) + BackgroundNY(bg) * BackgroundDY(bg);
+
+   int p = GlobalsNumProcsZ;
 
    switch(grid_type) 
    {
       case invalid_grid_type :
 	 // SGS FIXME Should error here
+	 break;
       case flow_3D_grid_type :
 	 upper[2] = lower[2] +  BackgroundNZ(bg) - 1;
+	 x_up[2]  = BackgroundZLower(bg) + BackgroundNZ(bg) * BackgroundDZ(bg);
 	 break;
       case surface_2D_grid_type :
-	 upper[2] = lower[2];
+	 upper[2] = lower[2] + p - 1;
+	 // SGS FIXME is this correct?
+	 x_up[2]  = BackgroundZLower(bg) + p * BackgroundDZ(bg);
 	 break;
       case clm_topsoil_grid_type :
 	 upper[2] = lower[2] + 10 - 1;
+	 // SGS FIXME is this correct?
+	 x_up[2]  = BackgroundZLower(bg) + 10 * BackgroundDZ(bg);
 	 break;
    }
 
@@ -196,16 +213,6 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(GridType grid_t
    domain[0] = box;
 
    input_db -> putDatabaseBoxArray("domain_boxes", domain);
-
-   double x_lo[3];
-   x_lo[0] = BackgroundXLower(bg);
-   x_lo[1] = BackgroundYLower(bg);
-   x_lo[2] = BackgroundZLower(bg);
-
-   double x_up[3];
-   x_up[0] = BackgroundXLower(bg) + BackgroundNX(bg) * BackgroundDX(bg);
-   x_up[1] = BackgroundYLower(bg) + BackgroundNY(bg) * BackgroundDY(bg);
-   x_up[2] = BackgroundZLower(bg) + BackgroundNZ(bg) * BackgroundDZ(bg);
 
    input_db -> putDoubleArray("x_lo", x_lo, d_dim[grid_type]);
    input_db -> putDoubleArray("x_up", x_up, d_dim[grid_type]);
@@ -298,7 +305,7 @@ void Parflow::initializePatchHierarchy(double time)
 	 fine_connector_gcw[0],
 	 peer_connector_gcw[0]);
       
-      tbox::Pointer< hier::MappedBoxLevel > mapped_box_level(createMappedBoxLevelFromParflowGrid());
+      tbox::Pointer< hier::MappedBoxLevel > mapped_box_level(createMappedBoxLevelFromParflowGrid(grid_type));
 
       
       d_patch_hierarchy[grid_type] -> makeNewPatchLevel(0, *mapped_box_level);
@@ -325,24 +332,54 @@ void Parflow::getFromInput(
    }
 }
 
-tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGrid(void)
+tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGrid(GridType grid_type)
 {
 
    Grid *grid = CreateGrid(GlobalsUserGrid);
 
    // Build a box based off of Parflow grid
-   const hier::Index lower( SubgridIX(GridSubgrid(grid, 0)),
-			    SubgridIY(GridSubgrid(grid, 0)),
-			    SubgridIZ(GridSubgrid(grid, 0)));
+   hier::Index lower(d_dim[grid_type]);
+   lower[0] = SubgridIX(GridSubgrid(grid, 0)),
+   lower[1] = SubgridIY(GridSubgrid(grid, 0));
 
-   const hier::Index upper ( lower[0] + SubgridNX(GridSubgrid(grid, 0)) - 1,
-			     lower[1] + SubgridNY(GridSubgrid(grid, 0)) - 1,
-			     lower[2] + SubgridNZ(GridSubgrid(grid, 0)) - 1);
 
+   hier::Index upper(d_dim[grid_type]);
+   upper[0] = lower[0] + SubgridNX(GridSubgrid(grid, 0)) - 1;
+   upper[1] = lower[1] + SubgridNY(GridSubgrid(grid, 0)) - 1;
+
+   int R = GlobalsNumProcsZ;
+   int r = GlobalsR;
+
+   switch(grid_type) 
+   {
+      case invalid_grid_type :
+	 // SGS FIXME Should error here
+	 break;
+      case flow_3D_grid_type :
+      {
+	 lower[2] = SubgridIZ(GridSubgrid(grid, 0));
+	 upper[2] = lower[2] + SubgridNZ(GridSubgrid(grid, 0)) - 1;
+	 break;
+      }
+      case surface_2D_grid_type :
+      {
+	 Background  *bg = GlobalsBackground;
+	 lower[2] = BackgroundIZ(bg) + r;
+	 upper[2] = lower[2];
+	 break;
+      }
+      case clm_topsoil_grid_type :
+      {
+	 lower[2] = SubgridIZ(GridSubgrid(grid, 0));
+	 upper[2] = lower[2] + 10 - 1;
+	 break;
+      }
+   }
+   
    hier::Box box(lower, upper);
-
-   std::cout << "In Parflow Grid create box " << box << std::endl;
-
+   
+   std::cout << "In Parflow Grid create box " << box << " for grid type " << grid_type << std::endl;
+   
    // Build a mapped box and insert into layer.  
    const int local_index = 0;
    const int my_rank = tbox::SAMRAI_MPI::getRank();

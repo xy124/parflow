@@ -109,7 +109,7 @@ public:
 
   private:
 
-   SAMRAI::tbox::Pointer<SAMRAI::hier::MappedBoxLevel> createMappedBoxLevelFromParflowGrid(void);
+   SAMRAI::tbox::Pointer<SAMRAI::hier::MappedBoxLevel> createMappedBoxLevelFromParflowGrid(GridType grid_type);
 
    SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> setupGridGeometryDatabase(GridType grid_type, std::string name);
 

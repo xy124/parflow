@@ -569,6 +569,11 @@ void     FreeVector(
 	     grid_type = Parflow::surface_2D_grid_type;
 	  }
 
+	 if(!vector -> boundary_fill_refine_algorithm.isNull()) {
+	    vector -> boundary_fill_refine_algorithm.setNull();
+	    vector -> boundary_fill_schedule.setNull();
+	 }
+
 	  tbox::Pointer<hier::PatchHierarchy > hierarchy(GlobalsParflowSimulation -> getPatchHierarchy(grid_type));
 	  tbox::Pointer<hier::PatchLevel > level(hierarchy -> getPatchLevel(0));
 	  

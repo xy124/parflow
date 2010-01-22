@@ -151,6 +151,13 @@ SubgridArray   *DistributeUserGrid(
 				     0, 0, 0,
 				     pqr_to_process(p, q, r, P, Q, R)),
 			  all_subgrids);
+
+	    if( pqr_to_process(p, q, r, P, Q, R) == amps_Rank(amps_CommWorld)) 
+	    {
+	       GlobalsP = p;
+	       GlobalsQ = q;
+	       GlobalsR = r;
+	    }
 	 }
 
    return all_subgrids;

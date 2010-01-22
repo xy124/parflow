@@ -56,6 +56,12 @@ public:
    int      num_procs_y;      /* number of processes in y */
    int      num_procs_z;      /* number of processes in z */
 
+
+   /* This process in PxQxR process grid */
+   int      p;  
+   int      q;  
+   int      r;  
+
    /* RDF the following just doesn't seem to make sense here */
    Background     *background;
    Grid           *user_grid;        /* user specified grid */
@@ -111,6 +117,10 @@ amps_ThreadLocalDcl(extern IDB *, input_database);
 #define GlobalsNumProcsX       (globals -> num_procs_x)
 #define GlobalsNumProcsY       (globals -> num_procs_y)
 #define GlobalsNumProcsZ       (globals -> num_procs_z)
+
+#define GlobalsP       (globals -> p)
+#define GlobalsQ       (globals -> q)
+#define GlobalsR       (globals -> r)
 
 #define GlobalsBackground      (globals -> background)
 #define GlobalsUserGrid        (globals -> user_grid)
