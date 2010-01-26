@@ -64,6 +64,7 @@ amps_Handle amps_IRecv (amps_Comm comm , int source , amps_Invoice invoice );
 
 /* amps_newhandle.c */
 amps_Handle amps_NewHandle (amps_Comm comm , int id , amps_Invoice invoice , amps_Package package );
+void amps_FreeHandle(amps_Handle handle);
 
 /* amps_newpackage.c */
 amps_Package amps_NewPackage (amps_Comm comm , int num_send , int *dest , amps_Invoice *send_invoices , int num_recv , int *src , amps_Invoice *recv_invoices );

@@ -332,15 +332,15 @@ typedef struct
    int            num_send;
    int           *dest;
    amps_Invoice  *send_invoices;
-   
+
    int            num_recv;
    int           *src;
    amps_Invoice  *recv_invoices;
-   
+
+   MPI_Request   *requests;
+
    int            recv_remaining;
    
-   MPI_Request     *requests;
-      
 } amps_PackageStruct;
 
 typedef amps_PackageStruct *amps_Package;
@@ -619,9 +619,6 @@ On most ports \Ref{amps_ISend} and \Ref{amps_Send} are identical.
 
 #define amps_new(comm, size) malloc(size)
 #define amps_free(comm, buf) free((char*)buf)
-
-
-#define amps_FreeHandle(handle) free((handle));
 
 /**
 
