@@ -84,6 +84,14 @@
 #undef HAVE_CEGDB
 #endif
 
+/*
+ * SAMRAI
+ */
+
+#ifndef PARFLOW_HAVE_SAMRAI
+#undef PARFLOW_HAVE_SAMRAI
+#endif
+
 
 /*
  * Silo 
