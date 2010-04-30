@@ -221,6 +221,7 @@ void printMaxMemory(FILE *log_file)
 
 #endif
 
+#ifdef __linux__
    /*
     * Print out info from Linux proc file.
     */
@@ -248,6 +249,8 @@ void printMaxMemory(FILE *log_file)
 	 fprintf(log_file, "\n\nEND(Contents of %s)\n", procfilename); 
       }
    }
+#endif
+
 }
 
 

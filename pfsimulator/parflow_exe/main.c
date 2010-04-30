@@ -72,6 +72,7 @@ int main (int argc , char *argv [])
     *-----------------------------------------------------------------------*/
    
    tbox::SAMRAI_MPI::init(&argc, &argv);
+   tbox::SAMRAIManager::initialize();
    tbox::SAMRAIManager::startup();
    
    // SGS FIXME remove this
@@ -191,7 +192,7 @@ int main (int argc , char *argv [])
       if (is_from_restart) {
 	 restart_manager->
 	    openRestartFile(restart_read_dirname, restore_num, 
-			    tbox::SAMRAI_MPI::getNodes() );
+			    amps_Size() );
       }
 
 
@@ -307,6 +308,7 @@ int main (int argc , char *argv [])
     * Shutdown SAMRAI and MPI.
        *-----------------------------------------------------------------------*/
    tbox::SAMRAIManager::shutdown();
+   tbox::SAMRAIManager::finalize();
    tbox::SAMRAI_MPI::finalize();
 
    return 0;

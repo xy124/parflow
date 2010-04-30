@@ -214,8 +214,8 @@ tbox::Pointer<tbox::Database> Parflow::setupGridGeometryDatabase(GridType grid_t
 
    input_db -> putDatabaseBoxArray("domain_boxes", domain);
 
-   input_db -> putDoubleArray("x_lo", x_lo, d_dim[grid_type]);
-   input_db -> putDoubleArray("x_up", x_up, d_dim[grid_type]);
+   input_db -> putDoubleArray("x_lo", x_lo, d_dim[grid_type].getValue());
+   input_db -> putDoubleArray("x_up", x_up, d_dim[grid_type].getValue());
 
    return input_db;
 }
@@ -347,7 +347,6 @@ tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGr
    upper[0] = lower[0] + SubgridNX(GridSubgrid(grid, 0)) - 1;
    upper[1] = lower[1] + SubgridNY(GridSubgrid(grid, 0)) - 1;
 
-   int R = GlobalsNumProcsZ;
    int r = GlobalsR;
 
    switch(grid_type) 
@@ -382,7 +381,7 @@ tbox::Pointer< hier::MappedBoxLevel > Parflow::createMappedBoxLevelFromParflowGr
    
    // Build a mapped box and insert into layer.  
    const int local_index = 0;
-   const int my_rank = tbox::SAMRAI_MPI::getRank();
+   const int my_rank = amps_Rank();
 
    hier::MappedBox mapped_box( box, local_index, my_rank );
 
