@@ -232,9 +232,9 @@ if (${PARFLOW_ENABLE_NETCDF})
       set(PARFLOW_HAVE_NETCDF "yes")
       set(HAVE_NETCDF ${PARFLOW_HAVE_NETCDF})
     endif (${NETCDF_FOUND})
-  endif (${NETCDF_FOUND})
+  endif (${netCDF_FOUND})
   find_package(CURL)
-endif (${PARFLOW_ENABLE_NETCDF} OR DEFINED NETCDF_DIR OR DEFINED NETCDF_INCLUDE_DIR OR DEFINED NETCDF_LIBRARY)
+endif (${PARFLOW_ENABLE_NETCDF})
 
 #-----------------------------------------------------------------------------
 # HDF5

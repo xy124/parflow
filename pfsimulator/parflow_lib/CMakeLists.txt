@@ -43,6 +43,7 @@ set (SRC_FILES_CONST advect.F
   l2_error_norm.c
   line_process.c
   logging.c
+  metadata.c
   matdiag_scale.c
   max_field_value.c
   melissa.c
