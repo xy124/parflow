@@ -60,10 +60,17 @@
 
 #define PF_CLM_MAX_ROOT_NZ 20
 
+// quick time measuring:
+#include <time.h>
+#define MAX_ITERATIONS 1024
+int iteration = 0;
+clock_t iteration_times[MAX_ITERATIONS];
+clock_t writing_walltimes[MAX_ITERATIONS];
+clock_t start_writing;
+
 /*--------------------------------------------------------------------------
  * Structures
  *--------------------------------------------------------------------------*/
-
 typedef struct {
   PFModule *permeability_face;
   PFModule *advect_concen;
@@ -1553,6 +1560,11 @@ SetupRichards(PFModule * this_module)
       instance_xtra->file_number++;
     }
   }                             /* End if take_more_time_steps */
+
+  if (amps_Rank(amps_CommWorld) == 0)
+  {
+      printf("CLOCKS_PER_SEC: %d\n", CLOCKS_PER_SEC);
+  }
 }
 
 void
@@ -2977,6 +2989,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       // This allows us to measure the time needed to calculate one dumpinterval:
       PrintTimeCount("Dump");
 
+      start_writing = clock();
 #ifdef HAVE_FLOWVR
       /**************************************************************/
       /* FlowVR output                                              */
@@ -3353,6 +3366,9 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           printf("Waterstorage(t=%g) = %g\n", t, waterstorage);
         }
         // TODO: maybe write it to a file too...
+      }
+      if (rank == 0 && iteration < MAX_ITERATIONS) {
+          writing_walltimes[iteration] = clock() - start_writing;
       }
     }                           // End of if (dump_files)
 
@@ -3840,6 +3856,11 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       PUSH_NVTX("RichardsExclude1stTimeStepIndex",6)
       first_tstep = 0;
     }
+
+    if (rank == 0 && iteration < MAX_ITERATIONS) {
+        iteration_times[iteration] = clock();
+        iteration++;
+    }
   }                             /* ends do for time loop */
   while (take_more_time_steps);
 #ifdef HAVE_FLOWVR
@@ -3849,6 +3870,16 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
     FlowVREnd(&snapshot);
   }
 #endif
+
+  // print our timing information:
+  if (rank == 0)
+  {
+      for (int i = 0; i < iteration; i++) {
+          printf("iteration end at: %lu clocks\n", iteration_times[i]);
+          printf("time spent writing: %lu clocks\n", writing_walltimes[i]);
+      }
+  }
+
 
 
   EndTiming(RichardsExclude1stTimeStepIndex);
