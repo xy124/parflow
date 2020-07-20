@@ -71,16 +71,16 @@ EXTERN EXPORT(int, Parflow_Init) (Tcl_Interp * interp);
  *
  * DllEntryPoint --
  *
- *	This wrapper function is used by Windows to invoke the
- *	initialization code for the DLL.  If we are compiling
- *	with Visual C++, this routine will be renamed to DllMain.
- *	routine.
+ *      This wrapper function is used by Windows to invoke the
+ *      initialization code for the DLL.  If we are compiling
+ *      with Visual C++, this routine will be renamed to DllMain.
+ *      routine.
  *
  * Results:
- *	Returns TRUE;
+ *      Returns TRUE;
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -272,9 +272,11 @@ EXPORT(int, Parflow_Init)(Tcl_Interp * interp)
                     (ClientData)data, (Tcl_CmdDeleteProc*)NULL);
   Tcl_CreateCommand(interp, "Parflow::pfflintslawbybasin", (Tcl_CmdProc*)FlintsLawByBasinCommand,
                     (ClientData)data, (Tcl_CmdDeleteProc*)NULL);
-
-  //NBE: Adding another write module
   Tcl_CreateCommand(interp, "Parflow::pfvtksave", (Tcl_CmdProc*)SavePFVTKCommand,
+                    (ClientData)data, (Tcl_CmdDeleteProc*)NULL);
+  Tcl_CreateCommand(interp, "Parflow::pfpatchysolid", (Tcl_CmdProc*)MakePatchySolidCommand,
+                    (ClientData)data, (Tcl_CmdDeleteProc*)NULL);
+  Tcl_CreateCommand(interp, "Parflow::pfsolidfmtconvert", (Tcl_CmdProc*)pfsolFmtConvert,
                     (ClientData)data, (Tcl_CmdDeleteProc*)NULL);
 
 #ifdef SGS
@@ -286,7 +288,3 @@ EXPORT(int, Parflow_Init)(Tcl_Interp * interp)
 
   return Tcl_PkgProvide(interp, "parflow", "1.0");
 }
-
-
-
-

@@ -1,8 +1,79 @@
-cmake_minimum_required (VERSION 3.4)
+cmake_minimum_required (VERSION 3.14)
 
-project (PARFLOW C CXX Fortran)
+project (PARFLOW LANGUAGES C Fortran CXX)
+
+set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_C_STANDARD 11)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+
+#-----------------------------------------------------------------------------
+# Set accelerator backend
+#-----------------------------------------------------------------------------
+set(PARFLOW_ACCELERATOR_BACKEND "none" CACHE STRING "Set accelerator backend")
+
+if((${PARFLOW_ACCELERATOR_BACKEND} STREQUAL "none") OR ("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "NONE"))
+
+  set(PARFLOW_ACC_BACKEND 0)
+
+else((${PARFLOW_ACCELERATOR_BACKEND} STREQUAL "none") OR ("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "NONE"))
+
+  if(("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "cuda") OR ("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "CUDA"))
+
+  # Initialize CUDA
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(CMAKE_CUDA_COMPILER)
+      enable_language(CUDA)
+      set(CMAKE_CUDA_STANDARD 11)
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_70,code=sm_70 --expt-extended-lambda")
+      set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -G --ptxas-options=-v")
+      set(CMAKE_CUDA_FLAGS_RELEASE "-Xptxas ${CMAKE_CUDA_FLAGS_RELEASE}")
+      set(CMAKE_CUDA_HOST_COMPILER mpicxx)
+      message(STATUS "Found CUDA ${CMAKE_CUDA_COMPILER_VERSION} at ${CMAKE_CUDA_COMPILER}")
+      set(PARFLOW_HAVE_CUDA "yes")
+      set(PARFLOW_ACC_BACKEND 1)
+    else(CMAKE_CUDA_COMPILER)
+      message(FATAL_ERROR "ERROR: CUDA installation not found")
+    endif(CMAKE_CUDA_COMPILER)
+
+  # Include RapidsAI Memory Manager (RMM) for pool allocation
+  # @MCB 04/16/2020: This should probably be moved outside of the CUDA block at some point
+  #   so other accelerators have the option to use it as well.
+    if(DEFINED RMM_ROOT)
+      find_path(RMM_INCLUDE "rmm" HINTS "${RMM_ROOT}/include")
+      find_library(RMM_LIBRARY "rmm" HINTS "${RMM_ROOT}/lib")
+      if(RMM_INCLUDE AND RMM_LIBRARY)
+        message(STATUS "RMM: RMM_LIBRARY set to ${RMM_LIBRARY}")
+        message(STATUS "RMM: RMM_INCLUDE set to ${RMM_INCLUDE}")
+        add_library(rmm SHARED IMPORTED ${RMM_LIBRARY})
+        set_target_properties(rmm PROPERTIES IMPORTED_LOCATION ${RMM_LIBRARY})
+      # PARFLOW_HAVE_RMM is not defined in parflow_config.h because because it is
+      # only set for the compilation of parflow_exe, parflow_lib, and kinsol sources.
+      # RMM must be initialized before it is used, so, for example,
+      # the amps tests would fail if used across all compiles.
+        set(PARFLOW_HAVE_RMM "yes")
+      else(RMM_INCLUDE AND RMM_LIBRARY)
+        message(FATAL_ERROR "ERROR: RMM installation not found")
+      endif(RMM_INCLUDE AND RMM_LIBRARY)
+      message(STATUS "ACCELERATOR: Compiling with CUDA and RMM")
+    else(DEFINED RMM_ROOT)
+      message(STATUS "ACCELERATOR: Compiling with CUDA (RMM not used)")
+    endif(DEFINED RMM_ROOT)
+
+  elseif(("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "omp") OR ("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "OMP"))
+
+    message(STATUS "ACCELERATOR: Compiling ParFlow with backend accelerator OpenMP")
+  # Enable C and CXX -fopenmp flag, enable ParFlow defines.
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+    set(PARFLOW_HAVE_OMP "yes")
+    set(PARFLOW_ACC_BACKEND 2)
+  else()
+    message(FATAL_ERROR "ERROR: Unknown backend type! PARFLOW_ACCELERATOR_BACKEND=${PARFLOW_ACCELERATOR_BACKEND} does not exist!")
+  endif()
+
+endif((${PARFLOW_ACCELERATOR_BACKEND} STREQUAL "none") OR ("${PARFLOW_ACCELERATOR_BACKEND}" STREQUAL "NONE"))
 
 #-----------------------------------------------------------------------------
 # Version number
@@ -13,7 +84,6 @@ include (Version)
 #
 
 include(GetGitRevisionDescription)
-#git_describe(PARFLOW_VERSION --tags)
 git_describe(PARFLOW_VERSION --tags)
 
 # If not building with git then get version from file
@@ -39,12 +109,36 @@ include(CMakeDependentOption)
 # Use RPATH in install, many mpicc scripts use RPATH so default
 # behavior of CMAKE to remove RPATH from installed executables is not
 # so good.
+#SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# use, i.e. don't skip the full RPATH for the build tree
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+
+# the RPATH to be used when installing, but only if it's not a system directory
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+IF("${isSystemDir}" STREQUAL "-1")
+   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+ENDIF("${isSystemDir}" STREQUAL "-1")
 
 # Set AMPS communication layer
 set(PARFLOW_AMPS_LAYER "seq" CACHE STRING "Set the Communications layer to use")
-set_property(CACHE PARFLOW_AMPS_LAYER PROPERTY STRINGS seq mpi1 smpi oas3 win32)
+set_property(CACHE PARFLOW_AMPS_LAYER PROPERTY STRINGS seq mpi1 cuda smpi oas3 win32)
 set(AMPS ${PARFLOW_AMPS_LAYER})
+
+if((NOT PARFLOW_HAVE_CUDA) AND (${PARFLOW_AMPS_LAYER} STREQUAL "cuda"))
+  message(FATAL_ERROR "ERROR: Using PARFLOW_AMPS_LAYER=cuda requires building with GPU acceleration!")
+endif((NOT PARFLOW_HAVE_CUDA) AND (${PARFLOW_AMPS_LAYER} STREQUAL "cuda"))
 
 option(PARFLOW_AMPS_SEQUENTIAL_IO "Use AMPS single file I/O model for output of PFB files" "FALSE")
 
@@ -63,7 +157,8 @@ if (${PARFLOW_HAVE_OAS3})
   set (HAVE_OAS3 ${PARFLOW_HAVE_OAS3})
 endif (${PARFLOW_HAVE_OAS3})
 
-set (PARFLOW_AMPS_LAYER_REQUIRE_MPI mpi1 smpi oas3)
+set (PARFLOW_AMPS_LAYER_REQUIRE_MPI cuda mpi1 smpi oas3)
+set (PARFLOW_TEST_PARALLEL cuda mpi1 smpi)
 
 # Check for MPI only if AMPS requires it
 if ( ${PARFLOW_AMPS_LAYER} IN_LIST PARFLOW_AMPS_LAYER_REQUIRE_MPI )
@@ -137,8 +232,9 @@ if (${PARFLOW_ENABLE_NETCDF})
       set(PARFLOW_HAVE_NETCDF "yes")
       set(HAVE_NETCDF ${PARFLOW_HAVE_NETCDF})
     endif (${NETCDF_FOUND})
-  endif()
-endif (${PARFLOW_ENABLE_NETCDF})
+  endif (${NETCDF_FOUND})
+  find_package(CURL)
+endif (${PARFLOW_ENABLE_NETCDF} OR DEFINED NETCDF_DIR OR DEFINED NETCDF_INCLUDE_DIR OR DEFINED NETCDF_LIBRARY)
 
 #-----------------------------------------------------------------------------
 # HDF5
@@ -230,7 +326,9 @@ endif (${PARFLOW_ENABLE_SLURM} OR DEFINED SLURM_ROOT)
 #-----------------------------------------------------------------------------
 # libm
 #-----------------------------------------------------------------------------
-find_library(PARFLOW_LIBM m)
+if (NOT DEFINED PARFLOW_LIBM)
+  find_library(PARFLOW_LIBM m)
+endif (NOT DEFINED PARFLOW_LIBM)
 
 #-----------------------------------------------------------------------------
 # Valgrind
@@ -241,7 +339,7 @@ if (${PARFLOW_ENABLE_VALGRIND} )
   find_program( PARFLOW_MEMORYCHECK_COMMAND valgrind)
   set(PARFLOW_HAVE_MEMORYCHECK "yes")
   set(PARFLOW_MEMORYCHECK_SUPPRESSIONS_FILE "${PROJECT_SOURCE_DIR}/bin/valgrind.sup")
-  set(PARFLOW_MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --suppressions=${PARFLOW_MEMORYCHECK_SUPPRESSIONS_FILE}")
+  set(PARFLOW_MEMORYCHECK_COMMAND_OPTIONS "--gen-suppressions=all --leak-check=full --suppressions=${PARFLOW_MEMORYCHECK_SUPPRESSIONS_FILE}")
 endif (${PARFLOW_ENABLE_VALGRIND})
 
 #-----------------------------------------------------------------------------
@@ -257,6 +355,20 @@ if (${PARFLOW_ENABLE_FLOWVR} OR DEFINED FLOWVR_ROOT)
     set(HAVE_FLOWVR ${PARFLOW_HAVE_FLOWVR})
   endif (${FLOWVR_FOUND} AND ${fca_FOUND})
 endif (${PARFLOW_ENABLE_FLOWVR} OR DEFINED FLOWVR_ROOT)
+
+#-----------------------------------------------------------------------------
+# Ptrace
+#-----------------------------------------------------------------------------
+set (PARFLOW_ENABLE_ETRACE False CACHE BOOL "Build with etrace")
+if (${PARFLOW_ENABLE_ETRACE})
+  set(PARFLOW_HAVE_ETRACE "yes")
+
+  set(PARFLOW_ETRACE_COMPILE_FLAGS "-finstrument-functions")
+  set(PARFLOW_ETRACE_LIBRARY "etrace")
+else (${PARFLOW_ENABLE_ETRACE})
+  set(PARFLOW_ETRACE_COMPILE_FLAGS "")
+  set(PARFLOW_ETRACE_LIBRARY "")
+endif (${PARFLOW_ENABLE_ETRACE})
 
 #-----------------------------------------------------------------------------
 # Fortran checks
@@ -421,7 +533,7 @@ endif ()
 # -----------------------------------------------------------------------------
 configure_file (cmake/parflow_config.h.in include/parflow_config.h)
 
-configure_file (cmake/version.h.in include/version.h)
+configure_file (cmake/pfversion.h.in include/pfversion.h)
 
 configure_file (cmake/Makefile.config.in config/Makefile.config)
 configure_file (cmake/pf-cmake-env.sh.in config/pf-cmake-env.sh)
@@ -445,6 +557,7 @@ set (PARFLOW_ENABLE_SIMULATOR True CACHE BOOL "Enable building of the Parflow si
 if ( ${PARFLOW_ENABLE_SIMULATOR} )
   add_subdirectory (pfsimulator)
   add_subdirectory (test)
+  add_subdirectory (examples)
 endif ()
 
 set (PARFLOW_ENABLE_TOOLS True CACHE BOOL "Enable building of the Parflow tools")
@@ -468,8 +581,31 @@ include (CTest)
 
 set (PARFLOW_ENABLE_LATEX False CACHE BOOL "Enable LaTEX and building of documentation")
 if ( ${PARFLOW_ENABLE_LATEX} )
-  add_subdirectory(pftools/docs/usr_manual)
+  add_subdirectory(docs/manuals)
 endif()
 
 install (DIRECTORY ${CMAKE_BINARY_DIR}/config/ DESTINATION config)
+# Test script for docker builds
+install(PROGRAMS bin/parflow-docker-test DESTINATION bin)
 
+#-----------------------------------------------------------------------------
+# Doxygen
+#-----------------------------------------------------------------------------
+set (PARFLOW_ENABLE_DOXYGEN False CACHE BOOL "Enable Doxygen and building of code documentation")
+
+if ( ${PARFLOW_ENABLE_DOXYGEN} )
+  find_package(Doxygen)
+  if (DOXYGEN_FOUND)
+    set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/docs/doxygen)
+    set(DOXYGEN_IMAGE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/images)
+
+    message("Doxygen build started")
+
+    doxygen_add_docs(doxygen
+      COMMENT "Generating API documentation with Doxygen"
+      ${PROJECT_SOURCE_DIR})
+
+  else (DOXYGEN_FOUND)
+    message("Doxygen need to be installed to generate the doxygen documentation")
+  endif (DOXYGEN_FOUND)
+endif()

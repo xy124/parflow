@@ -33,7 +33,7 @@
 
 #include "parflow.h"
 #include "grgeometry.h"
-
+#include "clustering.h"
 
 /*--------------------------------------------------------------------------
  * GrGeomGetOctreeInfo:
@@ -283,17 +283,38 @@ GrGeomSolid   *GrGeomNewSolid(
 {
   GrGeomSolid   *new_grgeomsolid;
 
-
   new_grgeomsolid = talloc(GrGeomSolid, 1);
 
-  (new_grgeomsolid->data) = data;
-  (new_grgeomsolid->patches) = patches;
-  (new_grgeomsolid->num_patches) = num_patches;
-  (new_grgeomsolid->octree_bg_level) = octree_bg_level;
-  (new_grgeomsolid->octree_ix) = octree_ix;
-  (new_grgeomsolid->octree_iy) = octree_iy;
-  (new_grgeomsolid->octree_iz) = octree_iz;
+  new_grgeomsolid->data = data;
+  new_grgeomsolid->patches = patches;
+  new_grgeomsolid->num_patches = num_patches;
+  new_grgeomsolid->octree_bg_level = octree_bg_level;
+  new_grgeomsolid->octree_ix = octree_ix;
+  new_grgeomsolid->octree_iy = octree_iy;
+  new_grgeomsolid->octree_iz = octree_iz;
 
+  new_grgeomsolid->interior_boxes = NULL;
+
+#if PARFLOW_ACC_BACKEND == PARFLOW_BACKEND_CUDA
+  GrGeomSolidOutflag(new_grgeomsolid) = NULL;
+#endif
+
+  for (int f = 0; f < GrGeomOctreeNumFaces; f++)
+  {
+    GrGeomSolidSurfaceBoxes(new_grgeomsolid, f) = NULL;
+
+    new_grgeomsolid->patch_boxes[f] = talloc(BoxArray *, num_patches);
+
+    for (int patch = 0; patch < num_patches; patch++)
+    {
+      GrGeomSolidPatchBoxes(new_grgeomsolid, patch, f) = NULL;
+    }
+  }
+
+  if (GlobalsUseClustering)
+  {
+    ComputeBoxes(new_grgeomsolid);
+  }
   return new_grgeomsolid;
 }
 
@@ -306,6 +327,34 @@ void          GrGeomFreeSolid(
                               GrGeomSolid *solid)
 {
   int i;
+
+  if (GrGeomSolidInteriorBoxes(solid))
+  {
+    FreeBoxArray(GrGeomSolidInteriorBoxes(solid));
+  }
+
+  for (int f = 0; f < GrGeomOctreeNumFaces; f++)
+  {
+    if (GrGeomSolidSurfaceBoxes(solid, f))
+    {
+      FreeBoxArray(GrGeomSolidSurfaceBoxes(solid, f));
+    }
+
+    for (int patch = 0; patch < GrGeomSolidNumPatches(solid); patch++)
+    {
+      if (GrGeomSolidPatchBoxes(solid, patch, f))
+      {
+        FreeBoxArray(GrGeomSolidPatchBoxes(solid, patch, f));
+      }
+    }
+
+    tfree(solid->patch_boxes[f]);
+  }
+
+#if PARFLOW_ACC_BACKEND == PARFLOW_BACKEND_CUDA
+  // Internal _tfree_cuda function is used because unified memory is not active in this comp unit
+  if(GrGeomSolidOutflag(solid)) _tfree_cuda(GrGeomSolidOutflag(solid));
+#endif
 
   GrGeomFreeOctree(GrGeomSolidData(solid));
   for (i = 0; i < GrGeomSolidNumPatches(solid); i++)

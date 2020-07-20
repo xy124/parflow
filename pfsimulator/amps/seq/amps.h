@@ -103,7 +103,7 @@ typedef FILE *amps_File;
 #define amps_Wait(handle) 0
 
 /*---------------------------------------------------------------------------*/
-/* Macros for all commands that have no function in sequentail code.         */
+/* Macros for all commands that have no function in sequential code.         */
 /*---------------------------------------------------------------------------*/
 
 #define VOID_FUNC(amps_name) printf("AMPS Error: The %s function is not implemented\n", amps_name);
@@ -218,8 +218,8 @@ typedef struct amps_HandleObject {
 #define PACK_HOST_TYPE 1
 #define PACK_NO_CONVERT_TYPE 2
 
-#define AMPS_ALIGN(type, dest) \
-  ((sizeof(type) - \
+#define AMPS_ALIGN(type, dest)              \
+  ((sizeof(type) -                          \
     ((unsigned long)(dest) % sizeof(type))) \
    % sizeof(type));
 
@@ -237,17 +237,17 @@ typedef struct amps_HandleObject {
 /*---------------------------------------------------------------------------*/
 #if SGS
 #define AMPS_CLEAR_INVOICE(invoice) \
-  { \
-    amps_ClearInvoice(invoice); \
+  {                                 \
+    amps_ClearInvoice(invoice);     \
   }
 
 #define AMPS_PACK_FREE_LETTER(comm, invoice, amps_letter) \
-  if ((invoice)->combuf_flags & AMPS_INVOICE_OVERLAYED) \
-    (invoice)->combuf_flags |= AMPS_INVOICE_ALLOCATED; \
-  else \
-  { \
-    (invoice)->combuf_flags &= ~AMPS_INVOICE_ALLOCATED; \
-    pvm_freebuf(amps_letter); \
+  if ((invoice)->combuf_flags & AMPS_INVOICE_OVERLAYED)   \
+    (invoice)->combuf_flags |= AMPS_INVOICE_ALLOCATED;    \
+  else                                                    \
+  {                                                       \
+    (invoice)->combuf_flags &= ~AMPS_INVOICE_ALLOCATED;   \
+    pvm_freebuf(amps_letter);                             \
   }
 
 #endif
@@ -336,23 +336,23 @@ typedef struct amps_HandleObject {
 
 #ifdef AMPS_MEMORY_ALLOC_CHECK
 
-#define amps_TAlloc(type, count) \
-  { \
-    (type*)ptr; \
+#define amps_TAlloc(type, count)                                      \
+  {                                                                   \
+    (type*)ptr;                                                       \
     if ((ptr = (type*)malloc((unsigned int)(sizeof(type) * (count)))) \
-        == NULL) \
-      amps_Printf("Error: out of memory in <%s> at line %d\n", \
-                  __FILE__, __LINE__); \
-    ptr; \
+        == NULL)                                                      \
+      amps_Printf("Error: out of memory in <%s> at line %d\n",        \
+                  __FILE__, __LINE__);                                \
+    ptr;                                                              \
   }
 
-#define amps_CTAlloc(type, count) \
-  { \
-    (type*)ptr; \
+#define amps_CTAlloc(type, count)                                                         \
+  {                                                                                       \
+    (type*)ptr;                                                                           \
     if ((ptr = (type*)calloc((unsigned int)(count), (unsigned int)sizeof(type))) == NULL) \
-      amps_Printf("Error: out of memory in <%s> at line %d\n", \
-                  __FILE__, __LINE__); \
-    ptr; \
+      amps_Printf("Error: out of memory in <%s> at line %d\n",                            \
+                  __FILE__, __LINE__);                                                    \
+    ptr;                                                                                  \
   }
 
 /* note: the `else' is required to guarantee termination of the `if' */
@@ -378,12 +378,13 @@ typedef struct amps_HandleObject {
 /* These are the built-in types that are supported */
 
 #define AMPS_INVOICE_CHAR_CTYPE                1
-#define AMPS_INVOICE_SHORT_CTYPE               2
-#define AMPS_INVOICE_INT_CTYPE                 3
-#define AMPS_INVOICE_LONG_CTYPE                4
-#define AMPS_INVOICE_DOUBLE_CTYPE              5
-#define AMPS_INVOICE_FLOAT_CTYPE               6
-#define AMPS_INVOICE_LAST_CTYPE                7
+#define AMPS_INVOICE_CHAR_CTYPE                2
+#define AMPS_INVOICE_SHORT_CTYPE               3
+#define AMPS_INVOICE_INT_CTYPE                 5
+#define AMPS_INVOICE_LONG_CTYPE                5
+#define AMPS_INVOICE_DOUBLE_CTYPE              6
+#define AMPS_INVOICE_FLOAT_CTYPE               7
+#define AMPS_INVOICE_LAST_CTYPE                8
 
 /* Flags for use with user-defined flag                                      */
 /* ?????? following is very confusing rename them SGS */

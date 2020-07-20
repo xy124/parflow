@@ -44,9 +44,6 @@ typedef void InstanceXtra;
  *--------------------------------------------------------------------------*/
 void realSpaceZ(ProblemData *problem_data, Vector *rsz)
 {
-  PFModule       *this_module = ThisPFModule;
-  PublicXtra     *public_xtra = (PublicXtra*)PFModulePublicXtra(this_module);
-
   Grid           *grid = VectorGrid(rsz);
 
   SubgridArray   *subgrids = GridSubgrids(grid);
@@ -65,10 +62,9 @@ void realSpaceZ(ProblemData *problem_data, Vector *rsz)
   int r;
   int is, i, j, k, l, ips = 0;
 
-
   GrGeomSolid *gr_domain = ProblemDataGrDomain(problem_data);
 
-
+  k = 0; //@RMM bug fix for processor outside active domain
 
   /*-----------------------------------------------------------------------
    * real_space_z

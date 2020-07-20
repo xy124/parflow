@@ -30,6 +30,10 @@
 
 #include "databox.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*-----------------------------------------------------------------------
  * function prototypes
  *-----------------------------------------------------------------------*/
@@ -156,7 +160,7 @@ double ComputeLMCoeff(
 void ComputeGaussJordan(
                         double a[][2],
                         int    n,
-                        double b[][1],
+                        double b[][2],
                         int    m);
 
 void ComputeSatTransmissivity(
@@ -224,6 +228,10 @@ void ComputeHydroStatFromWT(
                             Databox *top,
                             Databox *mask,
                             Databox *press0);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

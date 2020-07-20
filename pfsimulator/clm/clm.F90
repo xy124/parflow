@@ -47,6 +47,9 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
   ! integer, parameter :: numrad      =   2   !number of solar radiation bands: vis, nir
   ! integer, parameter :: numcol      =   8   !number of soil color types
 
+  integer  :: pf_nlevsoi                         ! number of soil levels, passed from PF
+  integer  :: pf_nlevlak                         ! number of lake levels, passed from PF
+ 
   !=== Local Variables =====================================================
 
   ! basic indices, counters
@@ -136,11 +139,6 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
   real(r8) :: irr_stoppf                         ! irrigation daily stop tie for constant cycle
   real(r8) :: irr_thresholdpf                    ! irrigation threshold criteria for deficit cycle (units of soil moisture content)
   integer  :: irr_thresholdtypepf                ! irrigation threshold criteria type -- top layer, bottom layer, column avg
-
-  ! 
-  integer  :: pf_nlevsoi                         ! number of soil levels, passed from PF
-  integer  :: pf_nlevlak                         ! number of lake levels, passed from PF
-
 
   ! local indices & counters
   integer  :: i,j,k,k1,j1,l1                     ! indices for local looping
@@ -654,33 +652,50 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
     write(9919,*) 'time =', time, 'gmt =', drv%gmt, 'endtime =', drv%endtime
  end if !! rank 0, write log info
 
-! if ( (drv%gmt==0.0).or.(drv%endtime==1) ) call drv_restart(2,drv,tile,clm,rank,istep_pf)
+  ! if ( (drv%gmt==0.0).or.(drv%endtime==1) ) call drv_restart(2,drv,tile,clm,rank,istep_pf)
   ! ----------------------------------
   ! NBE: Added more control over writing of the RST files
-    if (clm_next == 1) then
-     if (clm_last_rst==1) then
-      d_stp=0
-     else
-      d_stp = istep_pf
-     endif
+    if (clm_last_rst==1) then
+       d_stp=0
+    else
+       d_stp = istep_pf
+    endif
+    
+    if (clm_daily_rst==1) then
 
-      if (clm_daily_rst==1) then
+       ! Restarts occur at daily boundaries and at end of the run.
        if ( (drv%gmt==0.0).or.(drv%endtime==1) ) then
-         if (rank==0) write(9919,*) 'Writing restart time =', time, 'gmt =', drv%gmt, 'istep_pf =',istep_pf
+
           !! @RMM/LEC  add in a TCL file that sets an istep value to better automate restarts
           if (rank==0) then
-                open(393, file="clm_restart.tcl",action="write")
-                write(393,*) "set istep ",istep_pf
-                close(393)
+             write(9919,*) 'Writing restart time =', time, 'gmt =', drv%gmt, 'istep_pf =',istep_pf
+
+             open(393, file="clm_restart.tcl",action="write")
+             write(393,*) "set istep ",istep_pf
+             close(393)
           end if  !  write istep corresponding to restart step
+             
+          call drv_restart(2,drv,tile,clm,rank,d_stp)
 
-            call drv_restart(2,drv,tile,clm,rank,d_stp)
-             end if
-      else
-       call drv_restart(2,drv,tile,clm,rank,d_stp)
-      endif
+       end if
+    else
+       ! Restarts occur at start of each CLM reuse sequence.
+       if (clm_next == 1) then
 
-    endif
+          !! @RMM/LEC  add in a TCL file that sets an istep value to better automate restarts
+          if (rank==0) then
+             write(9919,*) 'Writing restart time =', time, 'gmt =', drv%gmt, 'istep_pf =',istep_pf
+
+             open(393, file="clm_restart.tcl",action="write")
+             write(393,*) "set istep ",istep_pf
+             close(393)
+          end if  !  write istep corresponding to restart step
+             
+          call drv_restart(2,drv,tile,clm,rank,d_stp)
+
+       end if
+
+    end if
   ! ---------------------------------
 
   !=== Call routine to calculate CLM flux passed to PF

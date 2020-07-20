@@ -137,3 +137,6 @@ __pycache__
 ### Emacs ###
 *~
 \#*\#
+
+# VS Code
+.vscode/

@@ -41,19 +41,21 @@
  *--------------------------------------------------------------------------*/
 #define SolverSetupTimingIndex 0
 #define SolverTimingIndex 1
-#define SolverCleanupTimingIndex 2
-#define MatvecTimingIndex  3
-#define PFSBTimingIndex  4
-#define PFBTimingIndex  5
-#define CLMTimingIndex  6
-#define PFSOLReadTimingIndex  7
-#define FlowVRInteractTimingIndex  8
-#define FlowVRFulFillContractsTimingIndex  9
-#define FlowVRWaitTimingIndex  10
-#define MelissaTimingIndex  11
-#define NetCDFTimingIndex  12
+#define RichardsExclude1stTimeStepIndex 2
+#define SolverCleanupTimingIndex 3
+#define MatvecTimingIndex  4
+#define PFSBTimingIndex  5
+#define PFBTimingIndex  6
+#define CLMTimingIndex  7
+#define PFSOLReadTimingIndex  8
+#define ClusteringTimingIndex 9
+#define FlowVRInteractTimingIndex  10
+#define FlowVRFulFillContractsTimingIndex  11
+#define FlowVRWaitTimingIndex  12
+#define MelissaTimingIndex  13
+#define NetCDFTimingIndex  14
 #ifdef VECTOR_UPDATE_TIMING
-#define VectorUpdateTimingIndex  13
+#define VectorUpdateTimingIndex  15
 #endif
 
 
@@ -111,23 +113,23 @@ amps_ThreadLocalDcl(extern TimingType *, timing_ptr);
   TimingCPUCount += amps_CPUClock()
 
 #ifdef TIMING_WITH_SYNC
-#define BeginTiming(i) \
-  { \
-    StopTiming(); \
-    TimingTime(i) -= TimingTimeCount; \
+#define BeginTiming(i)                  \
+  {                                     \
+    StopTiming();                       \
+    TimingTime(i) -= TimingTimeCount;   \
     TimingCPUTime(i) -= TimingCPUCount; \
-    TimingFLOPS(i) -= TimingFLOPCount; \
-    amps_Sync(amps_CommWorld); \
-    StartTiming(); \
+    TimingFLOPS(i) -= TimingFLOPCount;  \
+    amps_Sync(amps_CommWorld);          \
+    StartTiming();                      \
   }
 #else
-#define BeginTiming(i) \
-  { \
-    StopTiming(); \
-    TimingTime(i) -= TimingTimeCount; \
+#define BeginTiming(i)                  \
+  {                                     \
+    StopTiming();                       \
+    TimingTime(i) -= TimingTimeCount;   \
     TimingCPUTime(i) -= TimingCPUCount; \
-    TimingFLOPS(i) -= TimingFLOPCount; \
-    StartTiming(); \
+    TimingFLOPS(i) -= TimingFLOPCount;  \
+    StartTiming();                      \
   }
 #endif
 
@@ -153,13 +155,13 @@ amps_ThreadLocalDcl(extern TimingType *, timing_ptr);
   }
 
 #else
-#define EndTiming(i) \
-  { \
-    StopTiming(); \
-    TimingTime(i) += TimingTimeCount; \
+#define EndTiming(i)                    \
+  {                                     \
+    StopTiming();                       \
+    TimingTime(i) += TimingTimeCount;   \
     TimingCPUTime(i) += TimingCPUCount; \
-    TimingFLOPS(i) += TimingFLOPCount; \
-    StartTiming(); \
+    TimingFLOPS(i) += TimingFLOPCount;  \
+    StartTiming();                      \
   }
 
 #define PrintTimeCount(event)

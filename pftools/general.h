@@ -32,15 +32,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*--------------------------------------------------------------------------
  * Define memory allocation routines
  *--------------------------------------------------------------------------*/
 
 #define talloc(type, count) \
-  ((count) ? (type*)malloc((unsigned int)(sizeof(type) * (count))) : NULL)
+  ((count > 0) ? (type*)malloc((unsigned int)(sizeof(type) * (count))) : NULL)
 
 #define ctalloc(type, count) \
-  ((count) ? (type*)calloc((unsigned int)(count), (unsigned int)sizeof(type)) : NULL)
+  ((count > 0) ? (type*)calloc((unsigned int)(count), (unsigned int)sizeof(type)) : NULL)
 
 /* note: the `else' is required to guarantee termination of the `if' */
 #define tfree(ptr) if (ptr) free(ptr); else
@@ -79,6 +83,9 @@
 #define ON  1
 #define OFF 0
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

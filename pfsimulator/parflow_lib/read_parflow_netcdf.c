@@ -34,8 +34,6 @@
 #include <string.h>
 #include <unistd.h>
 
-
-
 void ReadPFNC(char *fileName, Vector *v, char *varName, int tStep, int dimensionality)
 {
 #ifdef PARFLOW_HAVE_NETCDF
@@ -44,19 +42,15 @@ void ReadPFNC(char *fileName, Vector *v, char *varName, int tStep, int dimension
   SubgridArray   *subgrids = GridSubgrids(grid);
   Subgrid        *subgrid;
   Subvector      *subvector;
-
-  int num_chars, g;
-  int p, P;
-
-  amps_File file;
-
-  double X, Y, Z;
-  int NX, NY, NZ;
-  double DX, DY, DZ;
+  
+  int g;
+  
   int ncRID, varID;
-
-
+  
   OpenNCFile(fileName, &ncRID);
+
+  nc_inq_varid(ncRID, varName, &varID);
+  
   ForSubgridI(g, subgrids)
   {
     subgrid = SubgridArraySubgrid(subgrids, g);
@@ -67,13 +61,12 @@ void ReadPFNC(char *fileName, Vector *v, char *varName, int tStep, int dimension
   EndTiming(NetCDFTimingIndex);
 }
 
-
 void OpenNCFile(char *file_name, int *ncRID)
 {
   char *switch_name;
   char key[IDB_MAX_KEY_LEN];
   char *default_val = "None";
-
+  
   sprintf(key, "NetCDF.ROMIOhints");
   switch_name = GetStringDefault(key, "None");
   if (strcmp(switch_name, default_val) != 0)
@@ -94,10 +87,18 @@ void OpenNCFile(char *file_name, int *ncRID)
       MPI_Info_set(romio_info, romio_key, value);
     }
     int res = nc_open_par(file_name, NC_MPIIO, amps_CommWorld, romio_info, ncRID);
+    if(res != NC_NOERR)
+    {
+      amps_Printf("Error: nc_open_par failed for file <%s>\n", file_name);
+    }
   }
   else
   {
     int res = nc_open_par(file_name, NC_MPIIO, amps_CommWorld, MPI_INFO_NULL, ncRID);
+    if(res != NC_NOERR)
+    {
+      amps_Printf("Error: nc_open_par failed for file <%s>\n", file_name);
+    }
   }
 #else
   amps_Printf("Parflow not compiled with NetCDF, can't read NetCDF file\n");
@@ -107,32 +108,7 @@ void OpenNCFile(char *file_name, int *ncRID)
 void ReadNCFile(int ncRID, int varID, Subvector *subvector, Subgrid *subgrid, char *varName, int tStep, int dimensionality)
 {
 #ifdef PARFLOW_HAVE_NETCDF
-  //nc_inq_varid(ncRID, "pressure", &varID);
   nc_inq_varid(ncRID, varName, &varID);
-
-
-  int ix = SubgridIX(subgrid);
-  int iy = SubgridIY(subgrid);
-  int iz = SubgridIZ(subgrid);
-
-  int nx = SubgridNX(subgrid);
-  int ny = SubgridNY(subgrid);
-  int nz = SubgridNZ(subgrid);
-
-  int nx_v = SubvectorNX(subvector);
-  int ny_v = SubvectorNY(subvector);
-  int nz_v = SubvectorNZ(subvector);
-
-  int i, j, k, d, ai;
-
-  size_t startp[4];
-  size_t countp[4];
-
-  double *data;
-  double *nc_data;
-  nc_data = (double*)malloc(sizeof(double) * nx * ny * nz);
-
-  (void)subgrid;
 
   if (dimensionality == 3)
   {
@@ -217,7 +193,6 @@ void ReadNCFile(int ncRID, int varID, Subvector *subvector, Subgrid *subgrid, ch
     double *nc_data;
     nc_data = (double*)malloc(sizeof(double) * nx * ny * nz);
 
-    (void)subgrid;
     startp[0] = tStep, countp[0] = 1;
     startp[1] = iy, countp[1] = ny;
     startp[2] = ix, countp[2] = nx;

@@ -41,7 +41,6 @@
 /*----------------------------------------------------------------
  * Globals structure
  *----------------------------------------------------------------*/
-
 typedef struct _Globals {
   char run_name[256];
   char in_file_name[256];
@@ -87,7 +86,9 @@ typedef struct _Globals {
   Grid     *grid3d;
   Grid     *grid2d;
 
-#ifdef  HAVE_SAMRAI
+  int use_clustering;
+
+#ifdef HAVE_SAMRAI
   SAMRAI::tbox::Pointer < Parflow > parflow_simulation;
 #endif
 } Globals;
@@ -100,7 +101,28 @@ amps_ThreadLocalDcl(extern Globals *, globals_ptr);
 amps_ThreadLocalDcl(extern IDB *, input_database);
 #endif
 
-#define globals amps_ThreadLocal(globals_ptr)
+/*--------------------------------------------------------------------------
+ * Define __constant__ device pointer for globals struct (CUDA)  
+ *--------------------------------------------------------------------------*/
+#if (PARFLOW_ACC_BACKEND == PARFLOW_BACKEND_CUDA) && defined(__CUDACC__)
+#ifdef PARFLOW_GLOBALS
+__constant__  Globals *dev_globals_ptr;
+#else
+/* This extern requires CUDA separate compilation, otherwise nvcc compiler 
+   treats *dev_globals_ptr as static variable for each compilation unit   */
+extern __constant__  Globals *dev_globals_ptr;
+#endif // PARFLOW_GLOBALS
+#endif // PARFLOW_ACC_BACKEND == PARFLOW_BACKEND_CUDA && __CUDACC__
+
+
+/*--------------------------------------------------------------------------
+ * The globals accessor macro depends on compilation trajectory (host/device)
+ *--------------------------------------------------------------------------*/
+#ifdef __CUDA_ARCH__
+  #define globals amps_ThreadLocal(dev_globals_ptr)
+#else
+  #define globals amps_ThreadLocal(globals_ptr)
+#endif
 
 
 /*--------------------------------------------------------------------------
@@ -140,6 +162,8 @@ amps_ThreadLocalDcl(extern IDB *, input_database);
 #define GlobalsGeometries         (globals->geometries)
 
 #define GlobalsParflowSimulation   (globals->parflow_simulation)
+
+#define GlobalsUseClustering      (globals->use_clustering)
 
 #define pqr_to_process(p, q, r, P, Q, R)  ((((r) * (Q)) + (q)) * (P) + (p))
 

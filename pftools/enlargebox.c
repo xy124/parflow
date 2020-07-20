@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include "enlargebox.h"
 
-
 Databox       *EnlargeBox(Databox *inbox,
                           int new_nx, int new_ny, int new_nz)
 {
@@ -37,9 +36,6 @@ Databox       *EnlargeBox(Databox *inbox,
   int nx, ny, nz;
   double x, y, z;
   double dx, dy, dz;
-
-  double         *new_ptr;
-  double         *in_ptr;
 
   int i, j, k;
 
@@ -75,9 +71,6 @@ Databox       *EnlargeBox(Databox *inbox,
                            dx, dy, dz)) == NULL)
     return((Databox*)NULL);
 
-  new_ptr = DataboxCoeffs(newbox);
-  in_ptr = DataboxCoeffs(inbox);
-
   /* First just copy the old values into the new box */
   for (k = 0; k < nz; k++)
   {
@@ -89,7 +82,6 @@ Databox       *EnlargeBox(Databox *inbox,
       }
     }
   }
-
 
   /* Copy the z plane  from the existing nz'th plane */
   for (k = nz; k < new_nz; k++)

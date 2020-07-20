@@ -258,7 +258,7 @@ PFModule  *PFMGInitInstanceXtra(
   int i, j, k, itop, k1, ktop;
   int ix, iy, iz;
   int nx, ny, nz;
-  int nx_m, ny_m, nz_m, sy_m, sy_v;
+  int nx_m, ny_m, nz_m, sy_v;
   int im, io;
   int stencil_size;
   int symmetric;
@@ -480,9 +480,9 @@ PFModule  *PFMGInitInstanceXtra(
           np = SubmatrixStencilData(pfB_sub, 4);
           up = SubmatrixStencilData(pfB_sub, 6);
 
-//	    cp_c    = SubmatrixStencilData(pfC_sub, 0);
-//	    ep_c    = SubmatrixStencilData(pfC_sub, 2);
-//	    np_c    = SubmatrixStencilData(pfC_sub, 4);
+//          cp_c    = SubmatrixStencilData(pfC_sub, 0);
+//          ep_c    = SubmatrixStencilData(pfC_sub, 2);
+//          np_c    = SubmatrixStencilData(pfC_sub, 4);
           cp_c = SubmatrixStencilData(pfC_sub, 0);
           wp_c = SubmatrixStencilData(pfC_sub, 1);
           ep_c = SubmatrixStencilData(pfC_sub, 2);
@@ -521,8 +521,6 @@ PFModule  *PFMGInitInstanceXtra(
         nz_m = SubmatrixNZ(pfB_sub);
 
         sy_v = SubvectorNX(top_sub);
-
-        sy_m = nx_m;
 
         im = SubmatrixEltIndex(pfB_sub, ix, iy, iz);
 
@@ -751,7 +749,7 @@ PFModule  *PFMGNewPublicXtra(char *name)
   raptype = NA_NameToIndex(raptype_switch_na, raptype_name);
   if (raptype >= 0)
   {
-     public_xtra->raptype = raptype;
+    public_xtra->raptype = raptype;
   }
   else
   {
@@ -760,10 +758,10 @@ PFModule  *PFMGNewPublicXtra(char *name)
   }
   NA_FreeNameArray(raptype_switch_na);
 
-  if(raptype == 0 && smoother > 1)
+  if (raptype == 0 && smoother > 1)
   {
-     InputError("Error: Galerkin RAPType is not compatible with Smoother <%s>.\n",
-		smoother_name, key);
+    InputError("Error: Galerkin RAPType is not compatible with Smoother <%s>.\n",
+               smoother_name, key);
   }
 
   public_xtra->time_index_pfmg = RegisterTiming("PFMG");

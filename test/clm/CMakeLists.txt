@@ -1,5 +1,5 @@
 
-add_test (NAME clm COMMAND tclsh clm.tcl 1 1 1 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# add_test (NAME clm COMMAND tclsh clm.tcl 1 1 1 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(TESTS "")
 if(${PARFLOW_HAVE_CLM})
@@ -13,7 +13,7 @@ endif()
 
 set(APPEND PARALLEL_TESTS)
 
-if(${PARFLOW_AMPS_LAYER} STREQUAL "mpi1")
+if((${PARFLOW_AMPS_LAYER} STREQUAL "mpi1") OR (${PARFLOW_AMPS_LAYER} STREQUAL "cuda"))
   if(${PARFLOW_HAVE_HYPRE})
     list(APPEND PARALLEL_TESTS
       clm.tcl
@@ -49,4 +49,7 @@ foreach(inputfile ${SAMRAI_TESTS})
     pf_add_parallel_test(${inputfile} ${processor_topology})
   endforeach()
 endforeach()
+
+add_subdirectory (clm-reuse)
+
 
