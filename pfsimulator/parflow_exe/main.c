@@ -81,6 +81,9 @@ using namespace SAMRAI;
 
 #include <unistd.h>
 
+#include "flowvr.h"
+
+#include <signal.h>
 
 int main(int argc, char *argv [])
 {
@@ -89,6 +92,11 @@ int main(int argc, char *argv [])
   FILE *log_file = NULL;
 
   amps_Clock_t wall_clock_time;
+
+
+  printf("Running code!\n");
+
+  //raise(SIGINT);
 
 
 
@@ -122,6 +130,9 @@ int main(int argc, char *argv [])
     {
       amps_Printf("Error: amps_Init initalization failed\n");
       exit(1);
+    }
+    if (!amps_Rank(amps_CommWorld)) {
+        printf("Inited MPI\n");
     }
 #endif
 
@@ -162,13 +173,13 @@ int main(int argc, char *argv [])
       // CUDA
       if (!amps_Rank(amps_CommWorld))
       {
-        CUDA_ERR(cudaSetDevice(0));  
+        CUDA_ERR(cudaSetDevice(0));
       }else{
         int num_devices = 0;
         CUDA_ERR(cudaGetDeviceCount(&num_devices));
         CUDA_ERR(cudaSetDevice(amps_node_rank % num_devices));
       }
-    
+
       int device;
       CUDA_ERR(cudaGetDevice(&device));
 

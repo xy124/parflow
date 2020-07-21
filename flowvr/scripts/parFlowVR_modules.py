@@ -4,6 +4,48 @@ import socket
 import subprocess
 import os
 
+
+
+class FlowvrRunSlurm(Run):
+    """ the id of the modules must be built from the prefix, suffixed by
+    /0, /1, etc. hosts and name will not be populated automatically from
+    the corresponding module.
+    Optionnal parameters :
+     rankfile : is used to pass a rankfile to fix the affinity of the MPI processes
+    """
+
+    def __init__(self, cmdline, prefix, hosts):
+      self.cmdline = cmdline
+      self.name = prefix
+
+      self.options = '-v '
+
+      #if bindobject != ''  and  bindnumber != '':
+      #  os.environ['FLOWVR_MODULE_HWBIND'] = bindobject
+
+
+      #if ownShmem:
+      #  os.environ['FLOWVR_MODULE_OWNSHMEM'] = '1'
+
+      if app.current_path: self.name = app.current_path + self.name
+      hostlist = hosts.split(",")
+      self.np = len(hostlist)
+      self.hosts = list(set(hostlist))  # each node only once!
+      self.hosts.sort()
+
+
+      self.n_tasks_per_node = len(hostlist) // len(self.hosts)
+
+
+    def add_environment_variable(self, variable, value = ""):
+        os.environ[variable] = value
+
+    #Note : For now we don't use the binding object here to avoid undetermined behavior
+    #http://www.open-mpi.org/faq/?category=tuning#using-paffinity-v1.4
+    def get_cmdline(self):
+        return "srun %s -n %d --ntasks-per-node=%d --nodelist=%s --cpu-bind=rank --exclusive %s" % (self.options, self.np, self.n_tasks_per_node, ",".join(self.hosts), self.cmdline)
+
+
 # helper function:
 def preferLastCore(lastCore, cores):
     if lastCore and cores == '':
@@ -137,13 +179,11 @@ class ParflowMPI(Composite):
 
 
             for line in proc.stdout:
-                mpirunargs += ' ' + line
+                mpirunargs += ' ' + line.decode('utf-8')
 
             proc.communicate()
-	    parflowrun = FlowvrRunOpenMPI('%s %s %s' %
-                    (debugprefix, pf_cmd, problemName), hosts = hosts, prefix = prefix,
-                    mpirunargs=mpirunargs,
-                    rankfile=rankfile)
+            parflowrun = FlowvrRunSlurm('%s %s %s' %
+                    (debugprefix, pf_cmd, problemName), hosts = hosts, prefix = prefix)
 
 
         # hosts_list: convert hosts to a list
@@ -262,17 +302,15 @@ class NetCDFWriterMPI(Composite):
                         #rank 2=cc slot=15
 
             for line in proc.stdout:
-                mpirunargs += ' ' + line
+                mpirunargs += ' ' + line.decode('utf-8')
 
             proc.communicate()
 
 
-	    netcdfwriterrun = FlowvrRunOpenMPI('%s %s %s' %
+            netcdfwriterrun = FlowvrRunSlurm('%s %s %s' %
                     (nw_cmd, fileprefix, '--no-abort' if not abortOnEnd else ''),
                     hosts=hosts,
-                    prefix=prefix,
-                    mpirunargs=mpirunargs,
-                    rankfile=rankfile)
+                    prefix=prefix)
 
 
 

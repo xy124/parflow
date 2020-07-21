@@ -257,7 +257,7 @@ static inline int simple_intersect(int ix1, int nx1, int ix2, int nx2,
   return 1;
 }
 
-static inline LogSteer(Variable var, Action action, SteerMessageMetadata * s,
+static inline void LogSteer(Variable var, Action action, SteerMessageMetadata * s,
                        double *operand, double const * const ptime)
 {
   ////////////////////////////////////////////////////////
@@ -343,6 +343,7 @@ size_t Steer(Variable var, Action action, const void *buffer, double const * con
 
   int nx_v = SubvectorNX(subvector);
   int ny_v = SubvectorNY(subvector);
+  int nz_v = SubvectorNZ(subvector);
 
   // TODO:speedoptimize the BoxLoop! loop. switch to outside. maybe I can do it with avx on whole oxes? maybe I have to change 1,1,1
   // probably one can use IntersectSubgrids and loop only over intersction! Maybe this could influence the vectorupdate too!
@@ -515,6 +516,7 @@ static inline void vectorToMessage(const Variable variable, double const * const
 
   int nx_v = SubvectorNX(subvector);
   int ny_v = SubvectorNY(subvector);
+  int nz_v = SubvectorNZ(subvector);
 
   // write to the beginning of our memory segment
   GridMessageMetadata m;
