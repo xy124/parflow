@@ -22,6 +22,7 @@
 
 #include <string.h>  // for memcpy
 #include <stdlib.h>  // for malloc
+#include <unistd.h>  // for usleep
 
 #include "globals.h"
 
@@ -31,6 +32,10 @@ int FLOWVR_ACTIVE;
 #ifdef HAVE_FLOWVR
 static fca_module module_parflow;
 static fca_port port_in;
+
+// forward declaration:
+void SendSnapshot(SimulationSnapshot const * const snapshot, Variable var);
+
 
 void fillGridDefinition(Grid const * const grid, GridDefinition *grid_def)
 {

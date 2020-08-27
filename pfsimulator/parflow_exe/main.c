@@ -94,8 +94,6 @@ int main(int argc, char *argv [])
   amps_Clock_t wall_clock_time;
 
 
-  printf("Running code!\n");
-
   //raise(SIGINT);
 
 
@@ -132,7 +130,7 @@ int main(int argc, char *argv [])
       exit(1);
     }
     if (!amps_Rank(amps_CommWorld)) {
-        printf("Inited MPI\n");
+        printf("Node 0: Inited MPI\n");
     }
 #endif
 

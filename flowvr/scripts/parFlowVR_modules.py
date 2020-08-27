@@ -30,11 +30,14 @@ class FlowvrRunSlurm(Run):
       if app.current_path: self.name = app.current_path + self.name
       hostlist = hosts.split(",")
       self.np = len(hostlist)
-      self.hosts = list(set(hostlist))  # each node only once!
+      self.hosts = hostlist
+      #self.hosts = list(set(hostlist))  # each node only once!
       self.hosts.sort()
+      self.N = len(list(set(self.hosts)))
 
 
-      self.n_tasks_per_node = len(hostlist) // len(self.hosts)
+      self.n_tasks_per_node = len(hostlist) // self.N
+      self.job_name = prefix
 
 
     def add_environment_variable(self, variable, value = ""):
@@ -43,7 +46,9 @@ class FlowvrRunSlurm(Run):
     #Note : For now we don't use the binding object here to avoid undetermined behavior
     #http://www.open-mpi.org/faq/?category=tuning#using-paffinity-v1.4
     def get_cmdline(self):
-        return "srun %s -n %d --ntasks-per-node=%d --nodelist=%s --cpu-bind=rank --exclusive %s" % (self.options, self.np, self.n_tasks_per_node, ",".join(self.hosts), self.cmdline)
+        #return "srun %s -N %d -n %d --ntasks-per-node=%d --distribution=block --relative=0 --cpu-bind=rank  %s" % (self.options, self.N, self.np, self.n_tasks_per_node, self.cmdline)
+        return "srun %s --job-name=%s --exclusive -N %d -n %d --ntasks-per-node=%d --distribution=arbitrary --nodelist=%s --cpu-bind=rank  %s" % (self.options, self.job_name, self.N, self.np, self.n_tasks_per_node, ",".join(self.hosts), self.cmdline)
+        #return "srun %s --exclusive -n %d --ntasks-per-node=%d --nodelist=%s --cpu-bind=rank  %s" % (self.options, self.np, self.n_tasks_per_node, ",".join(self.hosts), self.cmdline)
 
 
 # helper function:
